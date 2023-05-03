@@ -9,13 +9,40 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundColor(.accentColor)
-            Text("Hello, world!")
+        NavigationView {
+            TabView {
+                NavigationView {
+                    HomeView()
+                }
+                .navigationBarTitleDisplayMode(.inline)
+                .navigationTitle("Top View")
+                .tabItem {
+                    VStack {
+                        Image(systemName: "house")
+                            .foregroundColor(.black)
+                        Text("ホーム")
+                            .foregroundColor(.black)
+                    }
+                }
+                
+                MakeRecuruitView()
+                    .tabItem {
+                        Image(systemName: "person")
+                        Text("作成する")
+                            .foregroundColor(.black)
+                    }
+                NavigationView{
+                    ProfileView()
+                }
+                .navigationTitle("Top View")
+                .tabItem {
+                    Image(systemName: "person")
+                    Text("マイページ")
+                        .foregroundColor(.black)
+                }
+            }
+            .accentColor(.black.opacity(0.8))
         }
-        .padding()
     }
 }
 
