@@ -31,8 +31,8 @@ struct HomeView: View {
                         .padding(.leading,16)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     Spacer()
-                    Button {
-                        print("もっと見る")
+                    NavigationLink {
+                       RecuruitmentListView()
                     } label: {
                         Text("もっと見る")
                             .foregroundColor(.blue.opacity(0.6))

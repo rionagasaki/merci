@@ -6,3 +6,8 @@
 //
 
 import Foundation
+
+class BirthdayViewModel: ObservableObject {
+    @Published var selectedBirthday: Date = Date()
+    
+}

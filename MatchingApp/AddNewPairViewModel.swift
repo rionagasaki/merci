@@ -6,3 +6,7 @@
 //
 
 import Foundation
+
+class AddNewPairViewModel: ObservableObject {
+    @Published var searchedUserId: String = ""
+}

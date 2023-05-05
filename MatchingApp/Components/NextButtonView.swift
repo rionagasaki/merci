@@ -9,7 +9,13 @@ import SwiftUI
 
 struct NextButtonView: View {
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        Image(systemName: "arrow.right")
+            .resizable()
+            .frame(width:20, height: 20)
+            .padding()
+            .background(Color.gray.opacity(0.6))
+            .foregroundColor(.white)
+            .clipShape(Circle())
     }
 }
 

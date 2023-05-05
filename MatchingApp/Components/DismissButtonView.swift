@@ -9,7 +9,13 @@ import SwiftUI
 
 struct DismissButtonView: View {
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        Image(systemName: "arrow.left")
+            .resizable()
+            .frame(width:20, height: 20)
+            .padding()
+            .background(Color.gray.opacity(0.6))
+            .foregroundColor(.white)
+            .clipShape(Circle())
     }
 }
 

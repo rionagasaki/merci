@@ -6,3 +6,9 @@
 //
 
 import Foundation
+
+class DateViewModel: ObservableObject {
+    let menu = ["すぐ会いたい", "日時を指定"]
+    @Published var selectedMenu: String = ""
+    @Published var selectedDate: Date = Date()
+}

@@ -9,7 +9,22 @@ import SwiftUI
 
 struct SettingView: View {
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack(alignment: .leading) {
+            HStack {
+                Image(systemName: "gearshape.fill")
+                Text("設定")
+            }
+            .fontWeight(.heavy)
+            .font(.system(size: 20))
+            
+            SettingCellView(systemImageName: "person.fill.badge.minus", text: "サービス内容")
+            SettingCellView(systemImageName: "person.fill.badge.minus", text: "利用規約")
+            SettingCellView(systemImageName: "person.fill.badge.minus", text: "プライバシポリシー")
+            SettingCellView(systemImageName: "person.fill.badge.minus", text: "オープンソースライブラリ")
+            SettingCellView(systemImageName: "person.fill.badge.minus", text: "アカウント削除")
+           Divider()
+            
+        }
     }
 }
 

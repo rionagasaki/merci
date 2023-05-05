@@ -8,13 +8,30 @@
 import SwiftUI
 
 struct SettingCellView: View {
+    let systemImageName: String
+    let text: String
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack {
+            Divider()
+            HStack {
+                
+                Image(systemName: systemImageName)
+                    .resizable()
+                    .frame(width: 20, height: 20)
+                Text(text)
+                    .fontWeight(.light)
+                    
+                
+                Spacer()
+            }
+            .padding(.vertical, 8)
+           
+        }
     }
 }
 
 struct SettingCellView_Previews: PreviewProvider {
     static var previews: some View {
-        SettingCellView()
+        SettingCellView(systemImageName: "plus", text: "退会する")
     }
 }

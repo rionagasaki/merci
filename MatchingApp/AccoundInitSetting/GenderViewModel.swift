@@ -6,3 +6,8 @@
 //
 
 import Foundation
+
+class GenderViewModel: ObservableObject {
+    let gender = ["男性", "女性"]
+    @Published var selectedGender: String = ""
+}
