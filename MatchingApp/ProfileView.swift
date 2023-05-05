@@ -8,70 +8,11 @@
 import SwiftUI
 
 struct ProfileView: View {
+    @EnvironmentObject var appState: AppState
     var body: some View {
         ScrollView {
             VStack {
-                ZStack(alignment: .bottomTrailing) {
-                    Image("Person")
-                        .resizable()
-                        .frame(width: 180, height: 180)
-                        .clipShape(Circle())
-                    Image(systemName: "plus")
-                        .resizable()
-                        .padding(.all, 8)
-                        .foregroundColor(.white)
-                        .background(Color.customRed1)
-                        .frame(width: 48, height: 48)
-                        .overlay(content: {
-                            Circle().stroke(lineWidth: 4).foregroundColor(.white)
-                        })
-                        .clipShape(Circle())
-                    
-                }
-                HStack {
-                    Text("ながり")
-                        .font(.system(size: 16))
-                        .bold()
-                    Text("21歳/千葉")
-                }
-                HStack {
-                    VStack {
-                        Text("友達")
-                            .foregroundColor(.gray)
-                            .font(.system(size: 16))
-                            .bold()
-                        Button {
-                            print("aaa")
-                        } label: {
-                            Text("追加")
-                                .padding(.vertical, 4)
-                                .padding(.horizontal, 8)
-                                .foregroundColor(.black.opacity(0.8))
-                                .background(.gray.opacity(0.4))
-                                .cornerRadius(15)
-                        }
-                        
-                    }
-                    Divider()
-                    VStack {
-                        Text("無料会員")
-                            .foregroundColor(.gray)
-                            .font(.system(size: 16))
-                            .bold()
-                        Button {
-                            print("aaa")
-                        } label: {
-                            Text("変更")
-                                .padding(.vertical, 4)
-                                .padding(.horizontal, 8)
-                                .foregroundColor(.black.opacity(0.8))
-                                .background(.gray.opacity(0.4))
-                                .cornerRadius(15)
-                        }
-                    }
-                }
-                .frame(height: 100)
-                CustomDivider()
+                MyMainInfoView()
                 Text("自己紹介")
                     .padding(.leading, 16)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -89,18 +30,55 @@ struct ProfileView: View {
                     .foregroundColor(.black.opacity(0.8))
                     .font(.system(size: 18))
                     .bold()
-                HStack {
-                    Image("Person")
-                        .resizable()
-                        .frame(width: 50, height: 50)
-                        .clipShape(Circle())
-                    Text("ジェニファー")
-                    Spacer()
+                NavigationLink {
+                    UserProfileView()
+                } label: {
+                    HStack {
+                        Image("Person")
+                            .resizable()
+                            .frame(width: 50, height: 50)
+                            .clipShape(Circle())
+                        Text("ジェニファー")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .foregroundColor(.black.opacity(0.8))
+                            .font(.system(size: 16))
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .resizable()
+                            .frame(width: 10, height: 20)
+                            .foregroundColor(.gray)
+                            .padding(.trailing, 16)
+                        
+                    }
                 }
                 .padding(.leading, 16)
-                Spacer()
+                
+                Button {
+                    print("aaaa")
+                } label: {
+                    HStack(alignment: .center){
+                        Image(systemName: "plus")
+                            .resizable()
+                            .frame(width: 10, height: 10)
+                        NavigationLink {
+                            AddNewPairView()
+                        } label: {
+                            Text("追加する")
+                        }
+                    }
+                    .foregroundColor(.black)
+                }
+                CustomDivider()
+                SettingView()
+                    .padding(.leading, 16)
+                Button {
+                    appState.isLogin = false
+                } label: {
+                    Text("ログアウト")
+                        .foregroundColor(.red)
+                        .padding(.vertical, 16)
+                }
             }
-
         }
     }
 }

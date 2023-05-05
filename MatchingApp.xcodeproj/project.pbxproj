@@ -28,6 +28,38 @@
 		533A9FC029FEE58D001C9C34 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 533A9FBF29FEE58D001C9C34 /* ProfileView.swift */; };
 		533A9FC229FF0F0B001C9C34 /* CustomDivider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 533A9FC129FF0F0B001C9C34 /* CustomDivider.swift */; };
 		533A9FC429FF123D001C9C34 /* Color+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 533A9FC329FF123D001C9C34 /* Color+Extension.swift */; };
+		534AB2232A02A41300612A1D /* AWSAPIGateway in Frameworks */ = {isa = PBXBuildFile; productRef = 534AB2222A02A41300612A1D /* AWSAPIGateway */; };
+		534AB2252A02A41300612A1D /* AWSAppleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 534AB2242A02A41300612A1D /* AWSAppleSignIn */; };
+		534AB2272A02A41300612A1D /* AWSAuthCore in Frameworks */ = {isa = PBXBuildFile; productRef = 534AB2262A02A41300612A1D /* AWSAuthCore */; };
+		534AB2292A02A41300612A1D /* AWSAuthUI in Frameworks */ = {isa = PBXBuildFile; productRef = 534AB2282A02A41300612A1D /* AWSAuthUI */; };
+		534AB22B2A02A41300612A1D /* AWSAutoScaling in Frameworks */ = {isa = PBXBuildFile; productRef = 534AB22A2A02A41300612A1D /* AWSAutoScaling */; };
+		534AB22D2A02A41300612A1D /* AWSChimeSDKIdentity in Frameworks */ = {isa = PBXBuildFile; productRef = 534AB22C2A02A41300612A1D /* AWSChimeSDKIdentity */; };
+		534AB22F2A02A89600612A1D /* amplifyconfiguration.json in Resources */ = {isa = PBXBuildFile; fileRef = 534AB22E2A02A89600612A1D /* amplifyconfiguration.json */; };
+		534AB2312A02A89D00612A1D /* awsconfiguration.json in Resources */ = {isa = PBXBuildFile; fileRef = 534AB2302A02A89D00612A1D /* awsconfiguration.json */; };
+		534AB2352A02E4EF00612A1D /* RichButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 534AB2342A02E4EF00612A1D /* RichButton.swift */; };
+		534AB2382A02E63400612A1D /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 534AB2372A02E63400612A1D /* OnboardingView.swift */; };
+		534AB23A2A035D4E00612A1D /* MyMainInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 534AB2392A035D4E00612A1D /* MyMainInfoView.swift */; };
+		534AB23D2A035F6800612A1D /* SettingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 534AB23C2A035F6800612A1D /* SettingView.swift */; };
+		534AB2402A03829900612A1D /* GenderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 534AB23F2A03829900612A1D /* GenderView.swift */; };
+		534AB2422A03856200612A1D /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 534AB2412A03856200612A1D /* AppState.swift */; };
+		534AB2442A03865C00612A1D /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 534AB2432A03865C00612A1D /* RootView.swift */; };
+		534AB2462A038E8F00612A1D /* PrefectureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 534AB2452A038E8F00612A1D /* PrefectureView.swift */; };
+		534AB2482A03916E00612A1D /* PrefectureViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 534AB2472A03916E00612A1D /* PrefectureViewModel.swift */; };
+		534AB24A2A0393A000612A1D /* GenderViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 534AB2492A0393A000612A1D /* GenderViewModel.swift */; };
+		534AB24C2A03A6B400612A1D /* CustomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 534AB24B2A03A6B400612A1D /* CustomTabBar.swift */; };
+		535026E82A03F3F3006F48D5 /* NextButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535026E72A03F3F3006F48D5 /* NextButtonView.swift */; };
+		535026EA2A03F891006F48D5 /* BirthdayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535026E92A03F891006F48D5 /* BirthdayView.swift */; };
+		535026EC2A03F933006F48D5 /* BirthdayViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535026EB2A03F933006F48D5 /* BirthdayViewModel.swift */; };
+		535026EE2A04EADB006F48D5 /* DateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535026ED2A04EADB006F48D5 /* DateView.swift */; };
+		535026F02A04FEFC006F48D5 /* DateViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535026EF2A04FEFC006F48D5 /* DateViewModel.swift */; };
+		535026F22A0501CA006F48D5 /* SelectPairView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535026F12A0501CA006F48D5 /* SelectPairView.swift */; };
+		535026F42A050372006F48D5 /* DismissButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535026F32A050372006F48D5 /* DismissButtonView.swift */; };
+		535026F62A0504D4006F48D5 /* DatePlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535026F52A0504D4006F48D5 /* DatePlanView.swift */; };
+		535026F82A0508EA006F48D5 /* SettingCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535026F72A0508EA006F48D5 /* SettingCellView.swift */; };
+		535026FA2A051030006F48D5 /* AddNewPairView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535026F92A051030006F48D5 /* AddNewPairView.swift */; };
+		535026FC2A05106A006F48D5 /* AddNewPairViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535026FB2A05106A006F48D5 /* AddNewPairViewModel.swift */; };
+		535026FE2A0514BE006F48D5 /* UserProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535026FD2A0514BE006F48D5 /* UserProfileView.swift */; };
+		535027002A053211006F48D5 /* RecuruitmentListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535026FF2A053211006F48D5 /* RecuruitmentListView.swift */; };
 		53519B9B2A02315D003F5B36 /* RecruitmentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53519B9A2A02315D003F5B36 /* RecruitmentView.swift */; };
 		53519B9D2A024793003F5B36 /* MakeRecuruitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53519B9C2A024793003F5B36 /* MakeRecuruitView.swift */; };
 /* End PBXBuildFile section */
@@ -56,6 +88,32 @@
 		533A9FBF29FEE58D001C9C34 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		533A9FC129FF0F0B001C9C34 /* CustomDivider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomDivider.swift; sourceTree = "<group>"; };
 		533A9FC329FF123D001C9C34 /* Color+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Extension.swift"; sourceTree = "<group>"; };
+		534AB22E2A02A89600612A1D /* amplifyconfiguration.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = amplifyconfiguration.json; sourceTree = "<group>"; };
+		534AB2302A02A89D00612A1D /* awsconfiguration.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = awsconfiguration.json; sourceTree = "<group>"; };
+		534AB2342A02E4EF00612A1D /* RichButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RichButton.swift; sourceTree = "<group>"; };
+		534AB2372A02E63400612A1D /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		534AB2392A035D4E00612A1D /* MyMainInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyMainInfoView.swift; sourceTree = "<group>"; };
+		534AB23C2A035F6800612A1D /* SettingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingView.swift; sourceTree = "<group>"; };
+		534AB23F2A03829900612A1D /* GenderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenderView.swift; sourceTree = "<group>"; };
+		534AB2412A03856200612A1D /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		534AB2432A03865C00612A1D /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		534AB2452A038E8F00612A1D /* PrefectureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrefectureView.swift; sourceTree = "<group>"; };
+		534AB2472A03916E00612A1D /* PrefectureViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrefectureViewModel.swift; sourceTree = "<group>"; };
+		534AB2492A0393A000612A1D /* GenderViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenderViewModel.swift; sourceTree = "<group>"; };
+		534AB24B2A03A6B400612A1D /* CustomTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabBar.swift; sourceTree = "<group>"; };
+		535026E72A03F3F3006F48D5 /* NextButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NextButtonView.swift; sourceTree = "<group>"; };
+		535026E92A03F891006F48D5 /* BirthdayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BirthdayView.swift; sourceTree = "<group>"; };
+		535026EB2A03F933006F48D5 /* BirthdayViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BirthdayViewModel.swift; sourceTree = "<group>"; };
+		535026ED2A04EADB006F48D5 /* DateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateView.swift; sourceTree = "<group>"; };
+		535026EF2A04FEFC006F48D5 /* DateViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateViewModel.swift; sourceTree = "<group>"; };
+		535026F12A0501CA006F48D5 /* SelectPairView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectPairView.swift; sourceTree = "<group>"; };
+		535026F32A050372006F48D5 /* DismissButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DismissButtonView.swift; sourceTree = "<group>"; };
+		535026F52A0504D4006F48D5 /* DatePlanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePlanView.swift; sourceTree = "<group>"; };
+		535026F72A0508EA006F48D5 /* SettingCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingCellView.swift; sourceTree = "<group>"; };
+		535026F92A051030006F48D5 /* AddNewPairView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddNewPairView.swift; sourceTree = "<group>"; };
+		535026FB2A05106A006F48D5 /* AddNewPairViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddNewPairViewModel.swift; sourceTree = "<group>"; };
+		535026FD2A0514BE006F48D5 /* UserProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileView.swift; sourceTree = "<group>"; };
+		535026FF2A053211006F48D5 /* RecuruitmentListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecuruitmentListView.swift; sourceTree = "<group>"; };
 		53519B9A2A02315D003F5B36 /* RecruitmentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecruitmentView.swift; sourceTree = "<group>"; };
 		53519B9C2A024793003F5B36 /* MakeRecuruitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MakeRecuruitView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -65,6 +123,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				534AB2292A02A41300612A1D /* AWSAuthUI in Frameworks */,
+				534AB2232A02A41300612A1D /* AWSAPIGateway in Frameworks */,
+				534AB22B2A02A41300612A1D /* AWSAutoScaling in Frameworks */,
+				534AB2272A02A41300612A1D /* AWSAuthCore in Frameworks */,
+				534AB22D2A02A41300612A1D /* AWSChimeSDKIdentity in Frameworks */,
+				534AB2252A02A41300612A1D /* AWSAppleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -90,6 +154,12 @@
 		533A9F8929FECB0D001C9C34 /* MatchingApp */ = {
 			isa = PBXGroup;
 			children = (
+				535026FF2A053211006F48D5 /* RecuruitmentListView.swift */,
+				534AB23E2A03827D00612A1D /* AccoundInitSetting */,
+				534AB23B2A035D5700612A1D /* Components */,
+				534AB2362A02E61C00612A1D /* OnboardingView */,
+				534AB2302A02A89D00612A1D /* awsconfiguration.json */,
+				534AB22E2A02A89600612A1D /* amplifyconfiguration.json */,
 				533A9FBA29FED564001C9C34 /* Modifier */,
 				533A9FB529FED091001C9C34 /* Type */,
 				533A9FB029FECFBC001C9C34 /* ChatListView */,
@@ -109,6 +179,18 @@
 				533A9FC329FF123D001C9C34 /* Color+Extension.swift */,
 				53519B9A2A02315D003F5B36 /* RecruitmentView.swift */,
 				53519B9C2A024793003F5B36 /* MakeRecuruitView.swift */,
+				534AB2342A02E4EF00612A1D /* RichButton.swift */,
+				534AB2412A03856200612A1D /* AppState.swift */,
+				534AB2432A03865C00612A1D /* RootView.swift */,
+				534AB24B2A03A6B400612A1D /* CustomTabBar.swift */,
+				535026ED2A04EADB006F48D5 /* DateView.swift */,
+				535026EF2A04FEFC006F48D5 /* DateViewModel.swift */,
+				535026F12A0501CA006F48D5 /* SelectPairView.swift */,
+				535026F52A0504D4006F48D5 /* DatePlanView.swift */,
+				535026F72A0508EA006F48D5 /* SettingCellView.swift */,
+				535026F92A051030006F48D5 /* AddNewPairView.swift */,
+				535026FB2A05106A006F48D5 /* AddNewPairViewModel.swift */,
+				535026FD2A0514BE006F48D5 /* UserProfileView.swift */,
 			);
 			path = MatchingApp;
 			sourceTree = "<group>";
@@ -190,6 +272,38 @@
 			path = Modifier;
 			sourceTree = "<group>";
 		};
+		534AB2362A02E61C00612A1D /* OnboardingView */ = {
+			isa = PBXGroup;
+			children = (
+				534AB2372A02E63400612A1D /* OnboardingView.swift */,
+			);
+			path = OnboardingView;
+			sourceTree = "<group>";
+		};
+		534AB23B2A035D5700612A1D /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				534AB2392A035D4E00612A1D /* MyMainInfoView.swift */,
+				534AB23C2A035F6800612A1D /* SettingView.swift */,
+				535026E72A03F3F3006F48D5 /* NextButtonView.swift */,
+				535026F32A050372006F48D5 /* DismissButtonView.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		534AB23E2A03827D00612A1D /* AccoundInitSetting */ = {
+			isa = PBXGroup;
+			children = (
+				534AB23F2A03829900612A1D /* GenderView.swift */,
+				534AB2492A0393A000612A1D /* GenderViewModel.swift */,
+				534AB2452A038E8F00612A1D /* PrefectureView.swift */,
+				534AB2472A03916E00612A1D /* PrefectureViewModel.swift */,
+				535026E92A03F891006F48D5 /* BirthdayView.swift */,
+				535026EB2A03F933006F48D5 /* BirthdayViewModel.swift */,
+			);
+			path = AccoundInitSetting;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -206,6 +320,14 @@
 			dependencies = (
 			);
 			name = MatchingApp;
+			packageProductDependencies = (
+				534AB2222A02A41300612A1D /* AWSAPIGateway */,
+				534AB2242A02A41300612A1D /* AWSAppleSignIn */,
+				534AB2262A02A41300612A1D /* AWSAuthCore */,
+				534AB2282A02A41300612A1D /* AWSAuthUI */,
+				534AB22A2A02A41300612A1D /* AWSAutoScaling */,
+				534AB22C2A02A41300612A1D /* AWSChimeSDKIdentity */,
+			);
 			productName = MatchingApp;
 			productReference = 533A9F8729FECB0D001C9C34 /* MatchingApp.app */;
 			productType = "com.apple.product-type.application";
@@ -234,6 +356,9 @@
 				Base,
 			);
 			mainGroup = 533A9F7E29FECB0C001C9C34;
+			packageReferences = (
+				534AB2212A02A41300612A1D /* XCRemoteSwiftPackageReference "aws-sdk-ios-spm" */,
+			);
 			productRefGroup = 533A9F8829FECB0D001C9C34 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -248,7 +373,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				534AB2312A02A89D00612A1D /* awsconfiguration.json in Resources */,
 				533A9F9329FECB0D001C9C34 /* Preview Assets.xcassets in Resources */,
+				534AB22F2A02A89600612A1D /* amplifyconfiguration.json in Resources */,
 				533A9F8F29FECB0D001C9C34 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -260,11 +387,21 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				535026F22A0501CA006F48D5 /* SelectPairView.swift in Sources */,
+				535026F82A0508EA006F48D5 /* SettingCellView.swift in Sources */,
 				533A9FB729FED09E001C9C34 /* User.swift in Sources */,
+				534AB23A2A035D4E00612A1D /* MyMainInfoView.swift in Sources */,
 				53519B9B2A02315D003F5B36 /* RecruitmentView.swift in Sources */,
+				535026F42A050372006F48D5 /* DismissButtonView.swift in Sources */,
+				534AB2422A03856200612A1D /* AppState.swift in Sources */,
+				535026FE2A0514BE006F48D5 /* UserProfileView.swift in Sources */,
+				534AB2442A03865C00612A1D /* RootView.swift in Sources */,
 				533A9FB229FECFCC001C9C34 /* ChatListViewModel.swift in Sources */,
+				535026EE2A04EADB006F48D5 /* DateView.swift in Sources */,
+				535026E82A03F3F3006F48D5 /* NextButtonView.swift in Sources */,
 				533A9F9D29FECCA0001C9C34 /* LoginViewModel.swift in Sources */,
 				533A9FA529FECE2D001C9C34 /* HomeView.swift in Sources */,
+				534AB23D2A035F6800612A1D /* SettingView.swift in Sources */,
 				533A9FA229FECCDC001C9C34 /* RegisterViewModel.swift in Sources */,
 				533A9FB429FED00B001C9C34 /* ChatListView.swift in Sources */,
 				533A9FA929FECEA1001C9C34 /* HomeViewModel.swift in Sources */,
@@ -274,13 +411,27 @@
 				533A9FA029FECCCF001C9C34 /* RegisterView.swift in Sources */,
 				53519B9D2A024793003F5B36 /* MakeRecuruitView.swift in Sources */,
 				533A9FC029FEE58D001C9C34 /* ProfileView.swift in Sources */,
+				535026EC2A03F933006F48D5 /* BirthdayViewModel.swift in Sources */,
+				535026EA2A03F891006F48D5 /* BirthdayView.swift in Sources */,
+				535026FA2A051030006F48D5 /* AddNewPairView.swift in Sources */,
 				533A9F9A29FECC7E001C9C34 /* LoginView.swift in Sources */,
+				535026F62A0504D4006F48D5 /* DatePlanView.swift in Sources */,
+				534AB2402A03829900612A1D /* GenderView.swift in Sources */,
+				534AB24C2A03A6B400612A1D /* CustomTabBar.swift in Sources */,
+				535026F02A04FEFC006F48D5 /* DateViewModel.swift in Sources */,
 				533A9FBC29FED573001C9C34 /* HeaderImageModifier.swift in Sources */,
+				535026FC2A05106A006F48D5 /* AddNewPairViewModel.swift in Sources */,
 				533A9FB929FED36A001C9C34 /* Header.swift in Sources */,
 				533A9F8D29FECB0D001C9C34 /* ContentView.swift in Sources */,
+				534AB2482A03916E00612A1D /* PrefectureViewModel.swift in Sources */,
+				534AB2352A02E4EF00612A1D /* RichButton.swift in Sources */,
 				533A9FAF29FECF92001C9C34 /* ChatViewModel.swift in Sources */,
 				533A9F8B29FECB0D001C9C34 /* MatchingAppApp.swift in Sources */,
+				534AB2382A02E63400612A1D /* OnboardingView.swift in Sources */,
 				533A9FBE29FEDF08001C9C34 /* PlacePanelView.swift in Sources */,
+				534AB24A2A0393A000612A1D /* GenderViewModel.swift in Sources */,
+				534AB2462A038E8F00612A1D /* PrefectureView.swift in Sources */,
+				535027002A053211006F48D5 /* RecuruitmentListView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -492,6 +643,50 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		534AB2212A02A41300612A1D /* XCRemoteSwiftPackageReference "aws-sdk-ios-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/aws-amplify/aws-sdk-ios-spm";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		534AB2222A02A41300612A1D /* AWSAPIGateway */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 534AB2212A02A41300612A1D /* XCRemoteSwiftPackageReference "aws-sdk-ios-spm" */;
+			productName = AWSAPIGateway;
+		};
+		534AB2242A02A41300612A1D /* AWSAppleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 534AB2212A02A41300612A1D /* XCRemoteSwiftPackageReference "aws-sdk-ios-spm" */;
+			productName = AWSAppleSignIn;
+		};
+		534AB2262A02A41300612A1D /* AWSAuthCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 534AB2212A02A41300612A1D /* XCRemoteSwiftPackageReference "aws-sdk-ios-spm" */;
+			productName = AWSAuthCore;
+		};
+		534AB2282A02A41300612A1D /* AWSAuthUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 534AB2212A02A41300612A1D /* XCRemoteSwiftPackageReference "aws-sdk-ios-spm" */;
+			productName = AWSAuthUI;
+		};
+		534AB22A2A02A41300612A1D /* AWSAutoScaling */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 534AB2212A02A41300612A1D /* XCRemoteSwiftPackageReference "aws-sdk-ios-spm" */;
+			productName = AWSAutoScaling;
+		};
+		534AB22C2A02A41300612A1D /* AWSChimeSDKIdentity */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 534AB2212A02A41300612A1D /* XCRemoteSwiftPackageReference "aws-sdk-ios-spm" */;
+			productName = AWSChimeSDKIdentity;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 533A9F7F29FECB0C001C9C34 /* Project object */;
 }
