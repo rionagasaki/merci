@@ -27,6 +27,7 @@ struct RecruitmentView: View {
                         .font(.system(size: 18))
                         .padding(.top, 8)
                         
+                        
                     Text("5月3日(水)")
                         .fontWeight(.light)
                         .font(.system(size: 12))
@@ -39,6 +40,7 @@ struct RecruitmentView: View {
                         .font(.system(size: 14))
                         .padding(.top, 8)
                         
+                        
                 }
             }
             Button {
@@ -46,9 +48,10 @@ struct RecruitmentView: View {
             } label: {
                 Text("いいかも")
                     .frame(maxWidth: .infinity)
-                    .foregroundColor(.white)
                     .padding(.all, 8)
-                    .background(Color.customRed1.opacity(0.8))
+                    .foregroundColor(.black.opacity(0.7))
+                    .bold()
+                    .background(.yellow)
                     .cornerRadius(20)
             }
             .frame(maxWidth: .infinity,alignment: .trailing)

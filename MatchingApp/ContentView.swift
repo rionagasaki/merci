@@ -10,42 +10,56 @@ import SwiftUI
 struct ContentView: View {
     
     @EnvironmentObject var app: AppState
+    @State private var selectedTab: Tab = .home
+    @State private var navigationTitle:String = ""
+    @State private var navigationStyle:Bool = true
+    @State private var searchWord = ""
+    
+    init(){
+        UITabBar.appearance().isHidden = true
+    }
     
     var body: some View {
-        
-        TabView {
-            NavigationView {
-                HomeView()
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationTitle("Top View")
-            .tabItem {
-                VStack {
-                    Image(systemName: "house")
-                        .foregroundColor(.black)
-                    Text("ホーム")
-                        .foregroundColor(.black)
-                }
-            }
-            
-            MakeRecuruitView()
-                .tabItem {
-                    Image(systemName: "person")
-                    Text("作成する")
-                        .foregroundColor(.black)
-                }
-            NavigationView{
-                ProfileView()
-            }
-            .navigationTitle("Top View")
-            .tabItem {
-                Image(systemName: "person")
-                Text("マイページ")
-                    .foregroundColor(.black)
+        NavigationView {
+            TabView(selection: $selectedTab){
+                NavigationView {
+                    VStack{
+                        HomeView()
+                        Divider()
+                        CustomTabView(
+                            selectedTab: $selectedTab,
+                            navigationTitle: $navigationTitle
+                        )
+                    }
+                    
+                    .navigationBarTitleDisplayMode(.inline)
+                }.tag(Tab.home)
+                    .ignoresSafeArea()
+                
+                NavigationView {
+                    VStack{
+                        MakeRecuruitView()
+                        Divider()
+                        CustomTabView(
+                            selectedTab: $selectedTab,
+                            navigationTitle: $navigationTitle
+                        )
+                    }
+                    
+                }.tag(Tab.search)
+                
+                NavigationView {
+                    VStack{
+                        ProfileView()
+                        Divider()
+                        CustomTabView(
+                            selectedTab: $selectedTab,
+                            navigationTitle: $navigationTitle
+                        )
+                    }
+                }.tag(Tab.profile)
             }
         }
-        .accentColor(.black.opacity(0.8))
-        
     }
 }
 

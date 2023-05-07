@@ -10,11 +10,8 @@ import SwiftUI
 struct RichButton: View {
     let buttonText:String
     var body: some View {
-        LinearGradient(colors: [.red, .purple], startPoint: .topLeading, endPoint: .bottom).mask {
-            
+        LinearGradient(colors: [.orange, .yellow], startPoint: .topLeading, endPoint: .bottom).mask {
             Text(buttonText)
-                
-            
         }.font(.system(size: 22, weight: .heavy, design: .rounded))
             .frame(width: 200, height: 60)
             .background(ZStack{
@@ -31,6 +28,6 @@ struct RichButton: View {
 
 struct RichButton_Previews: PreviewProvider {
     static var previews: some View {
-        RichButton(buttonText: "学ぶ。")
+        RichButton(buttonText: "Sign In")
     }
 }

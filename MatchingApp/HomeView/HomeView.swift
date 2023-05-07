@@ -39,9 +39,7 @@ struct HomeView: View {
                             .bold()
                             .font(.system(size: 14))
                             .padding(.trailing,16)
-                            
                     }
-
                 }
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack{
