@@ -61,13 +61,14 @@ struct OnboardingView: View {
                         .clipShape(Circle())
                         .padding(.top, 20)
                     Spacer()
+                    AppleAuthView()
                     Button {
                         self.app.isLogin = true
                     } label: {
                         RichButton(buttonText: "Sign In")
                             .padding(.bottom, 16)
                     }
-
+                    .padding(.top, 8)
                     NavigationLink {
                         GenderView()
                     } label: {

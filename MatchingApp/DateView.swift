@@ -25,7 +25,7 @@ struct DateView: View {
                     } label: {
                         Text(menu)
                             .foregroundColor(
-                                viewModel.selectedMenu == menu ? .black: .gray.opacity(0.6)
+                                viewModel.selectedMenu == menu ? .black.opacity(0.7): .gray.opacity(0.6)
                             )
                             .fontWeight(.semibold)
                             .font(.system(size: 23))

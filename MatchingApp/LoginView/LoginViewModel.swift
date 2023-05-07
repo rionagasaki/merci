@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+
 class LoginViewModel: ObservableObject {
     @Published var emailText: String = ""
     @Published var passwordText: String = ""
@@ -19,7 +20,7 @@ class LoginViewModel: ObservableObject {
     func signInWithEmail(completion:@escaping ()-> Void){
        
     }
-    
+
     func validateEmail(){
         isEmailEmpty = emailText == ""
     }
@@ -27,4 +28,6 @@ class LoginViewModel: ObservableObject {
         isPasswordEmpty = passwordText == ""
     }
 }
+
+
 

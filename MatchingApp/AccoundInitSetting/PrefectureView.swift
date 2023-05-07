@@ -28,7 +28,7 @@ struct PrefectureView: View {
                     } label: {
                         Text(prefecture)
                             .foregroundColor(
-                                viewModel.selectedPrefecture == prefecture ? .black: .gray.opacity(0.6)
+                                viewModel.selectedPrefecture == prefecture ? .black.opacity(0.7): .gray.opacity(0.6)
                             )
                             .fontWeight(.semibold)
                             .font(.system(size: 23))

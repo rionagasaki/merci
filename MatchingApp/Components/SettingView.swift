@@ -21,7 +21,13 @@ struct SettingView: View {
             SettingCellView(systemImageName: "person.fill.badge.minus", text: "利用規約")
             SettingCellView(systemImageName: "person.fill.badge.minus", text: "プライバシポリシー")
             SettingCellView(systemImageName: "person.fill.badge.minus", text: "オープンソースライブラリ")
-            SettingCellView(systemImageName: "person.fill.badge.minus", text: "アカウント削除")
+            NavigationLink {
+                AccountDeleteView()
+            } label: {
+                SettingCellView(systemImageName: "person.fill.badge.minus", text: "アカウント削除")
+                
+            }
+
            Divider()
             
         }

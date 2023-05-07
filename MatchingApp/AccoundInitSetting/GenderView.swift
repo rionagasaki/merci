@@ -15,6 +15,7 @@ struct GenderView: View {
                 Text("性別を選択してください")
                     .font(.system(size: 25))
                     .fontWeight(.heavy)
+                    .foregroundColor(.black.opacity(0.8))
                     .padding(.top, 16)
                     .padding(.leading, 16)
                 VStack {
@@ -23,7 +24,7 @@ struct GenderView: View {
                             viewModel.selectedGender = gender
                         } label: {
                             Text(gender)
-                                .foregroundColor(viewModel.selectedGender == gender ? .black: .gray.opacity(0.6))
+                                .foregroundColor(viewModel.selectedGender == gender ? .black.opacity(0.8): .gray.opacity(0.6))
                                 .fontWeight(.semibold)
                                 .font(.system(size: 23))
                                 .padding(.top, 8)

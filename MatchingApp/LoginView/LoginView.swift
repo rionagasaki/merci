@@ -42,6 +42,7 @@ struct LoginView: View {
                         .padding(.vertical, 8)
                 }
                 
+                
                 Button {
                     viewModel
                         .signInWithEmail {

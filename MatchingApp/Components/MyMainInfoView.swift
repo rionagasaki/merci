@@ -64,8 +64,9 @@ struct MyMainInfoView: View {
                         .foregroundColor(.gray)
                         .font(.system(size: 16))
                         .bold()
-                    Button {
-                        print("aaa")
+                    
+                    NavigationLink {
+                        PriceListView()
                     } label: {
                         Text("変更")
                             .padding(.vertical, 4)

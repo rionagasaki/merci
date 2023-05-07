@@ -12,8 +12,10 @@ struct HomeView: View {
     var body: some View {
         VStack(spacing: .zero) {
             ScrollView {
-                VStack(alignment: .center){
+                ZStack(alignment: .center){
                     Image("")
+                        .resizable()
+                        .frame(width: UIScreen.main.bounds.width-20)
                 }
                 HStack(alignment: .bottom){
                     Text("募集中")

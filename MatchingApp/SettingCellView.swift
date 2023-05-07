@@ -14,11 +14,12 @@ struct SettingCellView: View {
         VStack {
             Divider()
             HStack {
-                
                 Image(systemName: systemImageName)
                     .resizable()
+                    .foregroundColor(.black)
                     .frame(width: 20, height: 20)
                 Text(text)
+                    .foregroundColor(.black)
                     .fontWeight(.light)
                     
                 
