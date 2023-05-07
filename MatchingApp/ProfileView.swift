@@ -13,16 +13,32 @@ struct ProfileView: View {
         ScrollView {
             VStack {
                 MyMainInfoView()
-                Text("自己紹介")
-                    .padding(.leading, 16)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .foregroundColor(.black.opacity(0.8))
-                    .font(.system(size: 18))
-                    .bold()
-                Text("こんにちはこんにちはこんにちはこんにちはこんにちはこんにちはこんにちはこんにちはこんにちはこんにちはこんにちはこんにちは")
-                    .padding(.horizontal, 16)
-                    .font(.system(size: 14))
-                    .fontWeight(.light)
+                NavigationLink {
+                    DetailUserIntroductionView()
+                } label: {
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text("自己紹介")
+                                .padding(.leading, 16)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .foregroundColor(.black.opacity(0.8))
+                                .font(.system(size: 18))
+                                .bold()
+                            Text("こんにちはこんにちはこんにちはこんにちはこんにちはこんにちはこんにちはこんにちはこんにちはこんにちはこんにちはこんにちは")
+                                .foregroundColor(.black.opacity(0.8))
+                                .multilineTextAlignment(.leading)
+                                .padding(.horizontal, 16)
+                                .font(.system(size: 14))
+                                .fontWeight(.light)
+                        }
+                        Image(systemName: "chevron.right")
+                            .resizable()
+                            .frame(width: 10, height: 20)
+                            .foregroundColor(.gray)
+                            .padding(.trailing, 16)
+                    }
+                }
+
                 CustomDivider()
                 Text("ペア")
                     .padding(.leading, 16)
@@ -69,14 +85,17 @@ struct ProfileView: View {
                     .foregroundColor(.black)
                 }
                 CustomDivider()
-                SettingView()
-                    .padding(.leading, 16)
-                Button {
-                    appState.isLogin = false
-                } label: {
-                    Text("ログアウト")
-                        .foregroundColor(.red)
-                        .padding(.vertical, 16)
+                Group {
+                    NewIntroductionView()
+                    CustomDivider()
+                    SettingView()                    .padding(.leading, 16)
+                    Button {
+                        appState.isLogin = false
+                    } label: {
+                        Text("ログアウト")
+                            .foregroundColor(.red)
+                            .padding(.vertical, 16)
+                    }
                 }
             }
         }

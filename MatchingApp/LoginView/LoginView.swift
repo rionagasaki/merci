@@ -1,4 +1,5 @@
 import SwiftUI
+import AWSAppleSignIn
 
 struct LoginView: View {
     @StateObject private var viewModel = LoginViewModel()

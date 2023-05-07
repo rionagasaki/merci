@@ -51,7 +51,7 @@ struct OnboardingView: View {
                         
                 }
                 VStack(spacing: .zero) {
-                    Text("POMPOM")
+                    Text("Cheers!")
                         .bold()
                         .font(.system(size: 35))
                         .padding(.top, 20)
