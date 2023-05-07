@@ -28,7 +28,7 @@ struct AddNewPairView: View {
                 print("aaa")
             } label: {
                 Text("検索する")
-                    .foregroundColor(.blue.opacity(0.8))
+                    .foregroundColor(.black.opacity(0.8))
             }
             .padding(.top, 16)
             

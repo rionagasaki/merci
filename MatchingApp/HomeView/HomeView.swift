@@ -13,15 +13,7 @@ struct HomeView: View {
         VStack(spacing: .zero) {
             ScrollView {
                 VStack(alignment: .center){
-                    TabView(selection: $viewModel.selection){
-                        ForEach(viewModel.headers.indices, id: \.self) { index in
-                            makeHeader(
-                                headerTitle: viewModel.headers[index].headerTitle,
-                                contentImage: Image(viewModel.headers[index].headerImageString)
-                            ).tag(index)
-                        }
-                    }
-                    .frame(width: UIScreen.main.bounds.width-30,height:200)
+                    Image("")
                 }
                 HStack(alignment: .bottom){
                     Text("募集中")

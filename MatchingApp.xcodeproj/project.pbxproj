@@ -46,7 +46,8 @@
 		534AB2462A038E8F00612A1D /* PrefectureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 534AB2452A038E8F00612A1D /* PrefectureView.swift */; };
 		534AB2482A03916E00612A1D /* PrefectureViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 534AB2472A03916E00612A1D /* PrefectureViewModel.swift */; };
 		534AB24A2A0393A000612A1D /* GenderViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 534AB2492A0393A000612A1D /* GenderViewModel.swift */; };
-		534AB24C2A03A6B400612A1D /* CustomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 534AB24B2A03A6B400612A1D /* CustomTabBar.swift */; };
+		534AB24C2A03A6B400612A1D /* CustomTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 534AB24B2A03A6B400612A1D /* CustomTabView.swift */; };
+		53501E192A06B0AA0016EF2B /* SchoolTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53501E182A06B0AA0016EF2B /* SchoolTextView.swift */; };
 		535026E82A03F3F3006F48D5 /* NextButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535026E72A03F3F3006F48D5 /* NextButtonView.swift */; };
 		535026EA2A03F891006F48D5 /* BirthdayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535026E92A03F891006F48D5 /* BirthdayView.swift */; };
 		535026EC2A03F933006F48D5 /* BirthdayViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535026EB2A03F933006F48D5 /* BirthdayViewModel.swift */; };
@@ -62,6 +63,16 @@
 		535027002A053211006F48D5 /* RecuruitmentListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535026FF2A053211006F48D5 /* RecuruitmentListView.swift */; };
 		53519B9B2A02315D003F5B36 /* RecruitmentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53519B9A2A02315D003F5B36 /* RecruitmentView.swift */; };
 		53519B9D2A024793003F5B36 /* MakeRecuruitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53519B9C2A024793003F5B36 /* MakeRecuruitView.swift */; };
+		53625C332A062B6600A77D24 /* Tab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53625C322A062B6600A77D24 /* Tab.swift */; };
+		53625C352A0640F500A77D24 /* MakeGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53625C342A0640F500A77D24 /* MakeGroupView.swift */; };
+		53625C372A06444200A77D24 /* UserCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53625C362A06444200A77D24 /* UserCellView.swift */; };
+		53625C392A0645D300A77D24 /* SelectedPictureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53625C382A0645D300A77D24 /* SelectedPictureView.swift */; };
+		53625C3B2A064D8300A77D24 /* NewIntroductionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53625C3A2A064D8300A77D24 /* NewIntroductionView.swift */; };
+		53625C3D2A064DA100A77D24 /* NewIntroductionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53625C3C2A064DA100A77D24 /* NewIntroductionViewModel.swift */; };
+		53625C3F2A064E0200A77D24 /* DetailUserIntroductionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53625C3E2A064E0200A77D24 /* DetailUserIntroductionView.swift */; };
+		53625C412A064E1300A77D24 /* DetailUserIntroductionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53625C402A064E1300A77D24 /* DetailUserIntroductionViewModel.swift */; };
+		53625C432A064EEC00A77D24 /* DetailIntroductionCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53625C422A064EEC00A77D24 /* DetailIntroductionCell.swift */; };
+		53625C452A06597200A77D24 /* CardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53625C442A06597200A77D24 /* CardView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -100,7 +111,8 @@
 		534AB2452A038E8F00612A1D /* PrefectureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrefectureView.swift; sourceTree = "<group>"; };
 		534AB2472A03916E00612A1D /* PrefectureViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrefectureViewModel.swift; sourceTree = "<group>"; };
 		534AB2492A0393A000612A1D /* GenderViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenderViewModel.swift; sourceTree = "<group>"; };
-		534AB24B2A03A6B400612A1D /* CustomTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabBar.swift; sourceTree = "<group>"; };
+		534AB24B2A03A6B400612A1D /* CustomTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabView.swift; sourceTree = "<group>"; };
+		53501E182A06B0AA0016EF2B /* SchoolTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchoolTextView.swift; sourceTree = "<group>"; };
 		535026E72A03F3F3006F48D5 /* NextButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NextButtonView.swift; sourceTree = "<group>"; };
 		535026E92A03F891006F48D5 /* BirthdayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BirthdayView.swift; sourceTree = "<group>"; };
 		535026EB2A03F933006F48D5 /* BirthdayViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BirthdayViewModel.swift; sourceTree = "<group>"; };
@@ -116,6 +128,16 @@
 		535026FF2A053211006F48D5 /* RecuruitmentListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecuruitmentListView.swift; sourceTree = "<group>"; };
 		53519B9A2A02315D003F5B36 /* RecruitmentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecruitmentView.swift; sourceTree = "<group>"; };
 		53519B9C2A024793003F5B36 /* MakeRecuruitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MakeRecuruitView.swift; sourceTree = "<group>"; };
+		53625C322A062B6600A77D24 /* Tab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tab.swift; sourceTree = "<group>"; };
+		53625C342A0640F500A77D24 /* MakeGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MakeGroupView.swift; sourceTree = "<group>"; };
+		53625C362A06444200A77D24 /* UserCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserCellView.swift; sourceTree = "<group>"; };
+		53625C382A0645D300A77D24 /* SelectedPictureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectedPictureView.swift; sourceTree = "<group>"; };
+		53625C3A2A064D8300A77D24 /* NewIntroductionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewIntroductionView.swift; sourceTree = "<group>"; };
+		53625C3C2A064DA100A77D24 /* NewIntroductionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewIntroductionViewModel.swift; sourceTree = "<group>"; };
+		53625C3E2A064E0200A77D24 /* DetailUserIntroductionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailUserIntroductionView.swift; sourceTree = "<group>"; };
+		53625C402A064E1300A77D24 /* DetailUserIntroductionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailUserIntroductionViewModel.swift; sourceTree = "<group>"; };
+		53625C422A064EEC00A77D24 /* DetailIntroductionCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailIntroductionCell.swift; sourceTree = "<group>"; };
+		53625C442A06597200A77D24 /* CardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -182,7 +204,7 @@
 				534AB2342A02E4EF00612A1D /* RichButton.swift */,
 				534AB2412A03856200612A1D /* AppState.swift */,
 				534AB2432A03865C00612A1D /* RootView.swift */,
-				534AB24B2A03A6B400612A1D /* CustomTabBar.swift */,
+				534AB24B2A03A6B400612A1D /* CustomTabView.swift */,
 				535026ED2A04EADB006F48D5 /* DateView.swift */,
 				535026EF2A04FEFC006F48D5 /* DateViewModel.swift */,
 				535026F12A0501CA006F48D5 /* SelectPairView.swift */,
@@ -191,6 +213,17 @@
 				535026F92A051030006F48D5 /* AddNewPairView.swift */,
 				535026FB2A05106A006F48D5 /* AddNewPairViewModel.swift */,
 				535026FD2A0514BE006F48D5 /* UserProfileView.swift */,
+				53625C322A062B6600A77D24 /* Tab.swift */,
+				53625C342A0640F500A77D24 /* MakeGroupView.swift */,
+				53625C362A06444200A77D24 /* UserCellView.swift */,
+				53625C382A0645D300A77D24 /* SelectedPictureView.swift */,
+				53625C3A2A064D8300A77D24 /* NewIntroductionView.swift */,
+				53625C3C2A064DA100A77D24 /* NewIntroductionViewModel.swift */,
+				53625C3E2A064E0200A77D24 /* DetailUserIntroductionView.swift */,
+				53625C402A064E1300A77D24 /* DetailUserIntroductionViewModel.swift */,
+				53625C422A064EEC00A77D24 /* DetailIntroductionCell.swift */,
+				53625C442A06597200A77D24 /* CardView.swift */,
+				53501E182A06B0AA0016EF2B /* SchoolTextView.swift */,
 			);
 			path = MatchingApp;
 			sourceTree = "<group>";
@@ -392,22 +425,33 @@
 				533A9FB729FED09E001C9C34 /* User.swift in Sources */,
 				534AB23A2A035D4E00612A1D /* MyMainInfoView.swift in Sources */,
 				53519B9B2A02315D003F5B36 /* RecruitmentView.swift in Sources */,
+				53625C412A064E1300A77D24 /* DetailUserIntroductionViewModel.swift in Sources */,
 				535026F42A050372006F48D5 /* DismissButtonView.swift in Sources */,
 				534AB2422A03856200612A1D /* AppState.swift in Sources */,
+				53625C372A06444200A77D24 /* UserCellView.swift in Sources */,
+				53625C452A06597200A77D24 /* CardView.swift in Sources */,
+				53625C352A0640F500A77D24 /* MakeGroupView.swift in Sources */,
 				535026FE2A0514BE006F48D5 /* UserProfileView.swift in Sources */,
 				534AB2442A03865C00612A1D /* RootView.swift in Sources */,
+				53625C392A0645D300A77D24 /* SelectedPictureView.swift in Sources */,
 				533A9FB229FECFCC001C9C34 /* ChatListViewModel.swift in Sources */,
 				535026EE2A04EADB006F48D5 /* DateView.swift in Sources */,
 				535026E82A03F3F3006F48D5 /* NextButtonView.swift in Sources */,
 				533A9F9D29FECCA0001C9C34 /* LoginViewModel.swift in Sources */,
 				533A9FA529FECE2D001C9C34 /* HomeView.swift in Sources */,
+				53625C432A064EEC00A77D24 /* DetailIntroductionCell.swift in Sources */,
 				534AB23D2A035F6800612A1D /* SettingView.swift in Sources */,
+				53625C3D2A064DA100A77D24 /* NewIntroductionViewModel.swift in Sources */,
 				533A9FA229FECCDC001C9C34 /* RegisterViewModel.swift in Sources */,
 				533A9FB429FED00B001C9C34 /* ChatListView.swift in Sources */,
+				53625C332A062B6600A77D24 /* Tab.swift in Sources */,
+				53625C3B2A064D8300A77D24 /* NewIntroductionView.swift in Sources */,
 				533A9FA929FECEA1001C9C34 /* HomeViewModel.swift in Sources */,
+				53625C3F2A064E0200A77D24 /* DetailUserIntroductionView.swift in Sources */,
 				533A9FAD29FECF86001C9C34 /* ChatView.swift in Sources */,
 				533A9FC229FF0F0B001C9C34 /* CustomDivider.swift in Sources */,
 				533A9FC429FF123D001C9C34 /* Color+Extension.swift in Sources */,
+				53501E192A06B0AA0016EF2B /* SchoolTextView.swift in Sources */,
 				533A9FA029FECCCF001C9C34 /* RegisterView.swift in Sources */,
 				53519B9D2A024793003F5B36 /* MakeRecuruitView.swift in Sources */,
 				533A9FC029FEE58D001C9C34 /* ProfileView.swift in Sources */,
@@ -417,7 +461,7 @@
 				533A9F9A29FECC7E001C9C34 /* LoginView.swift in Sources */,
 				535026F62A0504D4006F48D5 /* DatePlanView.swift in Sources */,
 				534AB2402A03829900612A1D /* GenderView.swift in Sources */,
-				534AB24C2A03A6B400612A1D /* CustomTabBar.swift in Sources */,
+				534AB24C2A03A6B400612A1D /* CustomTabView.swift in Sources */,
 				535026F02A04FEFC006F48D5 /* DateViewModel.swift in Sources */,
 				533A9FBC29FED573001C9C34 /* HeaderImageModifier.swift in Sources */,
 				535026FC2A05106A006F48D5 /* AddNewPairViewModel.swift in Sources */,
