@@ -8,8 +8,21 @@
 import SwiftUI
 
 struct SchoolTextView: View {
+    @StateObject private var viewModel = SchoolTextViewModel()
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        ScrollView {
+            VStack{
+                Text("大学名を教えてね！")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+                
+                TextField("大学名", text: $viewModel.schoolText)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+            }
+        }
     }
 }
 

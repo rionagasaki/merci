@@ -17,11 +17,18 @@ struct NewIntroductionView: View {
             } label: {
                 DetailIntroductionCell(title: "学校名", introductionText: "東京大学")
             }
-
             Divider()
-            DetailIntroductionCell(title: "都道府県", introductionText: "千葉県")
+            NavigationLink {
+                PrefectureTextView()
+            } label: {
+                DetailIntroductionCell(title: "都道府県", introductionText: "千葉県")
+            }
             Divider()
-            DetailIntroductionCell(title: "活動地域", introductionText: "東京都")
+            NavigationLink {
+                ActiveRegionTextView()
+            } label: {
+                DetailIntroductionCell(title: "活動地域", introductionText: "東京都")
+            }
         }
     }
 }
