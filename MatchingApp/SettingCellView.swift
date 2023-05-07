@@ -18,9 +18,10 @@ struct SettingCellView: View {
                 Image(systemName: systemImageName)
                     .resizable()
                     .frame(width: 20, height: 20)
+                    .foregroundColor(.black)
                 Text(text)
                     .fontWeight(.light)
-                    
+                    .foregroundColor(.black)
                 
                 Spacer()
             }
