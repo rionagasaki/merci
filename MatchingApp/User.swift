@@ -7,12 +7,14 @@
 
 import Foundation
 
-struct User {
+struct User: Decodable {
+    var user_id: String
     var name: String
-    var ID: String
     var age: Int
+    var mainIcon: String
+    var subImages:[String]
     var friendName: String
     var frindID: String
-    var userImages: [String]
-   
 }
+
+

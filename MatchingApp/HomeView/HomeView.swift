@@ -51,6 +51,10 @@ struct HomeView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 PlacePanelView()
             }
+        }.onAppear{
+            UserAPI.shared.fetchUserData { data, error in
+                
+            }
         }
     }
 }

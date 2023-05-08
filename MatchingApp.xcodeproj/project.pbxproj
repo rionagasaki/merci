@@ -52,6 +52,10 @@
 		53501E1D2A07F6F40016EF2B /* SignInWithApple.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53501E1C2A07F6F40016EF2B /* SignInWithApple.swift */; };
 		53501E202A08148B0016EF2B /* PriceListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53501E1F2A08148B0016EF2B /* PriceListView.swift */; };
 		53501E222A0816590016EF2B /* PriceCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53501E212A0816590016EF2B /* PriceCellView.swift */; };
+		53501E242A08D9DA0016EF2B /* UserAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53501E232A08D9DA0016EF2B /* UserAPI.swift */; };
+		53501E262A08FAF00016EF2B /* Party.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53501E252A08FAF00016EF2B /* Party.swift */; };
+		53501E282A090AC30016EF2B /* PartyAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53501E272A090AC30016EF2B /* PartyAPI.swift */; };
+		53501E2B2A090FE40016EF2B /* apiGatewayURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53501E2A2A090FE40016EF2B /* apiGatewayURL.swift */; };
 		535026E82A03F3F3006F48D5 /* NextButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535026E72A03F3F3006F48D5 /* NextButtonView.swift */; };
 		535026EA2A03F891006F48D5 /* BirthdayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535026E92A03F891006F48D5 /* BirthdayView.swift */; };
 		535026EC2A03F933006F48D5 /* BirthdayViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535026EB2A03F933006F48D5 /* BirthdayViewModel.swift */; };
@@ -122,6 +126,10 @@
 		53501E1E2A07F82E0016EF2B /* MatchingAppDebug.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MatchingAppDebug.entitlements; sourceTree = "<group>"; };
 		53501E1F2A08148B0016EF2B /* PriceListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PriceListView.swift; sourceTree = "<group>"; };
 		53501E212A0816590016EF2B /* PriceCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PriceCellView.swift; sourceTree = "<group>"; };
+		53501E232A08D9DA0016EF2B /* UserAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserAPI.swift; sourceTree = "<group>"; };
+		53501E252A08FAF00016EF2B /* Party.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Party.swift; sourceTree = "<group>"; };
+		53501E272A090AC30016EF2B /* PartyAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartyAPI.swift; sourceTree = "<group>"; };
+		53501E2A2A090FE40016EF2B /* apiGatewayURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = apiGatewayURL.swift; sourceTree = "<group>"; };
 		535026E72A03F3F3006F48D5 /* NextButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NextButtonView.swift; sourceTree = "<group>"; };
 		535026E92A03F891006F48D5 /* BirthdayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BirthdayView.swift; sourceTree = "<group>"; };
 		535026EB2A03F933006F48D5 /* BirthdayViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BirthdayViewModel.swift; sourceTree = "<group>"; };
@@ -185,6 +193,7 @@
 		533A9F8929FECB0D001C9C34 /* MatchingApp */ = {
 			isa = PBXGroup;
 			children = (
+				53501E292A090ACB0016EF2B /* API */,
 				53501E1E2A07F82E0016EF2B /* MatchingAppDebug.entitlements */,
 				535026FF2A053211006F48D5 /* RecuruitmentListView.swift */,
 				534AB23E2A03827D00612A1D /* AccoundInitSetting */,
@@ -237,6 +246,7 @@
 				53501E1A2A07F1B10016EF2B /* AccountDeleteView.swift */,
 				53501E1F2A08148B0016EF2B /* PriceListView.swift */,
 				53501E212A0816590016EF2B /* PriceCellView.swift */,
+				53501E252A08FAF00016EF2B /* Party.swift */,
 			);
 			path = MatchingApp;
 			sourceTree = "<group>";
@@ -351,6 +361,16 @@
 			path = AccoundInitSetting;
 			sourceTree = "<group>";
 		};
+		53501E292A090ACB0016EF2B /* API */ = {
+			isa = PBXGroup;
+			children = (
+				53501E232A08D9DA0016EF2B /* UserAPI.swift */,
+				53501E272A090AC30016EF2B /* PartyAPI.swift */,
+				53501E2A2A090FE40016EF2B /* apiGatewayURL.swift */,
+			);
+			path = API;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -442,6 +462,7 @@
 				53625C412A064E1300A77D24 /* DetailUserIntroductionViewModel.swift in Sources */,
 				535026F42A050372006F48D5 /* DismissButtonView.swift in Sources */,
 				534AB2422A03856200612A1D /* AppState.swift in Sources */,
+				53501E262A08FAF00016EF2B /* Party.swift in Sources */,
 				53625C372A06444200A77D24 /* UserCellView.swift in Sources */,
 				53625C452A06597200A77D24 /* CardView.swift in Sources */,
 				53625C352A0640F500A77D24 /* MakeGroupView.swift in Sources */,
@@ -467,6 +488,7 @@
 				53625C3F2A064E0200A77D24 /* DetailUserIntroductionView.swift in Sources */,
 				533A9FAD29FECF86001C9C34 /* ChatView.swift in Sources */,
 				533A9FC229FF0F0B001C9C34 /* CustomDivider.swift in Sources */,
+				53501E242A08D9DA0016EF2B /* UserAPI.swift in Sources */,
 				533A9FC429FF123D001C9C34 /* Color+Extension.swift in Sources */,
 				53501E192A06B0AA0016EF2B /* SchoolTextView.swift in Sources */,
 				533A9FA029FECCCF001C9C34 /* RegisterView.swift in Sources */,
@@ -477,6 +499,7 @@
 				535026FA2A051030006F48D5 /* AddNewPairView.swift in Sources */,
 				533A9F9A29FECC7E001C9C34 /* LoginView.swift in Sources */,
 				535026F62A0504D4006F48D5 /* DatePlanView.swift in Sources */,
+				53501E2B2A090FE40016EF2B /* apiGatewayURL.swift in Sources */,
 				534AB2402A03829900612A1D /* GenderView.swift in Sources */,
 				53501E222A0816590016EF2B /* PriceCellView.swift in Sources */,
 				534AB24C2A03A6B400612A1D /* CustomTabView.swift in Sources */,
@@ -484,6 +507,7 @@
 				533A9FBC29FED573001C9C34 /* HeaderImageModifier.swift in Sources */,
 				535026FC2A05106A006F48D5 /* AddNewPairViewModel.swift in Sources */,
 				533A9FB929FED36A001C9C34 /* Header.swift in Sources */,
+				53501E282A090AC30016EF2B /* PartyAPI.swift in Sources */,
 				533A9F8D29FECB0D001C9C34 /* ContentView.swift in Sources */,
 				534AB2482A03916E00612A1D /* PrefectureViewModel.swift in Sources */,
 				534AB2352A02E4EF00612A1D /* RichButton.swift in Sources */,
