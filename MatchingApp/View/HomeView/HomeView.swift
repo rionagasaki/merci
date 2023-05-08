@@ -64,7 +64,6 @@ private func makeHeader(headerTitle: String, contentImage: Image) -> some View {
         .resizable()
         .frame(width: UIScreen.main.bounds.width-30,height:200)
         .scaledToFill()
-        
         .modifier(HeaderImageModifier(headerTitle: headerTitle))
 }
 

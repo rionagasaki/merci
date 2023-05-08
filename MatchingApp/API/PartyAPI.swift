@@ -10,8 +10,8 @@ import Foundation
 class PartyAPI {
     static let shared = PartyAPI()
     
-    func fetchPartyDataFromDynamoDB(completion: @escaping ([String: Any]?, Error?) -> Void){
-        guard let url = URL(string: "")?.appendingPathComponent("party", conformingTo: .json) else {
+    func fetchPartyData(completion: @escaping ([String: Any]?, Error?) -> Void){
+        guard let url = URL(string: "")?.appendingPathComponent("parties", conformingTo: .json) else {
             return
         }
         let request = URLRequest(url: url)
@@ -23,6 +23,7 @@ class PartyAPI {
             do {
                 let decoder = JSONDecoder()
                 let party = try decoder.decode(Party.self, from: data)
+                
             } catch let error {
                 completion(nil, error)
             }
@@ -30,6 +31,7 @@ class PartyAPI {
         task.resume()
     }
     
-    func putPartyDataFromDynamoDB(){
+    func postPartyData(){
+        
     }
 }

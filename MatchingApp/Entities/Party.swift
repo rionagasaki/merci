@@ -11,8 +11,9 @@ struct Party: Decodable {
     var description: String
     var place: String
     var date: String
-    var women:[String]
     var men: [String]
+    var women:[String]
+    
 }
 
 
