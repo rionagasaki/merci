@@ -7,14 +7,20 @@
 
 import Foundation
 
-struct User: Decodable {
-    var user_id: String
+struct User: Codable {
+    var userId: String
     var name: String
-    var age: Int
+    var age: String
     var mainIcon: String
-    var subImages:[String]
-    var friendName: String
-    var frindID: String
+    var subImages: [String]
+
+    enum CodingKeys: String, CodingKey {
+        case userId = "user_id"
+        case name = "name"
+        case age = "age"
+        case mainIcon = "main_icon"
+        case subImages = "sub_images"
+    }
 }
 
 

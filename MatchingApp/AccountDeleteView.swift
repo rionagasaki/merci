@@ -9,12 +9,12 @@ import SwiftUI
 struct AccountDeleteView: View {
     var body: some View {
         ScrollView {
+            Text("🚶アカウント削除")
+                .fontWeight(.bold)
+                .font(.system(size: 28))
+                .padding(16)
+                .frame(maxWidth: .infinity, alignment: .leading)
             VStack {
-                Text("🚶アカウント削除")
-                    .fontWeight(.bold)
-                    .font(.system(size: 28))
-                    .padding(16)
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 Text("アカウント削除について")
                     .padding(16)
                     .font(.system(size: 24))
@@ -27,14 +27,18 @@ struct AccountDeleteView: View {
                     print("aaa")
                 } label: {
                     Text("アカウントを削除する")
-                        .padding(.horizontal, 88)
-                        .padding(.vertical, 12)
-                        .background(Color.yellow)
-                        .cornerRadius(12)
+                        .foregroundColor(.white)
+                        .font(.system(size: 16))
+                        .bold()
+                        .frame(width: UIScreen.main.bounds.width - 40,height: 56)
+                        .background(Color.red.opacity(0.8))
+                        .cornerRadius(20)
                         .foregroundColor(.black)
                 }
             }
-        }
+            .padding(.bottom, 16)
+            .background(.white)
+        }.background(.ultraThinMaterial)
     }
 }
 

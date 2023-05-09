@@ -52,8 +52,13 @@ struct HomeView: View {
                 PlacePanelView()
             }
         }.onAppear{
-            UserAPI.shared.fetchUserData { data, error in
-                
+            API.request(APIModel.UserAPI(request: Empty())) { result in
+                switch result {
+                case .success(let success):
+                    print(success)
+                case .failure(let failure):
+                    print(failure)
+                }
             }
         }
     }

@@ -29,6 +29,7 @@ struct DetailUserIntroductionView: View {
                 dismiss()
             } label: {
                 Text("保存する")
+                    .bold()
                     .foregroundColor(.black
                     )
                     .frame(width: UIScreen.main.bounds.width-60, height: 50)
