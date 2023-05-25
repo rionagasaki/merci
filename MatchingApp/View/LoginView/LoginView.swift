@@ -1,75 +1,114 @@
 import SwiftUI
-import AWSAppleSignIn
+import AuthenticationServices
+import Foundation
+import FirebaseAuth
+import CryptoKit
 
 struct LoginView: View {
     @StateObject private var viewModel = LoginViewModel()
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var appState: AppState
     
     var body: some View {
-        ScrollView {
-            VStack {
-                TextField("", text: $viewModel.emailText , prompt: Text("メールアドレス"))
-                    .padding(.leading, 10)
-                    .frame(height: 38)
-                    .overlay(RoundedRectangle(cornerRadius: 3)
-                        .stroke(Color.customLightGray, lineWidth: 2))
-                    .onChange(of: viewModel.emailText, perform: { _ in
-                        viewModel.validateEmail()
-                    })
-                    .padding(.horizontal, 16)
-                    .padding(.top, 16)
-                
-                SecureField("", text: $viewModel.passwordText , prompt: Text("パスワード"))
-                    .padding(.leading, 10)
-                    .frame(height: 38)
-                    .overlay(RoundedRectangle(cornerRadius: 3)
-                        .stroke(Color.customLightGray, lineWidth: 2))
-                    .onChange(of: viewModel.passwordText, perform: { _ in
-                        viewModel.validatePassword()
-                    })
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8)
-                
-                NavigationLink {
-                    
-                } label: {
-                    Text("パスワードを忘れた方")
+        VStack {
+            ScrollView {
+                VStack {
+                    Text("アプリのロゴ")
                         .fontWeight(.heavy)
-                        .font(.system(size: 13))
-                        .foregroundColor(.customBlue)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                        .padding(.trailing, 16)
-                        .padding(.vertical, 8)
-                }
-                
-                
-                Button {
-                    viewModel
-                        .signInWithEmail {
-                            
-                        }
-                } label: {
-                    Text("ログイン")
-                        .foregroundColor(.white)
-                        .font(.system(size: 17))
-                        .bold()
-                        .frame(width: UIScreen.main.bounds.width-40, height: 50)
-                        .background(viewModel.isEnabledTappedLoginButton ? Color.customBlue: Color.customBlue.opacity(0.2))
-                        .cornerRadius(32)
+                        .font(.system(size: 30))
+                        .padding(.top, 16)
+                    
+                    TextField("", text: $viewModel.email , prompt: Text("ユーザーネーム"))
+                        .padding(.leading, 10)
+                        .frame(height: 38)
+                        .overlay(RoundedRectangle(cornerRadius: 3)
+                            .stroke(Color.customLightGray, lineWidth: 2))
+                        .onChange(of: viewModel.email, perform: { _ in
+                            viewModel.validateEmail()
+                        })
+                        .padding(.horizontal, 16)
+                        .padding(.top, 56)
+                    
+                    SecureField("", text: $viewModel.password , prompt: Text("パスワード"))
+                        .padding(.leading, 10)
+                        .frame(height: 38)
+                        .overlay(RoundedRectangle(cornerRadius: 3)
+                            .stroke(Color.customLightGray, lineWidth: 2))
+                        .onChange(of: viewModel.password, perform: { _ in
+                            viewModel.validatePassword()
+                        })
+                        .padding(.horizontal, 16)
                         .padding(.top, 8)
-                        .padding(.horizontal,16)
+                    
+                    NavigationLink {
+                        
+                    } label: {
+                        Text("パスワードを忘れた方")
+                            .fontWeight(.heavy)
+                            .font(.system(size: 13))
+                            .foregroundColor(.customBlue)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                            .padding(.trailing, 16)
+                            .padding(.vertical, 8)
+                    }
+                    
+                    
+                    Button {
+                        appState.isLogin = true
+                    } label: {
+                        Text("ログイン")
+                            .foregroundColor(.white)
+                            .font(.system(size: 17))
+                            .bold()
+                            .frame(width: UIScreen.main.bounds.width-40, height: 50)
+                            .background(Color.customBlack)
+                            .cornerRadius(32)
+                            .padding(.top, 8)
+                            .padding(.horizontal,16)
+                    }
+                    .disabled(!viewModel.isEnabledTappedLoginButton)
+                    
+                    HStack {
+                        VStack {
+                            Divider()
+                        }
+                        Text("または")
+                            .foregroundColor(.gray)
+                            .font(.system(size: 17))
+                            .bold()
+                            .padding(.vertical, 16)
+                        VStack {
+                            Divider()
+                        }
+                    }
+                    .padding(.horizontal, 8)
+                    AppleAuthView()
+                    GoogleAuthView()
+                    
                 }
-                .disabled(!viewModel.isEnabledTappedLoginButton)
-                
-                Text("または")
-                    .foregroundColor(.gray)
-                    .font(.system(size: 17))
-                    .bold()
-                    .padding(.vertical, 16)
             }
+            Spacer()
+            Button {
+                viewModel.registerSheet = true
+            } label: {
+                HStack(spacing: .zero){
+                    Image(systemName: "person.badge.plus")
+                        .resizable()
+                        .frame(width: 20, height: 20)
+                        .foregroundColor(.black)
+                    Text("アカウントの新規作成は")
+                        .foregroundColor(.black)
+                        .font(.system(size: 16))
+                        .padding(.leading, 8)
+                    Text("こちらから")
+                        .foregroundColor(.blue.opacity(0.8))
+                        .font(.system(size: 16))
+                }
+            }
+            .frame(width: UIScreen.main.bounds.width, height: 60)
+            .background(.ultraThinMaterial)
         }
-        .navigationTitle("🔑ログイン")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
         .alert(isPresented: $viewModel.isVisibleValidateAlert) {
             Alert(
                 title: Text("入力内容が間違っています")
@@ -84,8 +123,15 @@ struct LoginView: View {
                 )
             )
         }
+        .sheet(isPresented: $viewModel.registerSheet) {
+            RegisterView()
+        }
+        .fullScreenCover(isPresented: $viewModel.isModal) {
+            NickNameView()
+        }
     }
 }
+
 
 extension View {
     public func gradientForegroundColor() -> some View {

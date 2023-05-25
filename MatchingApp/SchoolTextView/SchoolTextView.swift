@@ -8,6 +8,7 @@ import SwiftUI
 
 struct SchoolTextView: View {
     @StateObject private var viewModel = SchoolTextViewModel()
+    @Environment(\.dismiss) var dismiss
     var body: some View {
         ScrollView {
             VStack{
@@ -20,6 +21,19 @@ struct SchoolTextView: View {
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(
+                    action: {
+                        dismiss()
+                    }, label: {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.black)
+                    }
+                )
             }
         }
     }

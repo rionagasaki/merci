@@ -11,61 +11,50 @@ struct RecruitmentView: View {
     var body: some View {
         VStack {
             HStack(alignment: .top){
-                VStack(spacing: .zero){
-                    Image("Person")
-                        .resizable()
-                        .frame(width: 100, height: 100)
-                    Image("Header_One")
-                        .resizable()
-                        .frame(width: 100, height: 100)
-                }
-                Spacer()
-                VStack(alignment: .leading){
-                    Text("居酒屋に行きたい。")
-                        .foregroundColor(.black)
-                        .bold()
-                        .font(.system(size: 18))
-                        .padding(.top, 8)
-                        
-                        
-                    Text("5月3日(水)")
-                        .fontWeight(.light)
-                        .font(.system(size: 12))
-                        .padding(.all, 8)
-                        .background(.gray.opacity(0.3))
-                        .cornerRadius(20)
-                    Text("ここにはコメントここにはコメントここにはコメントここにはコメントここにはコメントここにはコメント")
-                        .foregroundColor(.black)
-                        .fontWeight(.light)
-                        .font(.system(size: 14))
-                        .padding(.top, 8)
-                        
-                        
+                HStack(spacing: 10){
+                    VStack {
+                        Image("Person")
+                            .resizable()
+                            .frame(width: (UIScreen.main.bounds.width/2)-30, height: (UIScreen.main.bounds.width/2)-30)
+                            .cornerRadius(20)
+                        Text("22歳 渋谷")
+                            .foregroundColor(.black.opacity(0.8))
+                            .bold()
+                            .font(.system(size: 14))
+                    }
+                    VStack {
+                        Image("Header_One")
+                            .resizable()
+                            .frame(width: (UIScreen.main.bounds.width/2)-30, height: (UIScreen.main.bounds.width/2)-30)
+                            .cornerRadius(20)
+                        Text("22歳 渋谷")
+                            .foregroundColor(.black.opacity(0.8))
+                            .bold()
+                            .font(.system(size: 14))
+                    }
                 }
             }
+            .padding(.horizontal, 16)
+            
             Button {
                 print("さそう")
             } label: {
                 Text("いいかも")
-                    .frame(maxWidth: .infinity)
+                    .frame(maxWidth: 400)
                     .padding(.all, 8)
-                    .foregroundColor(.black.opacity(0.7))
-                    .bold()
-                    .background(.yellow)
-                    .cornerRadius(20)
+                    .foregroundColor(.white)
+                    .fontWeight(.medium)
+                    .background(Color.customGreen)
+                    .cornerRadius(10)
             }
-            .frame(maxWidth: .infinity,alignment: .trailing)
-            .padding(.trailing, 8)
-
         }
-        .frame(width: UIScreen.main.bounds.width/1.5)
-        .background(.white)
-        .compositingGroup()
-        .shadow(radius: 10)
-        
-        .cornerRadius(20)
-        .padding(.horizontal, 16)
-        
+        .padding(.top, 8)
+        .background {
+            RoundedRectangle(cornerRadius: 20)
+                .foregroundColor(.white)
+                .shadow(radius: 1)
+        }
+        .padding(.horizontal, 8)
         
     }
 }

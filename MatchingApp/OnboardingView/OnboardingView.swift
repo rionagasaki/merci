@@ -8,71 +8,82 @@
 import SwiftUI
 
 struct OnboardingView: View {
-    @EnvironmentObject var app: AppState
+    @State private var isPresentingLoginView:Bool = false
+    
     var body: some View {
         NavigationView {
-            ZStack {
-                VStack {
+            ZStack{
+                VStack(alignment:.leading ,spacing: 20){
                     Circle()
-                        .frame(width: 200)
-                        .blur(radius: 30)
-                        .foregroundColor(.customRed1)
-                        .padding(.leading, 80)
-                    HStack {
-                        ZStack(alignment: .bottomLeading) {
-                            Circle()
-                                .frame(width: 200)
-                                .blur(radius: 30)
-                                .foregroundColor(.yellow.opacity(0.8))
-                                .padding(.trailing, 2)
-                                .padding(.bottom, 120)
-                            Circle()
-                                .frame(width: 200)
-                                .blur(radius: 30)
-                                .foregroundColor(.blue.opacity(0.8))
-                                .padding(.trailing, 20)
-                                .padding(.bottom, 50)
-                        }
+                        .size(width: 200, height: 200)
+                        .foregroundColor(.yellow)
+                    HStack{
                         Circle()
-                            .frame(width: 200)
-                            .blur(radius: 30)
-                            .foregroundColor(.purple)
-                            .padding(.leading, 30)
-                            .padding(.top, 30)
+                            .size(width: 200, height: 200)
+                            .foregroundColor(.blue)
+                            .padding(.top,-120)
+                        Circle()
+                            .size(width: 200, height: 200)
+                            .foregroundColor(.orange)
+                            .padding(.top,30)
                     }
-                        
-                }
-                .frame(maxHeight: .infinity)
-                .overlay {
-                    Rectangle()
-                        .foregroundColor(.white.opacity(0.7))
-                        
-                        .ignoresSafeArea()
-                        
-                }
-                VStack(spacing: .zero) {
-                    Text("Cheers!")
-                        .bold()
-                        .font(.system(size: 35))
-                        .padding(.top, 20)
-                    Image("Header_One")
-                        .resizable()
-                        .frame(width: 200, height: 200)
-                        .clipShape(Circle())
-                        .padding(.top, 20)
+                }.ignoresSafeArea()
+                VStack{
+                    TabView{
+                        VStack{
+                            Text("学び始めよう。\n60分から。")
+                                .bold()
+                                .font(.system(size: 30))
+                            Image("Person")
+                                .resizable()
+                                .frame(width: 300, height:300)
+                            
+                        }
+                        .tag(1)
+                        VStack{
+                            Text("あなたの知識が\n報酬に。")
+                                .bold()
+                                .font(.system(size: 30))
+                            Image("Person")
+                                .resizable()
+                                .frame(width: 300, height:300)
+                            
+                        }
+                        .tag(2)
+                        VStack{
+                            Text("ひとこまを\n始めましょう！")
+                                .bold()
+                                .font(.system(size: 30))
+                            Image("Person")
+                                .resizable()
+                                .frame(width: 300, height:300)
+                        }
+                        .tag(3)
+                    }
+                    .tabViewStyle(PageTabViewStyle())
+                    .indexViewStyle(.page(backgroundDisplayMode: .always))
+                    
                     Spacer()
-                    AppleAuthView()
-                    Button {
-                        self.app.isLogin = true
-                    } label: {
-                        RichButton(buttonText: "Sign In")
-                            .padding(.bottom, 16)
-                    }
-                    .padding(.top, 8)
                     NavigationLink {
-                        GenderView()
+                        LoginView()
                     } label: {
-                        RichButton(buttonText: "Sign Up")
+                        Text("Login")
+                            .foregroundColor(.black)
+                            .font(.system(size: 17))
+                            .bold()
+                            .frame(width: UIScreen.main.bounds.width-40, height: 50)
+                            .background(Color.yellow)
+                            .cornerRadius(10)
+                    }
+                    NavigationLink {
+                        RegisterView()
+                    } label: {
+                        Text("アカウントをまだお持ちでない方")
+                            .foregroundColor(.blue.opacity(0.8))
+                            .font(.system(size: 17))
+                            .bold()
+                            .frame(width: UIScreen.main.bounds.width-40, height: 50)
+                            .padding(.bottom, 16)
                     }
                 }
             }
@@ -80,10 +91,44 @@ struct OnboardingView: View {
     }
 }
 
-struct OnboardingView_Previews: PreviewProvider {
+struct IntroduceView: View {
+    let mainTitle: String
+    let describeText: String
+    let describeImage:String
+    
+    var body: some View{
+        ZStack{
+            VStack(alignment: .leading){
+                Image(systemName: "checkmark")
+                    .foregroundColor(.green)
+                    .padding(.all,10)
+                    .background(Color.white.opacity(1))
+                    .cornerRadius(40)
+                Text(mainTitle)
+                    .fontWeight(.bold)
+                    .font(.largeTitle)
+                    .padding(.top,15)
+                    .padding(.horizontal, 16)
+                Text(describeText)
+                    .font(.subheadline)
+                    .padding(.top,10)
+                    .padding(.horizontal, 16)
+                Image(describeImage)
+                    .resizable()
+                    .frame(width: 120, height: 120, alignment: .center)
+            }
+        }
+        .frame(width: 320, height: 500)
+        .background(Color.white.opacity(0.3))
+        .background(RoundedRectangle(cornerRadius: 20).stroke(Color.blue.opacity(0.5), lineWidth: 0.5))
+        .background(.ultraThinMaterial).cornerRadius(20).shadow(radius: 20, x: 0, y: 0)
+    }
+}
+
+
+struct IntroView_Previews: PreviewProvider{
     static var previews: some View {
         OnboardingView()
     }
 }
-
 

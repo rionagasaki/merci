@@ -9,11 +9,11 @@ import SwiftUI
 
 struct MyMainInfoView: View {
     @State var pictureSelectedViewVisible: Bool = false
+    @StateObject var userModel: UserObservableModel
     var body: some View {
         VStack {
             ZStack(alignment: .bottomTrailing) {
-                Image("Person")
-                    .resizable()
+                AsyncImage(url: URL(string: userModel.profileImageURL))
                     .frame(width: 180, height: 180)
                     .clipShape(Circle())
                 Button {
@@ -22,8 +22,8 @@ struct MyMainInfoView: View {
                     Image(systemName: "plus")
                         .resizable()
                         .padding(.all, 12)
-                        .foregroundColor(.black)
-                        .background(Color.yellow)
+                        .foregroundColor(.white)
+                        .background(Color.black)
                         .frame(width: 48, height: 48)
                         .overlay(content: {
                             Circle().stroke(lineWidth: 4).foregroundColor(.white)
@@ -35,10 +35,10 @@ struct MyMainInfoView: View {
                 }
             }
             HStack {
-                Text("ながり")
+                Text(userModel.nickname)
                     .font(.system(size: 16))
                     .bold()
-                Text("21歳/千葉")
+                Text("\(userModel.birthDate)/\(userModel.activeRegion)")
             }
             HStack {
                 VStack {
@@ -83,8 +83,4 @@ struct MyMainInfoView: View {
     }
 }
 
-struct MyMainInfoView_Previews: PreviewProvider {
-    static var previews: some View {
-        MyMainInfoView()
-    }
-}
+

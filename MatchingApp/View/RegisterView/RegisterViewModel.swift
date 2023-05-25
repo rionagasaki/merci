@@ -8,11 +8,23 @@
 import SwiftUI
 
 class RegisterViewModel: ObservableObject {
+    @Published var username: String = ""
     @Published var email: String = ""
     @Published var password: String = ""
+    @Published var verificationCode: String = ""
     
-    func register(){
+    @Published var modal: Bool = false
+    
+    func signUp() async {
+       
+    }
+    
+    func confirmSignUp() async {
         
+    }
+    
+    func socialSignInWithWebUI() async {
+     
     }
 }
 

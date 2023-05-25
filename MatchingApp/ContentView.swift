@@ -9,15 +9,12 @@ import SwiftUI
 
 struct ContentView: View {
     
-    @EnvironmentObject var app: AppState
+    @EnvironmentObject var appState: AppState
     @State private var selectedTab: Tab = .home
     @State private var navigationTitle:String = ""
     @State private var navigationStyle:Bool = true
     @State private var searchWord = ""
-    
-    init(){
-        UITabBar.appearance().isHidden = true
-    }
+    @EnvironmentObject var userModel: UserObservableModel
     
     var body: some View {
         NavigationView {
@@ -38,6 +35,19 @@ struct ContentView: View {
                 
                 NavigationView {
                     VStack{
+                        GoodsListView()
+                        Divider()
+                        CustomTabView(
+                            selectedTab: $selectedTab,
+                            navigationTitle: $navigationTitle
+                        )
+                    }
+                    .navigationBarTitleDisplayMode(.inline)
+                }.tag(Tab.good)
+                    .ignoresSafeArea()
+                
+                NavigationView {
+                    VStack{
                         MakeRecuruitView()
                         Divider()
                         CustomTabView(
@@ -46,11 +56,27 @@ struct ContentView: View {
                         )
                     }
                     
-                }.tag(Tab.search)
+                }.tag(Tab.add)
+                
+                NavigationView {
+                    VStack {
+                        if appState.isLogin {
+                            MessageListView()
+                        } else {
+                            NotLoginMessageListView()
+                        }
+                        Divider()
+                        CustomTabView(selectedTab: $selectedTab, navigationTitle: $navigationTitle)
+                    }
+                }.tag(Tab.message)
                 
                 NavigationView {
                     VStack{
-                        ProfileView()
+                        if appState.isLogin {
+                            ProfileView(userModel: userModel)
+                        } else {
+                            NotLoginProfileView()
+                        }
                         Divider()
                         CustomTabView(
                             selectedTab: $selectedTab,
@@ -58,6 +84,19 @@ struct ContentView: View {
                         )
                     }
                 }.tag(Tab.profile)
+            }
+        }
+        .onAppear {
+            
+            UITabBar.appearance().isHidden = true
+
+            FetchFromFirestore().fetchUserInfoFromFirestore { user in
+                self.userModel.nickname = user.nickname
+                self.userModel.email = user.email
+                self.userModel.activeRegion = user.activityRegion
+                self.userModel.birthDate = user.birthDate
+                self.userModel.gender = user.gender
+                self.userModel.profileImageURL = user.profileImageURL
             }
         }
     }

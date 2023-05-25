@@ -8,6 +8,7 @@ import SwiftUI
 
 struct PrefectureTextView: View {
     @StateObject private var viewModel = PrefectureTextViewModel()
+    @Environment(\.dismiss) var dismiss
     var body: some View {
         ScrollView {
             VStack {
@@ -19,6 +20,19 @@ struct PrefectureTextView: View {
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding(.top, 8)
                     .padding(.horizontal, 16)
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(
+                    action: {
+                        dismiss()
+                    }, label: {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.black)
+                    }
+                )
             }
         }
     }

@@ -9,13 +9,11 @@ import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject var appState: AppState
+    @State var isLogin: Bool = true
     var body: some View {
         Group {
-            if appState.isLogin == true {
-                ContentView()
-            }else{
-                OnboardingView()
-            }
+            ContentView()
+
         }
     }
 }

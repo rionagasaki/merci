@@ -15,7 +15,6 @@ struct UserCellView: View {
         HStack {
             Image(userImageIconsUrl)
                 .resizable()
-                
                 .frame(width: 60, height: 60)
                 .clipShape(Circle())
             
@@ -26,12 +25,12 @@ struct UserCellView: View {
                 .padding(.leading, 8)
             
             Spacer()
+            
             Image(systemName: "chevron.right")
                 .resizable()
                 .scaledToFit()
                 .frame(width: 20, height: 20)
                 .foregroundColor(.gray)
-                
         }
         .padding(.horizontal, 16)
     }

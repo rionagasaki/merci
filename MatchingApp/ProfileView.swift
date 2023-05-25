@@ -9,10 +9,11 @@ import SwiftUI
 
 struct ProfileView: View {
     @EnvironmentObject var appState: AppState
+    @StateObject var userModel: UserObservableModel
     var body: some View {
         ScrollView {
             VStack {
-                MyMainInfoView()
+                MyMainInfoView(userModel: userModel)
                 NavigationLink {
                     DetailUserIntroductionView()
                 } label: {
@@ -90,7 +91,9 @@ struct ProfileView: View {
                     CustomDivider()
                     SettingView()                    .padding(.leading, 16)
                     Button {
-                        appState.isLogin = false
+                        SignOut.shared.signOut {
+                            appState.isLogin = false
+                        }
                     } label: {
                         Text("ログアウト")
                             .foregroundColor(.red)
@@ -99,11 +102,5 @@ struct ProfileView: View {
                 }
             }
         }
-    }
-}
-
-struct ProfileView_Previews: PreviewProvider {
-    static var previews: some View {
-        ProfileView()
     }
 }

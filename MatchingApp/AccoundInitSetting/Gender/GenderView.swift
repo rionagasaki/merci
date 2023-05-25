@@ -8,44 +8,57 @@
 import SwiftUI
 
 struct GenderView: View {
-    @StateObject private var viewModel = GenderViewModel()
+    @StateObject var viewModel: UserObservableModel
+    @Binding var presentationMode: PresentationMode
+    @Environment(\.dismiss) var dismiss
     var body: some View {
-        VStack(alignment: .center) {
+        VStack {
             ScrollView {
-                Text("性別を選択してください")
+                Text("性別を\n選択してください")
                     .font(.system(size: 25))
-                    .fontWeight(.heavy)
-                    .foregroundColor(.black.opacity(0.8))
+                    .fontWeight(.bold)
+                    .foregroundColor(Color.customBlack)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.top, 16)
                     .padding(.leading, 16)
-                VStack {
-                    ForEach(viewModel.gender, id: \.self) { gender in
+                    
+                VStack(alignment: .leading){
+                    ForEach(viewModel.genders, id: \.self) { gender in
                         Button {
-                            viewModel.selectedGender = gender
+                            viewModel.gender = gender
                         } label: {
                             Text(gender)
-                                .foregroundColor(viewModel.selectedGender == gender ? .black.opacity(0.8): .gray.opacity(0.6))
+                                .foregroundColor(viewModel.gender == gender ? Color.customBlack: .gray.opacity(0.6))
                                 .fontWeight(.semibold)
                                 .font(.system(size: 23))
+                                .padding(.horizontal, 32)
                                 .padding(.top, 8)
-                                .padding(.leading, 16)
                         }
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
+            
             Spacer()
             NavigationLink {
-                PrefectureView()
+                ActiveRegionTextView(viewModel: viewModel, presentationMode: $presentationMode)
             } label: {
                 NextButtonView()
             }
-            .frame(maxWidth: .infinity, alignment: .center)
+        }
+        .navigationBarBackButtonHidden()
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(
+                    action: {
+                        dismiss()
+                    }, label: {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.black)
+                    }
+                )
+            }
         }
     }
 }
 
-struct GenderView_Previews: PreviewProvider {
-    static var previews: some View {
-        GenderView()
-    }
-}

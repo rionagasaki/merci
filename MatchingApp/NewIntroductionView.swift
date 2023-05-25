@@ -18,13 +18,14 @@ struct NewIntroductionView: View {
             }
             Divider()
             NavigationLink {
-                ActiveRegionTextView()
+                HomeView()
             } label: {
                 DetailIntroductionCell(title: "活動地域", introductionText: "東京都")
             }
         }
     }
 }
+
 struct NewIntroductionView_Previews: PreviewProvider {
     static var previews: some View {
         NewIntroductionView()

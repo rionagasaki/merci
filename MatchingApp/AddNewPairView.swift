@@ -9,6 +9,7 @@ import SwiftUI
 
 struct AddNewPairView: View {
     @StateObject var viewModel = AddNewPairViewModel()
+    @Environment(\.dismiss) var dismiss
     var body: some View {
         VStack {
             Text("ペアになりたい友達のUserIDを入力してください")
@@ -35,6 +36,19 @@ struct AddNewPairView: View {
             Spacer()
         }
         .padding(.top, 16)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(
+                    action: {
+                        dismiss()
+                    }, label: {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.black)
+                    }
+                )
+            }
+        }
     }
 }
 

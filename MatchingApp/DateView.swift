@@ -9,7 +9,7 @@ import SwiftUI
 
 struct DateView: View {
     @StateObject var viewModel = DateViewModel()
-    
+    @Environment(\.presentationMode) var presentationMode
     var body: some View {
         NavigationView {
             VStack {
@@ -36,17 +36,22 @@ struct DateView: View {
                 if viewModel.selectedMenu == "日時を指定" {
                     DatePicker("", selection: $viewModel.selectedDate)
                         .labelsHidden()
-                        
-                        
+                    
+                    
                 }
                 Spacer()
                 NavigationLink {
-                    SelectPairView()
+                    DatePlaceView(presentationMode: presentationMode)
                 } label: {
                     NextButtonView()
                 }
-
             }
+            .navigationBarItems(leading: Button(action: {
+                presentationMode.wrappedValue.dismiss()
+            }, label: {
+                Image(systemName: "xmark.square")
+                    .foregroundColor(.black)
+            }))
         }
     }
 }

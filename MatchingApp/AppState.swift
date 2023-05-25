@@ -9,6 +9,6 @@ import SwiftUI
 import UIKit
 
 class AppState: ObservableObject {
-    @Published var isLogin = false
+    @Published var isLogin = (Authentication().currentUser != nil) ? true: false
     @Published var isLoading = false
 }

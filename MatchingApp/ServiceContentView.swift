@@ -7,9 +7,23 @@
 import SwiftUI
 
 struct ServiceContentView: View {
+    @Environment(\.dismiss) var dismiss 
     var body: some View {
         ScrollView {
-
+            
+        }
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(
+                    action: {
+                        dismiss()
+                    }, label: {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.black)
+                    }
+                )
+            }
         }
     }
 }

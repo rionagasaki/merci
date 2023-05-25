@@ -16,13 +16,16 @@ struct TabBar: Identifiable{
 
 var tabItems = [
     TabBar(menuTitle: "ホーム", menuImage: "house",selectedMenuImage: "house.fill", tab: Tab.home),
-    TabBar(menuTitle: "募集する", menuImage: "plus",selectedMenuImage: "plus", tab: Tab.search),
+    TabBar(menuTitle: "いいね", menuImage: "heart", selectedMenuImage: "heart.fill", tab: Tab.good),
+    TabBar(menuTitle: "募集する", menuImage: "plus",selectedMenuImage: "plus", tab: Tab.add),
+    TabBar(menuTitle: "やりとり", menuImage: "message", selectedMenuImage: "message.fill", tab: Tab.message),
     TabBar(menuTitle: "マイページ", menuImage:"person", selectedMenuImage: "person.fill", tab: Tab.profile)
 ]
 
 enum Tab:String{
     case home = "home"
-    case search = "search"
-    case profile = "profile"
+    case good = "search"
+    case add = "add"
     case message = "message"
+    case profile = "profile"
 }
