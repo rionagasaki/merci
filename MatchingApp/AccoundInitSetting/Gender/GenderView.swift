@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct GenderView: View {
-    @StateObject var viewModel: UserObservableModel
     @Binding var presentationMode: PresentationMode
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var userModel: UserObservableModel
     var body: some View {
         VStack {
             ScrollView {
@@ -23,12 +23,12 @@ struct GenderView: View {
                     .padding(.leading, 16)
                     
                 VStack(alignment: .leading){
-                    ForEach(viewModel.genders, id: \.self) { gender in
+                    ForEach(userModel.genders, id: \.self) { gender in
                         Button {
-                            viewModel.gender = gender
+                            userModel.gender = gender
                         } label: {
                             Text(gender)
-                                .foregroundColor(viewModel.gender == gender ? Color.customBlack: .gray.opacity(0.6))
+                                .foregroundColor(userModel.gender == gender ? Color.customBlack: .gray.opacity(0.6))
                                 .fontWeight(.semibold)
                                 .font(.system(size: 23))
                                 .padding(.horizontal, 32)
@@ -41,7 +41,7 @@ struct GenderView: View {
             
             Spacer()
             NavigationLink {
-                ActiveRegionTextView(viewModel: viewModel, presentationMode: $presentationMode)
+                ActiveRegionTextView(presentationMode: $presentationMode)
             } label: {
                 NextButtonView()
             }

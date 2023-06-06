@@ -10,19 +10,29 @@ import SwiftUI
 struct MainImageView: View {
     @State var pictureSelectedViewVisible:Bool = false
     @State var selectedImage: UIImage?
+    @EnvironmentObject var appState: AppState
+    @EnvironmentObject var userModel: UserObservableModel
+    @Binding var presentationMode: PresentationMode
+    
+    @Environment(\.dismiss) var dismiss
+    
     var body: some View {
         VStack(alignment: .leading) {
             ScrollView {
-                Text("プロフィール画像の追加")
-                    .font(.system(size: 25))
-                    .fontWeight(.bold)
-                    .foregroundColor(Color.customBlack)
-                    .padding(.top, 16)
-                    .padding(.leading, 16)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Text("画像を一枚以上追加してください。\nプロフィール画像あとから変更できます。")
-                    .foregroundColor(.gray.opacity(0.5))
-                    .fontWeight(.light)
+                VStack {
+                    Text("プロフィール画像の追加")
+                        .font(.system(size: 25))
+                        .fontWeight(.bold)
+                        .foregroundColor(Color.customBlack)
+                        .padding(.top, 16)
+                        .padding(.leading, 16)
+                        
+                    Text("画像を一枚以上追加してください。\nプロフィール画像あとから変更できます。")
+                        .foregroundColor(.gray)
+                        .padding(.horizontal, 16)
+                        .font(.system(size: 13))
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 Button {
                     self.pictureSelectedViewVisible = true
                 } label: {
@@ -54,25 +64,42 @@ struct MainImageView: View {
                         }
                     }
                 }
+                Button {
+                    guard let selectedImage = selectedImage else { return }
+                    RegisterStorage().registerImageToStorage(folderName: "UserProfile", profileImage: selectedImage){ imageURLString in
+                        userModel.profileImageURL = imageURLString
+                        userModel.email = Authentication().currentUid
+                        userModel.email = Authentication().userEmail
+                        SetToFirestore.shared.registerUserInfoFirestore(uid: Authentication().currentUid, nickname: userModel.nickname, email: Authentication().userEmail, profileImageURL: userModel.profileImageURL, gender: userModel.gender, activityRegion: userModel.activeRegion, birthDate: userModel.birthDate) {
+                            presentationMode.dismiss()
+                            appState.isLogin = true
+                        }
+                    }
+                } label: {
+                    Text("登録する")
+                        .foregroundColor(.white)
+                        .frame(width: 300, height: 60)
+                        .background(Color.pink.opacity(0.5))
+                        .cornerRadius(20)
+                        .padding(.top, 56)
+                }
             }
             .sheet(isPresented: $pictureSelectedViewVisible) {
                 ImagePicker(selectedImage: $selectedImage)
             }
-            Spacer()
-            Button {
-                print("aaaa")
-            } label: {
-                Text("登録する")
-                    
-            }
-            .frame()
-
         }
-    }
-}
-
-struct MainImageView_Previews: PreviewProvider {
-    static var previews: some View {
-        MainImageView()
+        .navigationBarBackButtonHidden()
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(
+                    action: {
+                        dismiss()
+                    }, label: {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.black)
+                    }
+                )
+            }
+        }
     }
 }

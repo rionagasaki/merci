@@ -18,17 +18,17 @@ struct SettingView: View {
                 ServiceContentView()
 
             } label: {
-                SettingCellView(systemImageName: "person.fill.badge.minus", text: "サービス内容")
+                SettingCellView(systemImageName: "questionmark.circle", text: "サービス内容")
             }
             NavigationLink {
                 UsagePolicyView()
             } label: {
-                SettingCellView(systemImageName: "person.fill.badge.minus", text: "利用規約")
+                SettingCellView(systemImageName: "doc.text", text: "利用規約")
             }
             NavigationLink {
                 PrivacyPolicyView()
             } label: {
-                SettingCellView(systemImageName: "person.fill.badge.minus", text: "プライバシポリシー")
+                SettingCellView(systemImageName: "lock.shield", text: "プライバシポリシー")
             }
             NavigationLink {
                 OpenSourceLibraryView()

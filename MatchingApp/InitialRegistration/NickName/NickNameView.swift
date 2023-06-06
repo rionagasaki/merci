@@ -8,8 +8,9 @@
 import SwiftUI
 
 struct NickNameView: View {
-    @StateObject var viewModel = UserObservableModel()
+    @EnvironmentObject var userModel: UserObservableModel
     @Environment(\.presentationMode) var presentationMode
+    
     var body: some View {
         NavigationView {
             VStack {
@@ -22,7 +23,7 @@ struct NickNameView: View {
                             .padding(.horizontal, 16)
                             .padding(.top, 80)
                         VStack(alignment: .leading, spacing: .zero){
-                            TextField(text: $viewModel.nickname) {
+                            TextField(text: $userModel.nickname) {
                                 Text("入力してください")
                             }
                             .foregroundColor(.customBlack)
@@ -51,12 +52,11 @@ struct NickNameView: View {
                 }
                 Spacer()
                 NavigationLink {
-                    GenderView(viewModel: viewModel, presentationMode: presentationMode)
+                    GenderView(presentationMode: presentationMode)
                 } label: {
                     NextButtonView()
                 }
             }
-            
         }
     }
 }

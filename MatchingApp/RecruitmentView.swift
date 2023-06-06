@@ -6,14 +6,16 @@
 //
 
 import SwiftUI
+import SDWebImageSwiftUI
 
 struct RecruitmentView: View {
+    let pairModel:PairObservableModel
     var body: some View {
         VStack {
             HStack(alignment: .top){
                 HStack(spacing: 10){
                     VStack {
-                        Image("Person")
+                        WebImage(url: URL(string: pairModel.pair_1_profileImageURL))
                             .resizable()
                             .frame(width: (UIScreen.main.bounds.width/2)-30, height: (UIScreen.main.bounds.width/2)-30)
                             .cornerRadius(20)
@@ -23,7 +25,7 @@ struct RecruitmentView: View {
                             .font(.system(size: 14))
                     }
                     VStack {
-                        Image("Header_One")
+                        WebImage(url: URL(string: pairModel.pair_2_profileImageURL))
                             .resizable()
                             .frame(width: (UIScreen.main.bounds.width/2)-30, height: (UIScreen.main.bounds.width/2)-30)
                             .cornerRadius(20)
@@ -56,11 +58,5 @@ struct RecruitmentView: View {
         }
         .padding(.horizontal, 8)
         
-    }
-}
-
-struct RecruitmentView_Previews: PreviewProvider {
-    static var previews: some View {
-        RecruitmentView()
     }
 }

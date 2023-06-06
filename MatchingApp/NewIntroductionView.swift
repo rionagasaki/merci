@@ -3,6 +3,13 @@ struct NewIntroductionView: View {
     
     var body: some View {
         VStack(spacing: .zero){
+            Text("詳細なプロフィール")
+                .padding(.leading, 16)
+                .padding(.vertical, 8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .foregroundColor(.black.opacity(0.8))
+                .font(.system(size: 18))
+                .bold()
             
             NavigationLink {
                 SchoolTextView()

@@ -7,9 +7,10 @@
 import SwiftUI
 
 struct ActiveRegionTextView: View {
-    @StateObject var viewModel: UserObservableModel
     @Environment(\.dismiss) var dismiss
     @Binding var presentationMode: PresentationMode
+    @EnvironmentObject var userModel: UserObservableModel
+    
     var body: some View {
         VStack(alignment: .leading){
             Text("主な活動地域を\n選択してください(東京都限定)")
@@ -21,13 +22,13 @@ struct ActiveRegionTextView: View {
             
             VStack {
                 ScrollView (showsIndicators: false){
-                    ForEach(viewModel.tokyo23Wards, id: \.self) { activeRegion in
+                    ForEach(userModel.tokyo23Wards, id: \.self) { activeRegion in
                         Button {
-                            viewModel.activeRegion = activeRegion
+                            userModel.activeRegion = activeRegion
                         } label: {
                             Text(activeRegion)
                                 .foregroundColor(
-                                    viewModel.activeRegion == activeRegion ?
+                                    userModel.activeRegion == activeRegion ?
                                     Color.customBlack
                                     : .gray.opacity(0.6)
                                 )
@@ -42,7 +43,7 @@ struct ActiveRegionTextView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             
             NavigationLink {
-                BirthDateView(viewModel: viewModel, presentationMode: $presentationMode)
+                BirthDateView(presentationMode: $presentationMode)
             } label: {
                 NextButtonView()
             }

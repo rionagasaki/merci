@@ -9,31 +9,48 @@ import SwiftUI
 
 struct AddNewPairView: View {
     @StateObject var viewModel = AddNewPairViewModel()
+    
     @Environment(\.dismiss) var dismiss
     var body: some View {
-        VStack {
-            Text("ペアになりたい友達のUserIDを入力してください")
-                .foregroundColor(.black)
-                .fontWeight(.light)
-                .padding(.horizontal, 16)
-            TextField("userID", text: $viewModel.searchedUserId)
-            
-                .frame(height: 60)
-                .padding(.horizontal, 16)
-                .background(.gray.opacity(0.2))
-                .cornerRadius(20)
-                .padding(.horizontal, 16)
-            
-            
-            Button {
-                print("aaa")
-            } label: {
-                Text("検索する")
-                    .foregroundColor(.black.opacity(0.8))
+        ScrollView {
+            VStack{
+                Text("ペアになりたい友達のUserIDを入力してください")
+                    .foregroundColor(.black)
+                    .fontWeight(.light)
+                    .padding(.horizontal, 16)
+                TextField("userID", text: $viewModel.searchedUserId)
+                    .frame(height: 60)
+                    .padding(.horizontal, 16)
+                    .background(.gray.opacity(0.1))
+                    .cornerRadius(10)
+                    .padding(.horizontal, 16)
+                
+                if viewModel.noResult {
+                    Text("指定されたユーザーは存在しません。ご確認の上、もう一度入力してください。")
+                        .foregroundColor(.red)
+                        .font(.system(size: 16))
+                        .fontWeight(.light)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
+                }
+                Button {
+                    if viewModel.searchedUserId != "" {
+                        viewModel.pairSearch()
+                    }
+                } label: {
+                    Text("検索する")
+                        .foregroundColor(.white)
+                        .frame(width: UIScreen.main.bounds.width-32, height: 60)
+                        .background(Color.customGreen)
+                        .cornerRadius(10)
+                }
+                .padding(.top, 16)
+                
+                Spacer()
             }
-            .padding(.top, 16)
-            
-            Spacer()
+        }
+        .sheet(isPresented: $viewModel.isModal){
+            UserProfileView(currentUserID: viewModel.currentUserID, userID: viewModel.userID, nickname: viewModel.nickname, profileImageURL: viewModel.profileImageURL, birthDate: viewModel.birthDate, activeRegion: viewModel.activeRegion)
         }
         .padding(.top, 16)
         .navigationBarBackButtonHidden(true)

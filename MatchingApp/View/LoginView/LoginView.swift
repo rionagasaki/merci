@@ -5,10 +5,11 @@ import FirebaseAuth
 import CryptoKit
 
 struct LoginView: View {
+    @EnvironmentObject var userModel: UserObservableModel
+    @EnvironmentObject var pairModel: PairObservableModel
     @StateObject private var viewModel = LoginViewModel()
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var appState: AppState
-    
     var body: some View {
         VStack {
             ScrollView {
@@ -18,7 +19,7 @@ struct LoginView: View {
                         .font(.system(size: 30))
                         .padding(.top, 16)
                     
-                    TextField("", text: $viewModel.email , prompt: Text("ユーザーネーム"))
+                    TextField("", text: $viewModel.email , prompt: Text("メールアドレス"))
                         .padding(.leading, 10)
                         .frame(height: 38)
                         .overlay(RoundedRectangle(cornerRadius: 3)
@@ -54,7 +55,51 @@ struct LoginView: View {
                     
                     
                     Button {
-                        appState.isLogin = true
+                        SignIn.shared.signInWithEmail(email: viewModel.email, password: viewModel.password) { result in
+                            switch result {
+                            case .success(_):
+                                FetchFromFirestore().fetchUserInfoFromFirestore { user in
+                                    self.userModel.nickname = user.nickname
+                                    self.userModel.email = user.email
+                                    self.userModel.activeRegion = user.activityRegion
+                                    self.userModel.birthDate = user.birthDate
+                                    self.userModel.gender = user.gender
+                                    self.userModel.profileImageURL = user.profileImageURL
+                                    self.userModel.subProfileImageURL = user.subProfileImageURLs
+                                    self.userModel.introduction = user.introduction
+                                    self.userModel.uid = user.id
+                                    self.userModel.hobbies = user.hobbies
+                                    self.userModel.pairID = user.pairID
+                                    self.userModel.requestUids = user.requestUids
+                                    self.userModel.requestedUids = user.requestedUids
+                                    if userModel.pairID != "" {
+                                        FetchFromFirestore().fetchCurrentUserPairInfo(pairID: userModel.pairID) { pair in
+                                            pairModel.id = pair.id
+                                            pairModel.gender = pair.gender
+                                            pairModel.pair_1_uid = pair.pair_1_uid
+                                            pairModel.pair_1_nickname = pair.pair_1_nickname
+                                            pairModel.pair_1_profileImageURL = pair.pair_1_profileImageURL
+                                            pairModel.pair_1_activeRegion = pair.pair_1_activeRegion
+                                            pairModel.pair_1_birthDate = pair.pair_1_birthDate
+                                            pairModel.pair_2_uid = pair.pair_2_uid
+                                            pairModel.pair_2_nickname = pair.pair_2_nickname
+                                            pairModel.pair_2_profileImageURL = pair.pair_2_profileImageURL
+                                            pairModel.pair_2_activeRegion = pair.pair_2_activeRegion
+                                            pairModel.pair_2_birthDate = pair.pair_2_birthDate
+                                            pairModel.chatPairIDs = pair.chatPairIDs
+                                            appState.isLogin = true
+                                            appState.messageListViewInit = true
+                                        }
+                                    } else {
+                                        appState.isLogin = true
+                                        appState.messageListViewInit = true
+                                    }
+                                }
+                            case .failure(let failure):
+                                print(failure)
+                            }
+                        }
+                        
                     } label: {
                         Text("ログイン")
                             .foregroundColor(.white)

@@ -7,6 +7,7 @@
 import UIKit
 import Foundation
 import FirebaseCore
+import Supabase
 import GoogleSignIn
 
 class AppDelegate: NSObject, UIApplicationDelegate {
@@ -14,6 +15,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         FirebaseApp.configure()
+        
         return true
     }
     

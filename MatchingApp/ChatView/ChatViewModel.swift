@@ -10,7 +10,7 @@ import SwiftUI
 class ChatViewModel: ObservableObject {
     @Published var text: String = ""
     @Published var trigger: Bool?
-    
+    @Published var chatList:[ChatObservableModel] = []
     func fetchMessage() async {
         
     }

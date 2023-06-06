@@ -6,11 +6,15 @@
 //
 
 import SwiftUI
+import Supabase
 
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
+    @EnvironmentObject var userModel: UserObservableModel
+    @EnvironmentObject var pairModel: PairObservableModel
     
     var body: some View {
+        
         VStack(spacing: .zero) {
             Text("相手をさがす")
                 .foregroundColor(.black)
@@ -22,20 +26,73 @@ struct HomeView: View {
             ScrollView(showsIndicators: false) {
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(spacing: 20){
-                        NavigationLink {
-                            UserProfileView()
-                        } label: {
-                            RecruitmentView()
+                        ForEach(viewModel.pairs) { pair in
+                            NavigationLink {
+                                    GroupProfileView(
+                                        myPair: pairModel,
+                                        pairModel: pair
+                                    )
+                            } label: {
+                                RecruitmentView(pairModel: pair)
+                            }
                         }
-                        
-                        RecruitmentView()
-                        RecruitmentView()
                     }
                     .padding(.top,8)
                 }
             }
+            .refreshable {
+                viewModel.pairs = []
+                FetchFromFirestore().fetchPairInfo { pairs in
+                    pairs.forEach { pair in
+                        viewModel.pairs.append(.init(
+                            id: pair.id,
+                            gender: pair.gender,
+                            pair_1_uid: pair.pair_1_uid,
+                            pair_1_nickname: pair.pair_1_nickname,
+                            pair_1_profileImageURL: pair.pair_1_profileImageURL,
+                            pair_1_activeRegion: pair.pair_1_activeRegion,
+                            pair_1_birthDate: pair.pair_1_birthDate,
+                            pair_2_uid: pair.pair_2_uid,
+                            pair_2_nickname: pair.pair_2_nickname,
+                            pair_2_profileImageURL: pair.pair_2_profileImageURL,
+                            pair_2_activeRegion: pair.pair_2_activeRegion,
+                            pair_2_birthDate: pair.pair_2_birthDate
+                        )
+                        )
+                    }
+                }
+            }
+        }
+        .onAppear {
+            viewModel.pairs = []
+            FetchFromFirestore().fetchPairInfo { pairs in
+                pairs.forEach { pair in
+                    
+                    viewModel.pairs.append(.init(
+                        id: pair.id,
+                        gender: pair.gender,
+                        pair_1_uid: pair.pair_1_uid,
+                        pair_1_nickname: pair.pair_1_nickname,
+                        pair_1_profileImageURL: pair.pair_1_profileImageURL,
+                        pair_1_activeRegion: pair.pair_1_activeRegion,
+                        pair_1_birthDate: pair.pair_1_birthDate,
+                        pair_2_uid: pair.pair_2_uid,
+                        pair_2_nickname: pair.pair_2_nickname,
+                        pair_2_profileImageURL: pair.pair_2_profileImageURL,
+                        pair_2_activeRegion: pair.pair_2_activeRegion,
+                        pair_2_birthDate: pair.pair_2_birthDate
+                    )
+                    )
+                }
+            }
         }
     }
+}
+
+struct CityModel: Identifiable {
+    let id: Int
+    let name: String
+    let country_id:Int
 }
 
 private func makeHeader(headerTitle: String, contentImage: Image) -> some View {

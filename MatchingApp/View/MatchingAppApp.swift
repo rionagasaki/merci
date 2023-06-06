@@ -6,15 +6,18 @@
 //
 
 import SwiftUI
+import Supabase
 
 @main
 struct MatchingAppApp: App {
+    
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environmentObject(AppState())
                 .environmentObject(UserObservableModel())
+                .environmentObject(PairObservableModel())
         }
     }
 }

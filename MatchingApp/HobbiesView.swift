@@ -9,24 +9,41 @@ import SwiftUI
 
 struct HobbiesView: View {
     @StateObject var viewModel = HobbiesViewModel()
+    @EnvironmentObject var userModel: UserObservableModel
+    @Environment(\.dismiss) var dismiss
+    
     var body: some View {
         VStack {
             ScrollView {
-                HStack {
-                    ForEach(viewModel.selectedHobbies, id:\.self) { hobby in
-                        OneHobbyView(hobby: hobby, selected: true)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack{
+                            ForEach(viewModel.selectedHobbies, id:\.self) { hobby in
+                                OneHobbyView(hobby: hobby, selected: true)
+                            }
+                        }
+                        .padding(.vertical, 8)
+                        .padding(.leading, 16)
                     }
-                }
+                    
                 GeometryReader { geometry in
                     generateTags(geometry)
                 }
                 .padding()
             }
             Button {
-                print("aaa")
+                SetToFirestore.shared.updateHobbies(uid: userModel.uid, hobbies: viewModel.selectedHobbies)
+                userModel.hobbies = viewModel.selectedHobbies
+                dismiss()
             } label: {
                 Text("決定する")
+                    .foregroundColor(.white)
+                    .frame(width: UIScreen.main.bounds.width-40, height: 60)
+                    .background(Color.customGreen)
+                    .cornerRadius(10)
             }
+        }
+        .onAppear {
+            viewModel.selectedHobbies = userModel.hobbies
         }
     }
     
@@ -80,7 +97,20 @@ struct HobbiesView: View {
                 })
             }
         }
-        .navigationTitle("Tag Break")
+        .navigationTitle("興味")
+        .navigationBarBackButtonHidden()
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(
+                    action: {
+                        dismiss()
+                    }, label: {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.black)
+                    }
+                )
+            }
+        }
     }
 }
 

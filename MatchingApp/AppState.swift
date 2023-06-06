@@ -10,5 +10,6 @@ import UIKit
 
 class AppState: ObservableObject {
     @Published var isLogin = (Authentication().currentUser != nil) ? true: false
+    @Published var messageListViewInit: Bool = true
     @Published var isLoading = false
 }

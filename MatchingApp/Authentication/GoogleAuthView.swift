@@ -15,6 +15,7 @@ struct GoogleAuthView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var userModel: UserObservableModel
     @State private var isModal: Bool = false
+    
     private func googleAuth() {
         
         guard let clientID:String = FirebaseApp.app()?.options.clientID else { return }
@@ -56,8 +57,14 @@ struct GoogleAuthView: View {
                         self.userModel.birthDate = user.birthDate
                         self.userModel.gender = user.gender
                         self.userModel.profileImageURL = user.profileImageURL
+                        self.userModel.subProfileImageURL = user.subProfileImageURLs
+                        self.userModel.introduction = user.introduction
+                        self.userModel.uid = user.id
+                        self.userModel.hobbies = user.hobbies
+                        self.userModel.pairID = user.pairID
+                        appState.isLogin = true
+                        appState.messageListViewInit = true
                     }
-                    appState.isLogin = true
                 }
             }
         }

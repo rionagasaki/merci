@@ -14,8 +14,8 @@ struct AppleAuthView: View {
     @State var currentNonce: String?
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var userModel: UserObservableModel
+    @EnvironmentObject var pairModel: PairObservableModel
     @State var isModal: Bool = false
-    @StateObject var viewModel = UserObservableModel()
     
     private func randomNonceString(length: Int = 32) -> String {
         precondition(length > 0)
@@ -87,8 +87,37 @@ struct AppleAuthView: View {
                                 self.userModel.birthDate = user.birthDate
                                 self.userModel.gender = user.gender
                                 self.userModel.profileImageURL = user.profileImageURL
+                                self.userModel.subProfileImageURL = user.subProfileImageURLs
+                                self.userModel.introduction = user.introduction
+                                self.userModel.uid = user.id
+                                self.userModel.hobbies = user.hobbies
+                                self.userModel.pairID = user.pairID
+                                self.userModel.requestUids = user.requestUids
+                                self.userModel.requestedUids = user.requestedUids
+                                
+                                if userModel.pairID != "" {
+                                    FetchFromFirestore().fetchCurrentUserPairInfo(pairID: userModel.pairID) { pair in
+                                        pairModel.id = pair.id
+                                        pairModel.gender = pair.gender
+                                        pairModel.pair_1_uid = pair.pair_1_uid
+                                        pairModel.pair_1_nickname = pair.pair_1_nickname
+                                        pairModel.pair_1_profileImageURL = pair.pair_1_profileImageURL
+                                        pairModel.pair_1_activeRegion = pair.pair_1_activeRegion
+                                        pairModel.pair_1_birthDate = pair.pair_1_birthDate
+                                        pairModel.pair_2_uid = pair.pair_2_uid
+                                        pairModel.pair_2_nickname = pair.pair_2_nickname
+                                        pairModel.pair_2_profileImageURL = pair.pair_2_profileImageURL
+                                        pairModel.pair_2_activeRegion = pair.pair_2_activeRegion
+                                        pairModel.pair_2_birthDate = pair.pair_2_birthDate
+                                        pairModel.chatPairIDs = pair.chatPairIDs
+                                        appState.isLogin = true
+                                        appState.messageListViewInit = true
+                                    }
+                                } else {
+                                    appState.isLogin = true
+                                    appState.messageListViewInit = true
+                                }
                             }
-                            appState.isLogin = true
                         }
                     }
                 }
@@ -101,7 +130,7 @@ struct AppleAuthView: View {
         .signInWithAppleButtonStyle(.black)
         .frame(width: 224, height: 40)
         .sheet(isPresented: $isModal) {
-            NickNameView(viewModel: viewModel)
+            NickNameView()
                 .interactiveDismissDisabled()
         }
     }

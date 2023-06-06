@@ -11,6 +11,7 @@ import AuthenticationServices
 struct RegisterView: View {
     @StateObject private var viewModel = RegisterViewModel()
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var appState: AppState
     
     var body: some View {
         VStack {
@@ -52,8 +53,14 @@ struct RegisterView: View {
                     
                     
                     Button {
-                        Task {
-                            
+                        SignIn.shared.signInWithEmail(email: viewModel.email, password: viewModel.password) { result in
+                            switch result {
+                            case .success(let success):
+                                appState.isLogin = true
+                                appState.messageListViewInit = true
+                            case .failure(let failure):
+                                print(failure)
+                            }
                         }
                     } label: {
                         Text("新規アカウント作成")
