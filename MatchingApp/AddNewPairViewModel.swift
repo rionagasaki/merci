@@ -12,23 +12,13 @@ class AddNewPairViewModel: ObservableObject {
     @Published var isModal: Bool = false
     
     @Published var noResult: Bool = false
-    
-    @Published var currentUserID: String = ""
-    @Published var userID: String = ""
-    @Published var nickname: String = ""
-    @Published var profileImageURL: String = ""
-    @Published var birthDate: String = ""
-    @Published var activeRegion: String = ""
+    @Published var user: UserObservableModel = .init()
     
     func pairSearch(){
         FetchFromFirestore().fetchUserInfoFromFirestoreByUserID(uid: searchedUserId) { user in
             if let user = user {
-                self.currentUserID = Authentication().currentUid
-                self.userID = user.id
-                self.nickname = user.nickname
-                self.profileImageURL = user.profileImageURL
-                self.birthDate = user.birthDate
-                self.activeRegion = user.activityRegion
+                self.user = user.adaptUserObservableModel()
+                self.searchedUserId = ""
                 self.isModal = true
             } else {
                 self.noResult = true

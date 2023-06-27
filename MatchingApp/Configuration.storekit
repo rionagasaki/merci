@@ -1,0 +1,33 @@
+{
+  "identifier" : "A73B0D0A",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "8C073FBB",
+      "localizations" : [
+        {
+          "description" : "メッセージができるコインです",
+          "displayName" : "NiNiコイン",
+          "locale" : "ar"
+        }
+      ],
+      "productID" : "com.temporary.MessageTicket",
+      "referenceName" : "MessageTicket",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 2,
+    "minor" : 0
+  }
+}

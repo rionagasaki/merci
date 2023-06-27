@@ -10,17 +10,7 @@ struct OpenSourceLibraryView: View {
     var body: some View {
         ScrollView {
             VStack {
-                Text("オープンソースライブラリ")
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .fontWeight(.bold)
-                    .font(.system(size: 24))
-                    .padding(.horizontal, 16)
-                Text("オープンソースライブラリ")
-                    .fontWeight(.light)
-                    .font(.system(size: 20))
-                    .padding(20)
-                Text("Open Source Policy")
-                    .fontWeight(.light)
+                
             }
         }
     }

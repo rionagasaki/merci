@@ -9,7 +9,7 @@ import SwiftUI
 import SDWebImageSwiftUI
 import Lottie
 
-enum SheetItem: Identifiable {
+enum ImageSheetItem: Identifiable {
     case mainImage
     case subImages
     var id: Int {
@@ -18,6 +18,31 @@ enum SheetItem: Identifiable {
 }
 
 struct ChangeImageView: View {
+    
+    var registerButtonEnabled: Bool {
+        return selectedImage != nil
+    }
+    
+    @State var showEditImageModal: Bool = false
+    
+    @State var previewModal: Bool = false
+    
+    @State var selectedImage: UIImage?
+    @State var selection: Int = 0
+    
+    @State var subImages: [UIImage] = []
+    @State var subImagesIndex: Int = 0
+    @State var sheetItem: ImageSheetItem?
+    
+    @State var allImages:[UIImage] = []
+    
+    @State var tabSection = ["メイン(必須)","サブ"]
+    @EnvironmentObject var appState: AppState
+    @EnvironmentObject var userModel: UserObservableModel
+    @EnvironmentObject var pairModel: PairObservableModel
+    
+    @Environment(\.dismiss) var dismiss
+    let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .medium)
     
     func getImageFromURLString(urlString: String, completion: @escaping (UIImage?) -> Void) {
         if let url = URL(string: urlString) {
@@ -34,27 +59,13 @@ struct ChangeImageView: View {
         }
     }
     
-    @EnvironmentObject var userModel: UserObservableModel
-    @Environment (\.dismiss) var dismiss
-    @State var checkSelectedMainImage: UIImage?
-    @State var checkSubImages:[UIImage] = []
-    @State var selectedMainImage: UIImage?
-    @State var subImages: [UIImage] = []
-    @State var subImagesIndex: Int = 0
-    @State var sheetItem: SheetItem?
-    @State var loading: Bool = false
-    @State var showCheckBox: Bool = false
-    
-    var enabledButton: Bool {
-        return selectedMainImage == checkSelectedMainImage && subImages == checkSubImages
-    }
-    
     var body: some View {
-        ZStack {
+        NavigationView {
             VStack(alignment: .leading) {
                 ScrollView {
-                    HStack {
-                        VStack(alignment: .leading){
+                    VStack {
+                        VStack {
+                            BannerView()
                             Text("プロフィール画像の追加")
                                 .font(.system(size: 25))
                                 .fontWeight(.bold)
@@ -62,148 +73,157 @@ struct ChangeImageView: View {
                                 .padding(.top, 16)
                                 .padding(.leading, 16)
                             
-                            Text("画像を一枚以上追加してください。")
+                            Text("画像を一枚以上追加してください。\nプロフィール画像あとから変更できます。")
                                 .foregroundColor(.gray)
                                 .padding(.horizontal, 16)
                                 .font(.system(size: 13))
                         }
-                        Spacer()
-                    }
-                    Button {
-                        sheetItem = .mainImage
-                    } label: {
-                        ZStack {
-                            if selectedMainImage != nil {
-                                Image(uiImage: selectedMainImage!)
-                                    .resizable()
-                                    .frame(width: 340, height: 340)
-                                    .cornerRadius(10)
-                            } else {
-                                RoundedRectangle(cornerRadius: 10)
-                                    .frame(width: 340, height: 340)
-                                    .foregroundColor(.gray.opacity(0.3))
-                            }
-                            VStack {
-                                Image(systemName: "camera")
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: 40, height: 40)
-                                    .foregroundColor(.white)
-                                Text("編集")
-                                    .foregroundColor(.white)
-                                    .font(.system(size: 16))
-                            }
-                            .background(
-                                Circle()
-                                    .foregroundColor(.gray.opacity(0.8))
-                                    .frame(width: 100, height: 100)
-                            )
-                        }
-                        
-                    }
-                    HStack {
-                        ForEach(0..<4){ index in
-                            Button {
-                                subImagesIndex = index
-                                sheetItem = .subImages
-                            } label: {
-                                VStack {
-                                    ZStack {
-                                        if subImages.count <= index {
-                                            RoundedRectangle(cornerRadius: 10)
-                                                .frame(width: (UIScreen.main.bounds.width/4)-10, height: (UIScreen.main.bounds.width/4)-10)
-                                                .foregroundColor(.gray.opacity(0.3))
-                                        } else {
-                                            Image(uiImage: subImages[index])
-                                                .resizable()
-                                                .frame(width: (UIScreen.main.bounds.width/4)-10, height: (UIScreen.main.bounds.width/4)-10)
-                                        }
-                                        VStack {
-                                            Image(systemName: "camera")
-                                                .resizable()
-                                                .scaledToFill()
-                                                .frame(width:20, height: 20)
-                                                .foregroundColor(.white)
-                                        }
-                                        .background(
-                                            Circle()
-                                                .foregroundColor(.gray.opacity(0.8))
-                                                .frame(width: 50, height: 50)
-                                        )
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        HStack {
+                            ForEach(tabSection.indices, id: \.self) { index in
+                                Button {
+                                    withAnimation {
+                                        selection = index
                                     }
-                                    if showCheckBox {
-                                        CheckBoxView()
-                                    }
+                                } label: {
+                                    Text(tabSection[index])
+                                        .foregroundColor(index == selection ? .customBlack: .customBlack.opacity(0.5))
+                                        .font(.system(size: 16, weight: .bold))
+                                        .frame(maxWidth: .infinity, alignment: .center)
                                 }
                             }
                         }
-                    }
-                }
-                
-                Button {
-                    if let selectedMainImage = selectedMainImage {
-                        loading = true
-                        RegisterStorage().registerImageToStorage(folderName: "UserProfile", profileImage: selectedMainImage) { imageURLString in
-                            userModel.profileImageURL = imageURLString
-                            RegisterStorage().registerConcurrentImageToStorage(folderName: "SubImage", images: subImages) { urlStrings in
-                                userModel.subProfileImageURL = urlStrings
-                                SetToFirestore.shared.updateProfileImages(uid: userModel.uid, profileImageURL: userModel.profileImageURL, subImageURLs: userModel.subProfileImageURL)
-                                loading = false
-                                dismiss()
+                        .padding(.top, 24)
+                        
+                        ZStack(alignment: selection == 0 ? .leading: .trailing) {
+                            Rectangle()
+                                .foregroundColor(.gray.opacity(0.8))
+                                .frame(width: UIScreen.main.bounds.width, height: 2)
+                            Rectangle()
+                                .foregroundColor(.pink.opacity(0.7))
+                                .frame(width: (UIScreen.main.bounds.width/2), height: 2)
+                        }
+                        
+                        TabView(selection: $selection){
+                            ForEach(tabSection.indices, id: \.self) { index in
+                                if index == 0 {
+                                    Button {
+                                        sheetItem = .mainImage
+                                    } label: {
+                                        if let selectedImage = selectedImage {
+                                            Image(uiImage: selectedImage)
+                                                .resizable()
+                                                .frame(width: (UIScreen.main.bounds.width)-32, height: (UIScreen.main.bounds.width)-32)
+                                                .cornerRadius(10)
+                                        } else {
+                                            ZStack {
+                                                RoundedRectangle(cornerRadius: 10)
+                                                    .frame(width: (UIScreen.main.bounds.width)-32, height: (UIScreen.main.bounds.width)-32)
+                                                    .foregroundColor(.gray.opacity(0.3))
+                                                VStack {
+                                                    Image(systemName: "camera")
+                                                        .resizable()
+                                                        .scaledToFill()
+                                                        .frame(width: 40, height: 40)
+                                                        .foregroundColor(.white)
+                                                    Text("編集")
+                                                        .foregroundColor(.white)
+                                                        .font(.system(size: 10))
+                                                }
+                                                .background(
+                                                    Circle()
+                                                        .foregroundColor(.gray.opacity(0.8))
+                                                        .frame(width: 100, height: 100)
+                                                )
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    SubImageColumnView(sheetItem: $sheetItem, subImagesIndex: $subImagesIndex, subImages: $subImages)
+                                }
                             }
                         }
+                        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                        .frame(height: UIScreen.main.bounds.width)
+                        
+                        Button {
+                            UIIFGeneratorMedium.impactOccurred()
+                            // エラーハンドリング3
+                            guard let selectedImage = selectedImage else { return }
+                            RegisterStorage().registerImageToStorage(folderName: "UserProfile", profileImage: selectedImage) { imageURLString in
+                                userModel.profileImageURL = imageURLString
+                                RegisterStorage().registerConcurrentImageToStorage(folderName: "SubImage", images: subImages) { urlStrings in
+                                    userModel.subProfileImageURL = urlStrings
+                                    SetToFirestore.shared.updateProfileImages(currentUser: userModel, pair: pairModel)
+                                    dismiss()
+                                }
+                            }
+                        } label: {
+                            Text("登録する😀")
+                                .foregroundColor(.white)
+                                .frame(width: UIScreen.main.bounds.width-32, height: 50)
+                                .background(registerButtonEnabled ? .pink.opacity(0.7): .gray.opacity(0.4))
+                                .font(.system(size: 16,weight: .bold))
+                                .cornerRadius(10)
+                                .padding(.top, 56)
+                        }
+                        .disabled(!registerButtonEnabled)
                     }
-                } label: {
-                    Text("保存する")
-                        .frame(width: UIScreen.main.bounds.width-32, height: 50)
-                        .background(enabledButton ? Color.gray.opacity(0.7): Color.red.opacity(0.7))
-                        .cornerRadius(10)
-                        .foregroundColor(.white)
                 }
-                .disabled(enabledButton)
-            }
-            .overlay {
-                if loading {
-                    Color.black.opacity(0.4).ignoresSafeArea()
-                        .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+                .sheet(item: $sheetItem) { item in
+                    switch item {
+                    case .mainImage: ImagePicker(selectedImage: $selectedImage)
+                        
+                    case .subImages: SubImagePicker(index: subImagesIndex, selectedImages: $subImages)
+                    }
                 }
             }
-            if loading {
-                LottieView(animationResourceName: "loading")
-                    .frame(width: 100, height:100)
+            .navigationBarBackButtonHidden()
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(
+                        action: {
+                            dismiss()
+                        }, label: {
+                            Image(systemName: "xmark")
+                                .foregroundColor(.black)
+                            
+                        }
+                    )
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(
+                        action: {
+                            UIIFGeneratorMedium.impactOccurred()
+                            previewModal = true
+                        }, label: {
+                            Text("プレビュー")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(.customBlack)
+                        }
+                    )
+                }
             }
-        }
-        .padding(.horizontal, 16)
-        .padding(.bottom, 10)
-        .onAppear {
-            userModel.subProfileImageURL.forEach { urlString in
-                getImageFromURLString(urlString: urlString) { image in
+            .sheet(isPresented: $previewModal) {
+                ImagePreviewView(previewImages: $allImages)
+                    .onAppear {
+                        subImages.insert(selectedImage!, at: 0)
+                        allImages = subImages
+                        subImages.removeFirst()
+                    }
+            }
+            .onAppear {
+                userModel.subProfileImageURL.forEach { urlString in
+                    getImageFromURLString(urlString: urlString) { image in
+                        guard let image = image else { return }
+                        subImages.append(image)
+                    }
+                }
+                getImageFromURLString(urlString: userModel.profileImageURL) { image in
                     guard let image = image else { return }
-                    subImages.append(image)
-                    checkSubImages.append(image)
+                    selectedImage = image
                 }
             }
-            getImageFromURLString(urlString: userModel.profileImageURL) { image in
-                guard let image = image else { return }
-                selectedMainImage = image
-                checkSelectedMainImage = image
-            }
         }
-        .sheet(item: $sheetItem) { item in
-            switch item {
-            case .mainImage:
-                ImagePicker(selectedImage: $selectedMainImage)
-            case .subImages:
-                SubImagePicker(
-                    index: subImagesIndex,
-                    selectedImages: $subImages)
-            }
-        }
-    }
-}
-
-struct ChangeImageView_Previews: PreviewProvider {
-    static var previews: some View {
-        ChangeImageView()
     }
 }

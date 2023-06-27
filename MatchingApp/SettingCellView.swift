@@ -12,7 +12,6 @@ struct SettingCellView: View {
     let text: String
     var body: some View {
         VStack {
-            Divider()
             HStack {
                 Image(systemName: systemImageName)
                     .resizable()
@@ -20,9 +19,6 @@ struct SettingCellView: View {
                     .frame(width: 20, height: 20)
                 Text(text)
                     .foregroundColor(.black)
-                    .fontWeight(.light)
-                    
-                
                 Spacer()
             }
             .padding(.vertical, 8)

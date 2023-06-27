@@ -7,61 +7,51 @@
 
 import SwiftUI
 import SDWebImageSwiftUI
+import AudioToolbox
 
 struct GroupProfileView: View {
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var userModel: UserObservableModel
     @State var selection = 0
     @Namespace var namespace
-    let myPair: PairObservableModel
-    let pairModel:PairObservableModel
+    @State var userInfos:[UserObservableModel] = []
+    @State var height: CGFloat = .init()
+    @EnvironmentObject var pairModel: PairObservableModel
+    @State var offset: CGFloat = 0
+    let pair:PairObservableModel
     var body: some View {
         VStack {
-            ScrollView {
-                VStack {
-                    HStack {
+            VStack {
+                HStack {
+                    ForEach(userInfos.indices, id: \.self) { index in
                         Button {
                             withAnimation {
-                                selection = 0
+                                selection = index
                             }
                         } label: {
-                            SelectUserComponent(nickname: pairModel.pair_1_nickname, profileImageURL: pairModel.pair_1_profileImageURL, activeRegion: pairModel.pair_1_activeRegion, birthDate: pairModel.pair_1_birthDate,selection: selection, selfNum: 0, namespace: namespace)
-                        }
-                        .padding(.leading, 8)
-                        Spacer()
-                        Button {
-                            withAnimation {
-                                selection = 1
-                            }
-                        } label: {
-                            SelectUserComponent(nickname: pairModel.pair_2_nickname, profileImageURL: pairModel.pair_2_profileImageURL, activeRegion: pairModel.pair_2_activeRegion, birthDate: pairModel.pair_2_birthDate,selection: selection, selfNum: 1, namespace: namespace)
-                        }
-                        .padding(.trailing, 16)
-                    }
-                    
-                    ZStack(alignment: selection == 0 ? .leading: .trailing) {
-                        Rectangle()
-                            .foregroundColor(.gray.opacity(0.8))
-                            .frame(width: UIScreen.main.bounds.width, height: 2)
-                        Rectangle()
-                            .foregroundColor(.customGreen)
-                            .frame(width: (UIScreen.main.bounds.width/2), height: 2)
-                            
-                    }
-                }
-                .padding(.bottom, 8)
-                
-                TabView(selection: $selection){
-                    ForEach(0..<2) { index in
-                        if index == 0 {
-                            EasyUserProfileView(nickname: pairModel.pair_1_nickname, profileImageURL: pairModel.pair_1_profileImageURL, activeRegion: pairModel.pair_1_activeRegion, birthDate: pairModel.pair_1_birthDate)
-                        } else {
-                            EasyUserProfileView(nickname: pairModel.pair_2_nickname, profileImageURL: pairModel.pair_2_profileImageURL, activeRegion: pairModel.pair_2_activeRegion, birthDate: pairModel.pair_2_birthDate)
+                            SelectUserComponent(nickname: userInfos[index].nickname, profileImageURL: userInfos[index].profileImageURL, activeRegion: userInfos[index].activeRegion, birthDate: userInfos[index].birthDate,selection: selection, selfNum: index, namespace: namespace)
                         }
                     }
                 }
-                .frame(height: UIScreen.main.bounds.height)
-                .tabViewStyle(PageTabViewStyle())
+                ZStack(alignment: selection == 0 ? .leading: .trailing) {
+                    Rectangle()
+                        .foregroundColor(.gray.opacity(0.8))
+                        .frame(width: UIScreen.main.bounds.width, height: 2)
+                    Rectangle()
+                        .foregroundColor(.pink.opacity(0.7))
+                        .frame(width: (UIScreen.main.bounds.width/2), height: 2)
+                }
             }
+            .frame(height: 80)
+            
+            TabView(selection: $selection){
+                ForEach(userInfos.indices, id: \.self) { index in
+                    EasyUserProfileView(user: userInfos[index], offset: $offset)
+                }
+            }
+            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+            
+            Spacer()
             HStack {
                 GeometryReader { geometry in
                     HStack {
@@ -72,18 +62,37 @@ struct GroupProfileView: View {
                         }
                         .padding(.leading, 16)
                         Spacer()
-                        NavigationLink {
-                            ChatView(pair: pairModel)
-                        } label: {
-                            Text("メッセージを送る")
-                                .frame(width: geometry.frame(in: .global).width - 90, height: 60)
-                                .background(Color.customGreen)
+                        if userModel.pairUid == "" {
+                            Text("ペアを有効にしてください")
+                                .frame(width: geometry.frame(in: .global).width - 90, height: 50)
+                                .background(Color.gray.opacity(0.7))
                                 .foregroundColor(.white)
-                                .bold()
-                                .font(.system(size: 16))
+                                .font(.system(size: 16, weight: .bold))
                                 .cornerRadius(10)
+                                .padding(.trailing, 16)
+                        } else {
+                            if userModel.coins < 100 {
+                                Text("コインが不足しています")
+                                    .frame(width: geometry.frame(in: .global).width - 90, height: 50)
+                                    .background(Color.gray.opacity(0.7))
+                                    .foregroundColor(.white)
+                                    .font(.system(size: 16, weight: .bold))
+                                    .cornerRadius(10)
+                                    .padding(.trailing, 16)
+                            } else {
+                                NavigationLink {
+                                    ChatView(pair: pair, id: UUID())
+                                } label: {
+                                    Text("メッセージを送る")
+                                        .frame(width: geometry.frame(in: .global).width - 90, height: 50)
+                                        .background(Color.pink.opacity(0.7))
+                                        .foregroundColor(.white)
+                                        .font(.system(size: 16, weight: .bold))
+                                        .cornerRadius(10)
+                                }
+                                .padding(.trailing, 16)
+                            }
                         }
-                        .padding(.trailing, 16)
                     }
                     .padding(.top, 16)
                 }
@@ -92,121 +101,181 @@ struct GroupProfileView: View {
             }
         }
         .onAppear {
-            print("myPair   \(myPair.id)")
-            print("pairModel    \(pairModel.id)")
+            userInfos = []
+            FetchFromFirestore().fetchConcurrentUserInfo(userIDs: [pair.pair.pair_1_uid, pair.pair.pair_2_uid]) { users in
+                users.forEach { user in
+                    userInfos.append(user.adaptUserObservableModel())
+                }
+            }
         }
         .navigationBarBackButtonHidden(true)
+        .navigationBarTitleDisplayMode(.inline)
         .navigationTitle("相手のプロフィール")
     }
 }
 
 
 struct EasyUserProfileView: View {
-    let nickname: String
-    let profileImageURL: String
-    let activeRegion: String
-    let birthDate: String
+    let user:UserObservableModel
+    @Binding var offset: CGFloat
+    @State var selection = 0
+    @State var degree: Double = 0
+    let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .medium)
+    let UIIFGeneratorError = UINotificationFeedbackGenerator()
+    var allImages:[String] {
+        return [user.profileImageURL] + user.subProfileImageURL
+    }
+    
+    func generateWebImage() -> [WebImage] {
+        var webImages: [WebImage] = []
+        allImages.forEach { image in
+            webImages.append(WebImage(url: URL(string: image)))
+        }
+        return webImages
+    }
+    
     var body: some View {
-        VStack {
-           WebImage(url: URL(string: profileImageURL))
-                .resizable()
-                .frame(width: UIScreen.main.bounds.width, height: 350)
-                .scaledToFit()
-            
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack {
-                    Image("Person")
+        ScrollView {
+            VStack(spacing: .zero){
+                ZStack(alignment: .bottom){
+                    generateWebImage()[selection]
                         .resizable()
-                        .frame(width:80, height: 80)
+                        .frame(width: UIScreen.main.bounds.width-30, height: UIScreen.main.bounds.width-30)
+                        .scaledToFit()
+                        .cornerRadius(10)
+                        .rotation3DEffect(.degrees(degree),axis: (x: 0, y: 1, z: 0))
+                    HStack(spacing: .zero){
+                        Button {
+                            if 0 < selection {
+                                UIIFGeneratorMedium.impactOccurred()
+                                selection -= 1
+                            } else {
+                                UIIFGeneratorError.notificationOccurred(.warning)
+                                withAnimation {
+                                    degree = -40
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now()+0.1) {
+                                    withAnimation {
+                                        degree = 0
+                                    }
+                                }
+                            }
+                        } label: {
+                            Rectangle()
+                                .foregroundColor(.clear)
+                        }
+
+                        Button {
+                            if allImages.count - 1 > selection {
+                                UIIFGeneratorMedium.impactOccurred()
+                                selection += 1
+                            } else {
+                                UIIFGeneratorError.notificationOccurred(.warning)
+                                withAnimation {
+                                    degree = 40
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now()+0.1) {
+                                    withAnimation {
+                                        degree = 0
+                                    }
+                                }
+                            }
+                        } label: {
+                            Rectangle()
+                                .foregroundColor(.clear)
+                        }
+                    }
+                    HStack {
+                        ForEach(allImages.indices, id: \.self) { index in
+                            if index == selection {
+                                Circle()
+                                    .frame(width: 10, height: 10)
+                                    .foregroundColor(.white)
+                            } else {
+                                Circle()
+                                    .frame(width: 10, height: 10)
+                                    .foregroundColor(.gray.opacity(0.8))
+                            }
+                        }
+                    }
+                    .padding(.bottom, 8)
+                }
+                if let age = CalculateAge().calculateAge(from: user.birthDate) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: .zero){
+                            Text(user.nickname)
+                                .foregroundColor(.black)
+                                .font(.system(size: 25))
+                                .fontWeight(.bold)
+                                .padding(.top, 8)
+                                .padding(.leading, 16)
+                            Text("\(age)歳・\(user.activeRegion)")
+                                .foregroundColor(.customBlack.opacity(0.8))
+                                .font(.system(size: 13))
+                                .fontWeight(.bold)
+                                .padding(.vertical, 2)
+                                .padding(.leading, 16)
+                        }
+                        Spacer()
+                    }
+                    .padding(.top, 8)
+                }
+                VStack {
+                    VStack(alignment: .leading,spacing: 4){
+                        Text("自己紹介")
+                            .padding(.vertical, 8)
+                            .foregroundColor(.customBlack)
+                            .font(.system(size: 18, weight: .bold))
+                            
+                        Text(user.introduction)
+                            .foregroundColor(.customBlack)
+                            .font(.system(size: 16))
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 32)
+                    .padding(.horizontal, 16)
                     
-                    Image("Person")
-                        .resizable()
-                        .frame(width:80, height: 80)
+                    VStack(spacing: .zero){
+                        Text("興味")
+                            .padding(.vertical, 8)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .foregroundColor(.customBlack)
+                            .font(.system(size: 18, weight: .bold))
+                            
+                        HStack {
+                            GenerateTags.generateTags(UIScreen.main.bounds.width-32, tags: user.hobbies)
+                            Spacer()
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 32)
                     
-                    Image("Person")
-                        .resizable()
-                        .frame(width:80, height: 80)
-                    
-                    Image("Person")
-                        .resizable()
-                        .frame(width:80, height: 80)
-                    Image("Person")
-                        .resizable()
-                        .frame(width:80, height: 80)
-                    
+                    VStack {
+                        Text("プロフィール")
+                            .padding(.vertical, 8)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .foregroundColor(.customBlack)
+                            .font(.system(size: 18, weight: .bold))
+                            
+                        ForEach(DetailProfile.allCases) { detailProfile in
+                            DetailProfileCellView(user: user, selectedDetailProfile: detailProfile)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 32)
                 }
             }
-            .padding(.horizontal, 8)
-            
-            if let age = CalculateAge().calculateAge(from: birthDate) {
-                HStack {
-                    Text(nickname)
-                    Text("\(age)歳")
-                    Text(activeRegion)
-                }
-                .foregroundColor(.black.opacity(0.8))
-                .font(.system(size: 25))
-                .fontWeight(.light)
-                .padding(.vertical, 8)
-            }
-            
-            HStack {
-                Image(systemName: "ellipsis.message.fill")
-                    .resizable()
-                    .frame(width: 20, height: 20)
-                    .scaledToFit()
-                    .foregroundColor(.gray)
-                Text("真剣な恋愛を探しています！")
-                    .fontWeight(.light)
-                    .font(.system(size: 14))
-            }
-            VStack {
-                HStack {
-                    HStack {
-                        Text("身長")
-                            .foregroundColor(.gray)
-                            .fontWeight(.light)
-                        Text("161cm")
-                            .foregroundColor(.black)
-                    }
-                    Spacer()
-                    HStack {
-                        Text("身長")
-                            .foregroundColor(.gray)
-                            .fontWeight(.light)
-                        Text("161cm")
-                            .foregroundColor(.black)
-                    }
-                }
-                
-                HStack {
-                    HStack {
-                        Text("身長")
-                            .foregroundColor(.gray)
-                            .fontWeight(.light)
-                        Text("161cm")
-                            .foregroundColor(.black)
-                    }
-                    Spacer()
-                    HStack {
-                        Text("同居人")
-                            .foregroundColor(.gray)
-                            .fontWeight(.light)
-                        Text("161cm")
-                            .foregroundColor(.black)
-                    }
-                    
-                }
-            }
-            .padding(.horizontal, 16)
-            CustomDivider()
-            Text("")
-            Text("")
-            
-            Spacer()
         }
     }
 }
+
+struct OffsetPreferenceKey: PreferenceKey {
+    static var defaultValue = CGFloat.zero
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value += nextValue()
+    }
+}
+
 
 struct SelectUserComponent: View {
     let nickname: String
@@ -222,10 +291,11 @@ struct SelectUserComponent: View {
             HStack(alignment: .top) {
                 WebImage(url: URL(string: profileImageURL))
                     .resizable()
-                    .frame(width: 80, height: 80)
-                    .cornerRadius(15)
+                    .frame(width: 60, height: 60)
+                    .cornerRadius(5)
                 VStack(alignment: .leading){
                     Text(nickname)
+                        .bold()
                         .foregroundColor(.black)
                         .font(.system(size: 14))
                     if let age = CalculateAge().calculateAge(from: birthDate) {
@@ -233,12 +303,10 @@ struct SelectUserComponent: View {
                             .font(.system(size: 12))
                             .foregroundColor(.gray.opacity(0.8))
                     }
-                    
                     Spacer()
                 }
             }
             .padding(.all, 8)
-           
         }
     }
 }

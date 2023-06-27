@@ -8,14 +8,20 @@
 import Foundation
 import FirebaseAuth
 
-class Authentication {
-    let currentUser: FirebaseAuth.User?
-    let userEmail: String
-    let currentUid: String
+class AuthenticationManager {
+    static let shared = AuthenticationManager()
     
-    init(){
-        self.currentUser = Auth.auth().currentUser
-        self.currentUid = Auth.auth().currentUser?.uid ?? ""
-        self.userEmail = Auth.auth().currentUser?.email ?? ""
+    var user: FirebaseAuth.User? {
+        return Auth.auth().currentUser
     }
+    
+    var uid: String? {
+        return Auth.auth().currentUser?.uid
+    }
+    
+    var email: String? {
+        return Auth.auth().currentUser?.email
+    }
+    
+    private init(){}
 }

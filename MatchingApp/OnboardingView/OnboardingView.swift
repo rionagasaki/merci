@@ -64,27 +64,7 @@ struct OnboardingView: View {
                     .indexViewStyle(.page(backgroundDisplayMode: .always))
                     
                     Spacer()
-                    NavigationLink {
-                        LoginView()
-                    } label: {
-                        Text("Login")
-                            .foregroundColor(.black)
-                            .font(.system(size: 17))
-                            .bold()
-                            .frame(width: UIScreen.main.bounds.width-40, height: 50)
-                            .background(Color.yellow)
-                            .cornerRadius(10)
-                    }
-                    NavigationLink {
-                        RegisterView()
-                    } label: {
-                        Text("アカウントをまだお持ちでない方")
-                            .foregroundColor(.blue.opacity(0.8))
-                            .font(.system(size: 17))
-                            .bold()
-                            .frame(width: UIScreen.main.bounds.width-40, height: 50)
-                            .padding(.bottom, 16)
-                    }
+                    
                 }
             }
         }

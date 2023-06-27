@@ -16,7 +16,6 @@ struct AppleAuthView: View {
     @EnvironmentObject var userModel: UserObservableModel
     @EnvironmentObject var pairModel: PairObservableModel
     @State var isModal: Bool = false
-    
     private func randomNonceString(length: Int = 32) -> String {
         precondition(length > 0)
         var randomBytes = [UInt8](repeating: 0, count: length)
@@ -49,6 +48,7 @@ struct AppleAuthView: View {
     
     var body: some View {
         SignInWithAppleButton(.signIn){ request in
+            
             request.requestedScopes = [.email,.fullName]
             let nonce = randomNonceString()
             currentNonce = nonce
@@ -80,41 +80,52 @@ struct AppleAuthView: View {
                         if additionalUserInfo.isNewUser {
                             isModal = true
                         } else {
-                            FetchFromFirestore().fetchUserInfoFromFirestore { user in
+                            // エラーハンドリング1
+                            guard let uid = AuthenticationManager.shared.uid else { return }
+                            FetchFromFirestore().snapshotOnRequest(uid: uid){ user in
+                                self.userModel.uid = user.id
                                 self.userModel.nickname = user.nickname
                                 self.userModel.email = user.email
                                 self.userModel.activeRegion = user.activityRegion
+                                self.userModel.birthPlace = user.birthPlace
+                                self.userModel.educationalBackground = user.educationalBackground
+                                self.userModel.work = user.work
+                                self.userModel.height = user.height
+                                self.userModel.weight = user.weight
+                                self.userModel.bloodType = user.bloodType
+                                self.userModel.liquor = user.liquor
+                                self.userModel.cigarettes = user.cigarettes
+                                self.userModel.purpose = user.purpose
+                                self.userModel.datingExpenses = user.datingExpenses
                                 self.userModel.birthDate = user.birthDate
                                 self.userModel.gender = user.gender
                                 self.userModel.profileImageURL = user.profileImageURL
                                 self.userModel.subProfileImageURL = user.subProfileImageURLs
                                 self.userModel.introduction = user.introduction
-                                self.userModel.uid = user.id
-                                self.userModel.hobbies = user.hobbies
-                                self.userModel.pairID = user.pairID
                                 self.userModel.requestUids = user.requestUids
                                 self.userModel.requestedUids = user.requestedUids
+                                self.userModel.friendUids = user.friendUids
+                                self.userModel.pairRequestUid = user.pairRequestUid
+                                self.userModel.pairRequestedUids = user.pairRequestedUids
+                                self.userModel.pairUid = user.pairUid
+                                self.userModel.hobbies = user.hobbies
+                                self.userModel.pairID = user.pairID
+                                self.userModel.pairList = user.pairList
+                                self.userModel.chatUnreadNum = user.chatUnreadNum
                                 
                                 if userModel.pairID != "" {
-                                    FetchFromFirestore().fetchCurrentUserPairInfo(pairID: userModel.pairID) { pair in
-                                        pairModel.id = pair.id
-                                        pairModel.gender = pair.gender
-                                        pairModel.pair_1_uid = pair.pair_1_uid
-                                        pairModel.pair_1_nickname = pair.pair_1_nickname
-                                        pairModel.pair_1_profileImageURL = pair.pair_1_profileImageURL
-                                        pairModel.pair_1_activeRegion = pair.pair_1_activeRegion
-                                        pairModel.pair_1_birthDate = pair.pair_1_birthDate
-                                        pairModel.pair_2_uid = pair.pair_2_uid
-                                        pairModel.pair_2_nickname = pair.pair_2_nickname
-                                        pairModel.pair_2_profileImageURL = pair.pair_2_profileImageURL
-                                        pairModel.pair_2_activeRegion = pair.pair_2_activeRegion
-                                        pairModel.pair_2_birthDate = pair.pair_2_birthDate
-                                        pairModel.chatPairIDs = pair.chatPairIDs
-                                        appState.isLogin = true
-                                        appState.messageListViewInit = true
+                                    FetchFromFirestore().fetchPairInfo(pairID: userModel.pairID) { pair in
+                                        pairModel.pair = pair.adaptPairModel()
+                                        FetchFromFirestore().fetchUserInfoFromFirestoreByUserID(uid: user.pairUid) { pair in
+                                            if let pair = pair {
+                                                appState.pairUserModel = pair.adaptUserObservableModel()
+                                                appState.messageListViewInit = true
+                                                appState.notLoggedInUser = false
+                                            }
+                                        }
                                     }
                                 } else {
-                                    appState.isLogin = true
+                                    appState.notLoggedInUser = false
                                     appState.messageListViewInit = true
                                 }
                             }
@@ -128,16 +139,10 @@ struct AppleAuthView: View {
             }
         }
         .signInWithAppleButtonStyle(.black)
-        .frame(width: 224, height: 40)
+        .frame(width: UIScreen.main.bounds.width-32, height: 50)
         .sheet(isPresented: $isModal) {
             NickNameView()
                 .interactiveDismissDisabled()
         }
-    }
-}
-
-struct AppleAuthView_Previews: PreviewProvider {
-    static var previews: some View {
-        AppleAuthView()
     }
 }

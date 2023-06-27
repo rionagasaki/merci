@@ -35,11 +35,26 @@ struct HobbiesView: View {
                 userModel.hobbies = viewModel.selectedHobbies
                 dismiss()
             } label: {
-                Text("決定する")
+                Text("変更を保存する")
                     .foregroundColor(.white)
-                    .frame(width: UIScreen.main.bounds.width-40, height: 60)
-                    .background(Color.customGreen)
+                    .bold()
+                    .frame(width: UIScreen.main.bounds.width-32, height: 50)
+                    .background(Color.pink.opacity(0.7))
                     .cornerRadius(10)
+            }
+        }
+        .navigationTitle("興味")
+        .navigationBarBackButtonHidden()
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(
+                    action: {
+                        dismiss()
+                    }, label: {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.black)
+                    }
+                )
             }
         }
         .onAppear {
@@ -95,20 +110,6 @@ struct HobbiesView: View {
                     }
                     return result
                 })
-            }
-        }
-        .navigationTitle("興味")
-        .navigationBarBackButtonHidden()
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(
-                    action: {
-                        dismiss()
-                    }, label: {
-                        Image(systemName: "chevron.left")
-                            .foregroundColor(.black)
-                    }
-                )
             }
         }
     }

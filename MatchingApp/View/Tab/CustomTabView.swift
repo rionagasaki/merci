@@ -11,12 +11,14 @@ struct CustomTabView: View {
     
     @Binding var selectedTab:Tab
     @Binding var navigationTitle:String
+    let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .light)
     
     var body: some View {
         HStack{
             Spacer()
             ForEach(tabItems.indices, id: \.self) { index in
                 Button {
+                        UIIFGeneratorMedium.impactOccurred()
                         self.selectedTab = tabItems[index].tab
                         self.navigationTitle =
                         tabItems[index].tab.rawValue

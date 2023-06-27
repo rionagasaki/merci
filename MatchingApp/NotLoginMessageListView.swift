@@ -36,9 +36,6 @@ struct NotLoginMessageListView: View {
             .padding(.top, 56)
             .padding(.horizontal, 16)
         }
-        .sheet(isPresented: $viewModel.isModal) {
-            LoginView()
-        }
     }
 }
 

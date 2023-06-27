@@ -21,7 +21,7 @@ struct AccountDeleteView: View {
                 Text("アカウント削除すると、全てのアカウントデータに加えて、アプリケーション内のメッセージやその履歴などの全ての情報が削除されます。\nなお、一度アカウント削除すると、アカウントの復旧はできなくなります。")
                     .padding(.horizontal, 16)
                     .padding(.bottom, 16)
-                    .fontWeight(.light)
+                    
 
                 Button {
                     print("aaa")

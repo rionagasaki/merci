@@ -19,8 +19,15 @@ class DateFormat {
     
     func dateFormat(date: Date) -> String{
         let dateFormatter = DateFormatter()
-        dateFormatter.dateStyle = .long
-        dateFormatter.timeStyle = .long
+        dateFormatter.dateStyle = .short
+        dateFormatter.timeStyle = .short
+        let dateString = dateFormatter.string(from: date)
+        return dateString
+    }
+    
+    func customDateFormat(date: Date) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MM/dd HH:mm"
         let dateString = dateFormatter.string(from: date)
         return dateString
     }

@@ -8,30 +8,33 @@
 import Foundation
 
 class GoodsListViewModel: ObservableObject {
-    @Published var matchingPairIDs: [String: Any] = [:]
+    @Published var selectedPairChatRoomIDs: [String: String] = [:]
+     
     @Published var messageList: [PairObservableModel] = []
+    @Published var friendList: [UserObservableModel] = []
+    @Published var selectedPairMessageList:[PairObservableModel] = []
+    
     
     func fetch(){
+        messageList = []
         var pairKeys:[String] = []
-        matchingPairIDs.forEach { data in
+        selectedPairChatRoomIDs.forEach { data in
             pairKeys.append(data.key)
         }
         FetchFromFirestore().fetchConcurrentPairInfo(pairIDs: pairKeys) { pairs in
             pairs.forEach { pair in
+                
                 self.messageList.append(.init(
-                    id: pair.id,
-                    gender: pair.gender,
-                    pair_1_uid: pair.pair_1_uid,
-                    pair_1_nickname: pair.pair_1_nickname,
-                    pair_1_profileImageURL: pair.pair_1_profileImageURL,
-                    pair_1_activeRegion: pair.pair_1_activeRegion,
-                    pair_1_birthDate: pair.pair_1_birthDate,
-                    pair_2_uid: pair.pair_2_uid,
-                    pair_2_nickname: pair.pair_2_nickname,
-                    pair_2_profileImageURL: pair.pair_2_profileImageURL,
-                    pair_2_activeRegion: pair.pair_2_activeRegion,
-                    pair_2_birthDate: pair.pair_2_birthDate
+                    pairModel: pair.adaptPairModel()
                 ))
+            }
+        }
+    }
+    
+    func fetchFriend(friendUids: [String]){
+        FetchFromFirestore().fetchConcurrentUserInfo(userIDs: friendUids) { users in
+            users.forEach { user in
+                self.friendList.append(user.adaptUserObservableModel())
             }
         }
     }

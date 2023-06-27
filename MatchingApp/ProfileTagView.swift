@@ -11,16 +11,12 @@ struct ProfileTagView: View {
     let tagName: String
     var body: some View {
         Text(tagName)
-            .foregroundColor(.black)
-            .fontWeight(.light)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 6)
+            .foregroundColor(.customBlack.opacity(0.8))
+            .font(.system(size: 14, weight: .bold))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
             .background(Color.gray.opacity(0.1))
             .cornerRadius(20)
-            .overlay {
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(.gray.opacity(0.8), lineWidth: 1)
-            }
     }
 }
 

@@ -21,6 +21,7 @@ struct MyMessageBubbleView: View {
                 .padding(.all, 8)
                 .background(Color.red.opacity(0.3))
                 .cornerRadius(10)
+                .blur(radius: 10)
         }
         .padding(.horizontal, 8)
     }

@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Supabase
+import PartialSheet
 
 @main
 struct MatchingAppApp: App {
@@ -14,10 +15,11 @@ struct MatchingAppApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     var body: some Scene {
         WindowGroup {
-            RootView()
+            ContentView()
+                .attachPartialSheetToRoot()
                 .environmentObject(AppState())
                 .environmentObject(UserObservableModel())
-                .environmentObject(PairObservableModel())
+                .environmentObject(PairObservableModel(pairModel: .init()))
         }
     }
 }

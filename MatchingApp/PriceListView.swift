@@ -16,7 +16,7 @@ struct PriceListView: View {
                         .foregroundColor(.yellow)
                         .bold()
                         .font(.system(size: 20))
-                    Text("12ヶ月プラン")
+                    Text("200枚")
                         .foregroundColor(.white)
                         .fontWeight(.heavy)
                         .font(.system(size: 30))
@@ -25,12 +25,23 @@ struct PriceListView: View {
                 .frame(width:150 ,height: 150)
                 .background(Color.customRed1)
                 
-                Text("2000円")
+                VStack {
+                    Text("25,000円")
+                        .foregroundColor(.black)
+                        .fontWeight(.heavy)
+                        .font(.system(size: 35))
+                        .bold()
+                    Text("15000円お得※")
+                }
             }
             
         }
-        
         .cornerRadius(20)
+        .background {
+            RoundedRectangle(cornerRadius: 20)
+                .foregroundColor(.white)
+                .shadow(radius: 2)
+        }
     }
 }
 

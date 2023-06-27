@@ -5,6 +5,7 @@
 //  Created by Rio Nagasaki on 2023/05/11.
 //
 import Foundation
+import CropViewController
 import SwiftUI
 
 struct ImagePicker: UIViewControllerRepresentable {
@@ -14,33 +15,36 @@ struct ImagePicker: UIViewControllerRepresentable {
     @Binding var selectedImage: UIImage?
     @Environment(\.presentationMode) private var presentationMode
     
-    func makeUIViewController(context: UIViewControllerRepresentableContext<ImagePicker>) -> some UIImagePickerController {
-        let imagePicker = UIImagePickerController()
-        imagePicker.allowsEditing = true
-        imagePicker.sourceType = sourceType
-        imagePicker.delegate = context.coordinator
-        return imagePicker
+    func makeUIViewController(context: Context) -> some UIViewController {
+        let vc = CropImageViewController.init()
+        vc.delegate = context.coordinator
+        vc.originalImage = selectedImage
+        return vc
     }
-    
+
     func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) {
-        
     }
     
     func makeCoordinator() -> Coordinator {
         return Coordinator(self)
     }
     
-    final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    final class Coordinator: NSObject, CropImageViewControllerDelegate {
+        
         var parent: ImagePicker
         
         init(_ parent: ImagePicker){
             self.parent = parent
         }
         
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-            if let image = info[.originalImage] as? UIImage {
-                parent.selectedImage = image
-            }
+        func imageEditorViewController(_ editor: CropImageViewController, editedImage: UIImage?) {
+            guard let editedImage = editedImage else { return }
+            // メインイメージはそのまま設定する.
+            parent.selectedImage = editedImage
+            parent.presentationMode.wrappedValue.dismiss()
+        }
+        
+        func cancel() {
             parent.presentationMode.wrappedValue.dismiss()
         }
     }
@@ -53,12 +57,10 @@ struct SubImagePicker: UIViewControllerRepresentable {
     @Binding var selectedImages: [UIImage]
     @Environment(\.presentationMode) private var presentationMode
     
-    func makeUIViewController(context: UIViewControllerRepresentableContext<SubImagePicker>) -> some UIImagePickerController {
-        let imagePicker = UIImagePickerController()
-        imagePicker.allowsEditing = true
-        imagePicker.sourceType = sourceType
-        imagePicker.delegate = context.coordinator
-        return imagePicker
+    func makeUIViewController(context: Context) -> some UIViewController {
+        let vc = CropImageViewController.init()
+        vc.delegate = context.coordinator
+        return vc
     }
     
     func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) {
@@ -69,22 +71,27 @@ struct SubImagePicker: UIViewControllerRepresentable {
         return Coordinator(self)
     }
     
-    final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-        var parent: SubImagePicker
-        
-        init(_ parent: SubImagePicker){
-            self.parent = parent
-        }
-        
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-            if let image = info[.originalImage] as? UIImage {
-                if parent.selectedImages.count < 4 {
+    final class Coordinator: CropImageViewControllerDelegate {
+        func imageEditorViewController(_ editor: CropImageViewController, editedImage: UIImage?) {
+            if let image = editedImage {
+                //　写真が3つあったらINDEXは2
+                if parent.selectedImages.count - 1 < parent.index {
                     parent.selectedImages.append(image)
                 } else {
                     parent.selectedImages[parent.index] = image
                 }
             }
             parent.presentationMode.wrappedValue.dismiss()
+        }
+        
+        func cancel() {
+            parent.presentationMode.wrappedValue.dismiss()
+        }
+        
+        var parent: SubImagePicker
+        
+        init(_ parent: SubImagePicker){
+            self.parent = parent
         }
     }
 }

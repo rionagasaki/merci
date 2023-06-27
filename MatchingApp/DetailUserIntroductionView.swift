@@ -15,21 +15,11 @@ struct DetailUserIntroductionView: View {
     var body: some View {
         ScrollView {
             VStack {
+                
                 TextEditor(text: $viewModel.introductionText)
                     .frame(width: UIScreen.main.bounds.width-60, height: 300)
                     .font(.system(size: 22))
                     .padding(.all, 8)
-                    
-                Button {
-                    SetToFirestore.shared.updateMyIntroduction(currentUid: userModel.uid, introduction: viewModel.introductionText)
-                    dismiss()
-                } label: {
-                    Text("保存する")
-                        .foregroundColor(.white)
-                        .frame(width: UIScreen.main.bounds.width-40, height: 60)
-                        .background(Color.customGreen)
-                        .cornerRadius(10)
-                }
                 
                 Spacer()
             }
@@ -49,6 +39,28 @@ struct DetailUserIntroductionView: View {
                             .foregroundColor(.black)
                     }
                 )
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .keyboard) {
+                HStack {
+                    Text("\(viewModel.introductionText.count)/1000")
+                        .foregroundColor(.customBlack.opacity(0.8))
+                        .font(.system(size: 14))
+                    Spacer()
+                    Button {
+                        SetToFirestore.shared.updateMyIntroduction(currentUid: userModel.uid, introduction: viewModel.introductionText)
+                        dismiss()
+                    } label: {
+                        Text("保存する")
+                            .foregroundColor(.white)
+                            .bold()
+                            .font(.system(size: 14))
+                            .padding(.all, 8)
+                            .background(Color.pink.opacity(0.7))
+                            .cornerRadius(10)
+                    }
+                }
             }
         }
     }

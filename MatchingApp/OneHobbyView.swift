@@ -12,15 +12,12 @@ struct OneHobbyView: View {
     let selected: Bool
     var body: some View {
         Text(hobby)
-            .foregroundColor(.black)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 6)
-            .background(Color.white)
+            .foregroundColor(selected ? .white: .customBlack.opacity(0.8))
+            .font(.system(size: 14, weight: .bold))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(selected ? .pink: .gray.opacity(0.1))
             .cornerRadius(20)
-            .overlay {
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(selected ? .red: .gray.opacity(0.8), lineWidth: 1)
-            }
     }
 }
 

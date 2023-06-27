@@ -8,19 +8,14 @@
 import SwiftUI
 
 struct NextButtonView: View {
+    @Binding var isEnabled: Bool
     var body: some View {
         Image(systemName: "arrow.right")
             .resizable()
             .frame(width:20, height: 20)
             .padding()
-            .background(Color.gray.opacity(0.6))
+            .background(isEnabled ? Color.customBlack: Color.gray.opacity(0.4))
             .foregroundColor(.white)
             .clipShape(Circle())
-    }
-}
-
-struct NextButtonView_Previews: PreviewProvider {
-    static var previews: some View {
-        NextButtonView()
     }
 }

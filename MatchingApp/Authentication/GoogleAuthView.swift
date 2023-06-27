@@ -8,13 +8,18 @@
 import SwiftUI
 import FirebaseCore
 import FirebaseAuth
+import FirebaseFirestore
 import GoogleSignIn
 import GoogleSignInSwift
+
+// Googleでログインする場合。アカウント作成はできない！
 
 struct GoogleAuthView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var userModel: UserObservableModel
-    @State private var isModal: Bool = false
+    @EnvironmentObject var pairModel: PairObservableModel
+    @Binding var noAccountAlert: Bool
+    @Binding var alertText: String
     
     private func googleAuth() {
         
@@ -38,8 +43,17 @@ struct GoogleAuthView: View {
                 return
             }
             
-            let credential = GoogleAuthProvider.credential(withIDToken: idToken,accessToken: user.accessToken.tokenString)
-            self.login(credential: credential)
+            guard let profile = user.profile else { return }
+            Firestore.firestore().collection("User").whereField("email", isEqualTo: profile.email).getDocuments { querySnapshots, error in
+                if querySnapshots?.count != 0 {
+                    let credential = GoogleAuthProvider.credential(withIDToken: idToken,accessToken: user.accessToken.tokenString)
+                    self.login(credential: credential)
+                } else {
+                    noAccountAlert = true
+                    alertText = "このアドレスに紐づくアカウントは存在しません。"
+                    return
+                }
+            }
         }
     }
     
@@ -47,23 +61,62 @@ struct GoogleAuthView: View {
         Auth.auth().signIn(with: credential) { (result, error) in
             if error != nil, result == nil { return }
             if let additionalUserInfo = result?.additionalUserInfo {
-                if additionalUserInfo.isNewUser {
-                   isModal = true
-                } else {
-                    FetchFromFirestore().fetchUserInfoFromFirestore { user in
+                if !additionalUserInfo.isNewUser {
+                    // エラーハンドリング4
+                    guard let uid = AuthenticationManager.shared.uid else { return }
+                    FetchFromFirestore().snapshotOnRequest(uid: uid) { user in
+                        self.userModel.uid = user.id
                         self.userModel.nickname = user.nickname
                         self.userModel.email = user.email
                         self.userModel.activeRegion = user.activityRegion
+                        self.userModel.birthPlace = user.birthPlace
+                        self.userModel.educationalBackground = user.educationalBackground
+                        self.userModel.work = user.work
+                        self.userModel.height = user.height
+                        self.userModel.weight = user.weight
+                        self.userModel.bloodType = user.bloodType
+                        self.userModel.liquor = user.liquor
+                        self.userModel.cigarettes = user.cigarettes
+                        self.userModel.purpose = user.purpose
+                        self.userModel.datingExpenses = user.datingExpenses
                         self.userModel.birthDate = user.birthDate
                         self.userModel.gender = user.gender
                         self.userModel.profileImageURL = user.profileImageURL
                         self.userModel.subProfileImageURL = user.subProfileImageURLs
                         self.userModel.introduction = user.introduction
-                        self.userModel.uid = user.id
+                        self.userModel.requestUids = user.requestUids
+                        self.userModel.requestedUids = user.requestedUids
+                        self.userModel.friendUids = user.friendUids
+                        self.userModel.pairRequestUid = user.pairRequestUid
+                        self.userModel.pairRequestedUids = user.pairRequestedUids
+                        self.userModel.pairUid = user.pairUid
                         self.userModel.hobbies = user.hobbies
                         self.userModel.pairID = user.pairID
-                        appState.isLogin = true
-                        appState.messageListViewInit = true
+                        self.userModel.pairList = user.pairList
+                        self.userModel.chatUnreadNum = user.chatUnreadNum
+                        
+                        if user.pairID != "" {
+                            FetchFromFirestore().fetchSnapshotPairInfo(pairID: user.pairID) { pair in
+                                pairModel.pair = pair.adaptPairModel()
+                                // ペアの情報をAppStateで保管しておく。
+                                FetchFromFirestore().fetchUserInfoFromFirestoreByUserID(uid: user.pairUid) { pair in
+                                    if let pair = pair {
+                                        appState.pairUserModel = pair.adaptUserObservableModel()
+                                        appState.messageListViewInit = true
+                                    }
+                                }
+                            }
+                        } else {
+                           
+                        }
+                        
+                        FetchFromFirestore().fetchUserInfoFromFirestoreByUserID(uid: user.pairUid) { pair in
+                            if let pair = pair {
+                                appState.notLoggedInUser = false
+                                appState.pairUserModel = pair.adaptUserObservableModel()
+                                appState.messageListViewInit = true
+                            }
+                        }
                     }
                 }
             }
@@ -77,26 +130,18 @@ struct GoogleAuthView: View {
                 Image("Google")
                     .resizable()
                     .frame(width: 15, height: 15)
-                Text("Sign in with google")
-                    .font(.system(size:15))
+                Text("Sign in with Google")
+                    .font(.system(size:18))
+                    .bold()
                     .foregroundColor(.black)
             }
         }
-        .frame(width: 224, height: 40)
+        .frame(width: UIScreen.main.bounds.width-32, height: 50)
         .cornerRadius(5)
         .overlay {
             RoundedRectangle(cornerRadius: 5)
                 .stroke(.black,lineWidth: 1)
         }
         .padding(.top, 8)
-        .sheet(isPresented: $isModal) {
-            NickNameView()
-        }
-    }
-}
-
-struct GoogleAuthView_Previews: PreviewProvider {
-    static var previews: some View {
-        GoogleAuthView()
     }
 }

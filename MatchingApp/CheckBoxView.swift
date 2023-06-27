@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct CheckBoxView: View {
-    @State var select: Bool = false
+    @Binding var select: Bool
     var body: some View {
         ZStack {
             Button {
@@ -25,11 +25,5 @@ struct CheckBoxView: View {
                     .frame(width: 16, height:16)
             }
         }
-    }
-}
-
-struct CheckBoxView_Previews: PreviewProvider {
-    static var previews: some View {
-        CheckBoxView(select: true)
     }
 }

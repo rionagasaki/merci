@@ -15,48 +15,39 @@ struct RecruitmentView: View {
             HStack(alignment: .top){
                 HStack(spacing: 10){
                     VStack {
-                        WebImage(url: URL(string: pairModel.pair_1_profileImageURL))
+                        WebImage(url: URL(string: pairModel.pair.pair_1_profileImageURL))
                             .resizable()
                             .frame(width: (UIScreen.main.bounds.width/2)-30, height: (UIScreen.main.bounds.width/2)-30)
                             .cornerRadius(20)
-                        Text("22歳 渋谷")
-                            .foregroundColor(.black.opacity(0.8))
-                            .bold()
-                            .font(.system(size: 14))
+                        if let age = CalculateAge().calculateAge(from: pairModel.pair.pair_1_birthDate) {
+                            Text("\(age)歳 \(pairModel.pair.pair_1_activeRegion)")
+                                .foregroundColor(.black.opacity(0.8))
+                                .bold()
+                                .font(.system(size: 14))
+                        }
                     }
                     VStack {
-                        WebImage(url: URL(string: pairModel.pair_2_profileImageURL))
+                        WebImage(url: URL(string: pairModel.pair.pair_2_profileImageURL))
                             .resizable()
                             .frame(width: (UIScreen.main.bounds.width/2)-30, height: (UIScreen.main.bounds.width/2)-30)
                             .cornerRadius(20)
-                        Text("22歳 渋谷")
-                            .foregroundColor(.black.opacity(0.8))
-                            .bold()
-                            .font(.system(size: 14))
+                        if let age = CalculateAge().calculateAge(from: pairModel.pair.pair_2_birthDate) {
+                            Text("\(age)歳 \(pairModel.pair.pair_2_activeRegion)")
+                                .foregroundColor(.black.opacity(0.8))
+                                .bold()
+                                .font(.system(size: 14))
+                        }
                     }
                 }
             }
             .padding(.horizontal, 16)
-            
-            Button {
-                print("さそう")
-            } label: {
-                Text("いいかも")
-                    .frame(maxWidth: 400)
-                    .padding(.all, 8)
-                    .foregroundColor(.white)
-                    .fontWeight(.medium)
-                    .background(Color.customGreen)
-                    .cornerRadius(10)
-            }
         }
-        .padding(.top, 8)
+        .padding(.vertical, 8)
         .background {
             RoundedRectangle(cornerRadius: 20)
                 .foregroundColor(.white)
-                .shadow(radius: 1)
+                .shadow(radius: 2)
         }
         .padding(.horizontal, 8)
-        
     }
 }

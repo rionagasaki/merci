@@ -23,6 +23,7 @@ struct SchoolTextView: View {
                     .padding(.top, 8)
             }
         }
+        .background(Color.white)
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {

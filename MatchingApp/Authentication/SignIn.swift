@@ -22,8 +22,4 @@ class SignIn {
             }
         }
     }
-    
-    func signInWithApple(){
-        
-    }
 }

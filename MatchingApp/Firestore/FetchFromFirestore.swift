@@ -22,12 +22,10 @@ class FetchFromFirestore {
     var chatListener: ListenerRegistration? = nil
     
     let dispatchGroup = DispatchGroup()
-    
-    
-    
+
     func fetchUserInfoFromFirestore(completion: @escaping (User)-> Void){
-        
-        db.collection(userPath).document(Authentication().currentUid).getDocument(source: .cache) { document, error in
+        guard let uid = AuthenticationManager.shared.uid else { return }
+        db.collection(userPath).document(uid).getDocument(source: .cache) { document, error in
             if let error = error {
                 print("Error=>fetchUserInfoFromFirestore:\(error)")
                 return
@@ -62,12 +60,12 @@ class FetchFromFirestore {
         }
     }
     
-    func fetchCurrentUserPairInfo(pairID: String ,completion: @escaping(Pair)-> Void){
+    func fetchSnapshotPairInfo(pairID: String ,completion: @escaping(Pair)-> Void){
         if pairID == "" { return }
         db
             .collection(self.pairPath)
             .document(pairID)
-            .getDocument { document, error in
+            .addSnapshotListener{ document, error in
                 if let error = error {
                     print("Error=>fetchUserInfoFromFirestore:\(error)")
                     return
@@ -79,11 +77,42 @@ class FetchFromFirestore {
             }
     }
     
+    func fetchPairInfo(pairID: String ,completion: @escaping(Pair)-> Void){
+        if pairID == "" { return }
+        db
+            .collection(self.pairPath)
+            .document(pairID)
+            .getDocument { document, error in
+                if let error = error {
+                    print("Error=>fetchUserInfoFromFirestore:\(error)")
+                    return
+                }
+                guard let document = document else { return}
+                let pairDoc = Pair(document: document)
+                completion(pairDoc)
+            }
+    }
+    
+    func fetchConcurrentUserInfo(userIDs: [String], completion: @escaping ([User]) -> Void){
+        var usersInfoArray:[User] = []
+        for userID in userIDs {
+            dispatchGroup.enter()
+            fetchUserInfoFromFirestoreByUserID(uid: userID) { user in
+                guard let user = user else { return }
+                usersInfoArray.append(user)
+                self.dispatchGroup.leave()
+            }
+        }
+        dispatchGroup.notify(queue: .main){
+            completion(usersInfoArray)
+        }
+    }
+    
     func fetchConcurrentPairInfo(pairIDs: [String], completion: @escaping ([Pair]) -> Void) {
         var pairsInfoArray:[Pair] = []
         for pairID in pairIDs {
             dispatchGroup.enter()
-            fetchCurrentUserPairInfo(pairID: pairID) { pair in
+            fetchPairInfo(pairID: pairID) { pair in
                 pairsInfoArray.append(pair)
                 self.dispatchGroup.leave()
             }
@@ -104,7 +133,6 @@ class FetchFromFirestore {
             guard let document = document else { return }
             if document.exists {
                 let docRef = User(document: document)
-                print(docRef.activityRegion)
                 completion(docRef)
             } else {
                 completion(nil)
@@ -124,6 +152,10 @@ class FetchFromFirestore {
         }
     }
     
+    func deleteListener(){
+        listener?.remove()
+    }
+    
     func snapshotOnChat(chatroomID:String, completion: @escaping(Chat) -> Void) {
         listener?.remove()
         listener = db
@@ -131,12 +163,12 @@ class FetchFromFirestore {
             .document(chatroomID)
             .collection(messagePath)
             .order(by: "createdAt")
+            
             .addSnapshotListener { querySnapshot, error in
             guard let snapshot = querySnapshot else {
                 print("Error fetching snapshots: \(error!)")
                 return
             }
-        
             snapshot.documentChanges.forEach { diff in
                 if (diff.type == .added) {
                     let docRef = Chat(document: diff.document)
@@ -152,5 +184,4 @@ class FetchFromFirestore {
             }
         }
     }
-    
 }
