@@ -9,6 +9,7 @@ import SwiftUI
 import CryptoKit
 import AuthenticationServices
 import FirebaseAuth
+import Combine
 
 struct AppleRegisterView: View {
     @State var currentNonce: String?
@@ -16,6 +17,8 @@ struct AppleRegisterView: View {
     @EnvironmentObject var userModel: UserObservableModel
     @EnvironmentObject var pairModel: PairObservableModel
     @State var isModal: Bool = false
+    @State var cancellable = Set<AnyCancellable>()
+    let fetchFromFireStore = FetchFromFirestore()
     private func randomNonceString(length: Int = 32) -> String {
         precondition(length > 0)
         var randomBytes = [UInt8](repeating: 0, count: length)
@@ -71,7 +74,7 @@ struct AppleRegisterView: View {
                 }
                 
                 let credential = OAuthProvider.credential(withProviderID: "apple.com",idToken: idTokenString,rawNonce: nonce)
-                print("Email!!", appleIDCredential?.email)
+                
                 Auth.auth().signIn(with: credential) { result, error in
                     if error != nil, result == nil { return }
                     if let additionalUserInfo = result?.additionalUserInfo {
@@ -80,39 +83,21 @@ struct AppleRegisterView: View {
                             isModal = true
                         } else {
                             FetchFromFirestore().fetchUserInfoFromFirestore { user in
-                                self.userModel.uid = user.id
-                                self.userModel.nickname = user.nickname
-                                self.userModel.email = user.email
-                                self.userModel.activeRegion = user.activityRegion
-                                self.userModel.birthPlace = user.birthPlace
-                                self.userModel.educationalBackground = user.educationalBackground
-                                self.userModel.work = user.work
-                                self.userModel.height = user.height
-                                self.userModel.weight = user.weight
-                                self.userModel.bloodType = user.bloodType
-                                self.userModel.liquor = user.liquor
-                                self.userModel.cigarettes = user.cigarettes
-                                self.userModel.purpose = user.purpose
-                                self.userModel.datingExpenses = user.datingExpenses
-                                self.userModel.birthDate = user.birthDate
-                                self.userModel.gender = user.gender
-                                self.userModel.profileImageURL = user.profileImageURL
-                                self.userModel.subProfileImageURL = user.subProfileImageURLs
-                                self.userModel.introduction = user.introduction
-                                self.userModel.friendUids = user.friendUids
-                                self.userModel.requestUids = user.requestUids
-                                self.userModel.requestedUids = user.requestedUids
-                                self.userModel.pairRequestUid = user.pairRequestUid
-                                self.userModel.pairRequestedUids = user.pairRequestedUids
-                                self.userModel.pairUid = user.pairUid
-                                self.userModel.hobbies = user.hobbies
-                                self.userModel.pairID = user.pairID
-                                self.userModel.chatUnreadNum = user.chatUnreadNum
+                                self.userModel.user = user.adaptUserObservableModel()
                                 
-                                if userModel.pairID != "" {
-                                    FetchFromFirestore().fetchPairInfo(pairID: userModel.pairID) { pair in
-                                        pairModel.pair = pair.adaptPairModel()
-                                    }
+                                if !userModel.user.pairID.isEmpty {
+                                    fetchFromFireStore.fetchPairInfo(pairID: userModel.user.pairID)
+                                        .sink { completion in
+                                            switch completion {
+                                            case .finished:
+                                                print("finish!")
+                                            case .failure(_):
+                                                print("Error")
+                                            }
+                                        } receiveValue: { pair in
+                                            pairModel.pair = pair.adaptPairModel()
+                                        }
+                                        .store(in: &self.cancellable)
                                 } else {
                                     appState.notLoggedInUser = false
                                     appState.messageListViewInit = true

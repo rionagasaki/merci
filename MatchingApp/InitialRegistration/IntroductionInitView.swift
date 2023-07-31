@@ -14,7 +14,7 @@ struct IntroductionInitView: View {
     @FocusState var focus: Bool
     let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .medium)
     var isEnabled: Bool {
-        userModel.introduction.count >= 20
+        userModel.user.introduction.count >= 20
     }
     var body: some View {
         ScrollView(showsIndicators: false){
@@ -25,7 +25,7 @@ struct IntroductionInitView: View {
                     .foregroundColor(Color.customBlack)
                     .padding(.top, 16)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                TextEditor(text: $userModel.introduction)
+                TextEditor(text: $userModel.user.introduction)
                     .padding(.all, 8)
                     .frame(width: UIScreen.main.bounds.width-32, height: 500)
                     

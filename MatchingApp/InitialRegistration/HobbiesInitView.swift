@@ -8,13 +8,13 @@
 import SwiftUI
 
 struct HobbiesInitView: View {
-    @StateObject var viewModel = HobbiesViewModel()
+    @StateObject var viewModel = UserHobbiesEditorViewModel()
     @EnvironmentObject var userModel: UserObservableModel
     @Environment(\.dismiss) var dismiss
     @Binding var presentationMode: PresentationMode
     let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .medium)
     var isEnabled: Bool {
-        userModel.hobbies.count >= 3
+        userModel.user.hobbies.count >= 3
     }
     
     var body: some View {
@@ -48,7 +48,7 @@ struct HobbiesInitView: View {
             Divider()
             if isEnabled {
                 NavigationLink {
-                    MainImageView(presentationMode: $presentationMode)
+                    ProfileImageOnboardingView(presentationMode: $presentationMode)
                         .onAppear {
                             UIIFGeneratorMedium.impactOccurred()
                         }
@@ -84,10 +84,10 @@ struct HobbiesInitView: View {
             }
         }
         .onAppear {
-            viewModel.selectedHobbies = userModel.hobbies
+            viewModel.selectedHobbies = userModel.user.hobbies
         }
         .onChange(of: viewModel.selectedHobbies) { _ in
-            userModel.hobbies = viewModel.selectedHobbies
+            userModel.user.hobbies = viewModel.selectedHobbies
         }
     }
     

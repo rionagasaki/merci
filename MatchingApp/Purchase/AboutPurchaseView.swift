@@ -20,8 +20,10 @@ struct AboutPurchaseView: View {
             Text("NiNiポイントでできること(男性会員)")
                 .foregroundColor(.customBlack)
                 .font(.system(size: 24, weight: .bold))
-            
-            
+            PointCapableSectionView()
+            PointCapableSectionView()
+            PointCapableSectionView()
+            PointCapableSectionView()
             
             Text("NiNiポイントの購入について")
                 .foregroundColor(.customBlack)

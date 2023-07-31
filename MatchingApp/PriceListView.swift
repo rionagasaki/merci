@@ -23,7 +23,7 @@ struct PriceListView: View {
                         .bold()
                 }
                 .frame(width:150 ,height: 150)
-                .background(Color.customRed1)
+                .background(Color.customRed)
                 
                 VStack {
                     Text("25,000円")

@@ -42,7 +42,7 @@ struct ModalGroupProfileView: View {
                                 selection = 0
                             }
                         } label: {
-                            SelectUserComponent(nickname: pair.pair.pair_1_nickname, profileImageURL: pair.pair.pair_1_profileImageURL, activeRegion: pair.pair.pair_1_activeRegion, birthDate: pair.pair.pair_1_birthDate,selection: selection, selfNum: 0, namespace: namespace)
+                            UserThumbnailView(nickname: pair.pair.pair_1_nickname, profileImageURL: pair.pair.pair_1_profileImageURL, activeRegion: pair.pair.pair_1_activeRegion, birthDate: pair.pair.pair_1_birthDate,selection: selection, selfNum: 0, namespace: namespace)
                         }
                         .padding(.leading, 8)
                         Spacer()
@@ -51,7 +51,7 @@ struct ModalGroupProfileView: View {
                                 selection = 1
                             }
                         } label: {
-                            SelectUserComponent(nickname: pair.pair.pair_2_nickname, profileImageURL: pair.pair.pair_2_profileImageURL, activeRegion: pair.pair.pair_2_activeRegion, birthDate: pair.pair.pair_2_birthDate,selection: selection, selfNum: 1, namespace: namespace)
+                            UserThumbnailView(nickname: pair.pair.pair_2_nickname, profileImageURL: pair.pair.pair_2_profileImageURL, activeRegion: pair.pair.pair_2_activeRegion, birthDate: pair.pair.pair_2_birthDate,selection: selection, selfNum: 1, namespace: namespace)
                         }
                         .padding(.trailing, 16)
                     }
@@ -70,7 +70,7 @@ struct ModalGroupProfileView: View {
                 
                 TabView(selection: $selection){
                     ForEach(userInfos.indices, id: \.self) { index in
-                        EasyUserProfileView(user: userInfos[index], offset: $height)
+                        DetailedUserProfileView(user: userInfos[index], offset: $height)
                     }
                 }
                 .tabViewStyle(PageTabViewStyle())
