@@ -79,7 +79,7 @@ struct UserHobbiesEditorView: View {
         
         return ZStack(alignment: .topLeading) {
             
-            ForEach(viewModel.hobbies, id: \.self) { tag in
+            ForEach(PickerItems.hobbies, id: \.self) { tag in
                 Button {
                     withAnimation {
                         if viewModel.selectedHobbies.contains(tag){
@@ -105,7 +105,7 @@ struct UserHobbiesEditorView: View {
                     // 改行判定後に返却値を代入
                     let result = leading
                     
-                    if tag == viewModel.hobbies.last {
+                    if tag == PickerItems.hobbies.last {
                         // 複数回計算されるためリセットする
                         leading = 0
                     } else {
@@ -116,7 +116,7 @@ struct UserHobbiesEditorView: View {
                 })
                 .alignmentGuide(.top, computeValue: { _ in
                     let result = top
-                    if tag == viewModel.hobbies.last {
+                    if tag == PickerItems.hobbies.last {
                         // 複数回計算されるためリセットする
                         top = 0
                     }

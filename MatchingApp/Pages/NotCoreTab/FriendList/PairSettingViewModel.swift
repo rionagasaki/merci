@@ -10,53 +10,41 @@ import Combine
 import SwiftUI
 
 class PairSettingViewModel: ObservableObject {
-    @Published var currentPairUser: UserObservableModel?
-    @Published var pastPairUsers: [UserObservableModel] = []
-    @Published var requestedPairUsers: [UserObservableModel] = []
-    @Published var requestPairUser: UserObservableModel?
+    @Published var friendUsers: [UserObservableModel] = []
+    @Published var requestedFriendUsers: [UserObservableModel] = []
+    @Published var requestFriendUsers: [UserObservableModel] = []
     @Published var searchResultUser: UserObservableModel?
     @Published var searchQuery: String = ""
     @Published var submit: Bool = false
-    @Published var unPairRequestModal: Bool = false
+    @Published var requestPairRequestCancelModal: Bool = false
     @Published var isErrorAlert: Bool = false
     @Published var errorMessage: String = ""
     
-    let fetchFromFirestore = FetchFromFirestore()
-    let setToFirestore = SetToFirestore()
+    private let userService = UserFirestoreService()
     let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .medium)
     private var cancellable = Set<AnyCancellable>()
     
     func initialFriendList(userModel: UserObservableModel){
-        fetchFromFirestore.fetchUserInfoFromFirestoreByUserID(uid: userModel.user.pairRequestUid)
-            .flatMap { user -> AnyPublisher<[User], AppError> in
-                if let user = user {
-                    self.requestPairUser = .init(userModel: user.adaptUserObservableModel())
-                }
-                return self.fetchFromFirestore.fetchConcurrentUserInfo(userIDs: userModel.user.pairRequestedUids)
+        self.userService.getConcurrentUserInfo(userIDs: userModel.user.friendRequestUids)
+            .flatMap { users -> AnyPublisher<[User], AppError> in
+                self.requestFriendUsers = users.map { .init(userModel: $0.adaptUserObservableModel()) }
+                return self.userService.getConcurrentUserInfo(userIDs: userModel.user.friendRequestedUids)
             }
-            .flatMap { users -> AnyPublisher<User?, AppError> in
-                self.requestedPairUsers = users.map { .init(userModel: $0.adaptUserObservableModel()) }
-                return self.fetchFromFirestore.fetchUserInfoFromFirestoreByUserID(uid: userModel.user.pairUid)
-            }
-            .flatMap { user -> AnyPublisher<[User], AppError> in
-                if let user = user {
-                    self.currentPairUser = .init(userModel: user.adaptUserObservableModel())
-                }
-                return self.fetchFromFirestore.fetchConcurrentUserInfo(userIDs: Array<String>(userModel.user.pairMapping.keys))
+            .flatMap { users -> AnyPublisher<[User], AppError> in
+                self.requestedFriendUsers = users.map { .init(userModel: $0.adaptUserObservableModel()) }
+                return self.userService.getConcurrentUserInfo(userIDs: userModel.user.friendUids
+                )
             }
             .sink { completion in
                 switch completion {
                 case .finished:
-                    if let index = self.requestedPairUsers.firstIndex(where: { $0.user.uid == userModel.user.pairUid }) {
-                        let pairUser = self.requestedPairUsers.remove(at: index)
-                        self.requestedPairUsers.insert(pairUser, at: 0)
-                    }
+                    print("finished")
                 case .failure(let error):
                     self.isErrorAlert = true
                     self.errorMessage = error.errorMessage
                 }
             } receiveValue: { users in
-                self.pastPairUsers = users.map { .init(userModel: $0.adaptUserObservableModel()) }
+                self.friendUsers = users.map { .init(userModel: $0.adaptUserObservableModel()) }
             }
             .store(in: &self.cancellable)
     }
@@ -68,7 +56,7 @@ class PairSettingViewModel: ObservableObject {
             return
         }
         
-        fetchFromFirestore.fetchUserInfoFromFirestoreByUserID(uid: searchQuery)
+        self.userService.searchUser(uid: self.searchQuery)
             .sink { completion in
                 switch completion {
                 case .finished:
@@ -79,15 +67,15 @@ class PairSettingViewModel: ObservableObject {
                 }
             } receiveValue: { user in
                 if let user = user {
-                    if user.pairRequestUid == userModel.user.uid {
+                    if user.friendRequestUids.contains(userModel.user.uid){
                         self.isErrorAlert = true
                         self.errorMessage = "\(user.nickname)さんからは既にペアリクエストを受けています。"
-                    } else if user.pairUid == userModel.user.uid {
-                        self.isErrorAlert = true
-                        self.errorMessage = "\(user.nickname)さんとは既にペアになっています。"
-                    } else if user.pairRequestedUids.contains(userModel.user.uid) {
+                    }  else if user.friendRequestedUids.contains(userModel.user.uid) {
                         self.isErrorAlert = true
                         self.errorMessage = "\(user.nickname)さんには既にペアリクエストを送っています。"
+                    } else if user.friendUids.contains(userModel.user.uid) {
+                        self.isErrorAlert = true
+                        self.errorMessage = "\(user.nickname)さんとは既に友達になっています。"
                     } else {
                         self.searchResultUser = .init(userModel: user.adaptUserObservableModel())
                     }
@@ -99,8 +87,8 @@ class PairSettingViewModel: ObservableObject {
             .store(in: &self.cancellable)
     }
     
-    func createPair(requestUser: UserObservableModel, requestedUser: UserObservableModel){
-        setToFirestore.pairApprove(requestUser: requestUser, requestedUser: requestedUser)
+    func approveRequest(requestUser: UserObservableModel, requestedUser: UserObservableModel){
+        self.userService.approveRequest(requestUser: requestUser, requestedUser: requestedUser)
             .sink { completion in
                 switch completion {
                 case .finished:
@@ -115,12 +103,13 @@ class PairSettingViewModel: ObservableObject {
             .store(in: &self.cancellable)
     }
     
-    func dissolvePair(requestUser: UserObservableModel, requestedUser:UserObservableModel){
-        self.setToFirestore.changePairStatus(requestUser: requestUser, requestedUser: requestedUser)
+    func requestFriend(requestingUser: UserObservableModel, requestedUser: UserObservableModel){
+        
+        self.userService.requestFriend(requestingUser: requestingUser, requestedUser: requestedUser)
             .sink { completion in
                 switch completion {
                 case .finished:
-                    print("正常にペアを解除しました！")
+                    print("finished")
                 case .failure(let error):
                     self.isErrorAlert = true
                     self.errorMessage = error.errorMessage
@@ -132,8 +121,7 @@ class PairSettingViewModel: ObservableObject {
     }
     
     func cancelPair(requestingUser: UserObservableModel, requestedUser:UserObservableModel){
-        self.setToFirestore
-            .cancelPairRequest(requestingUser: requestingUser, requestedUser: requestedUser)
+        self.userService.cancelFriendRequest(requestingUser: requestingUser, requestedUser: requestedUser)
             .sink { completion in
                 switch completion {
                 case .finished:
@@ -146,6 +134,5 @@ class PairSettingViewModel: ObservableObject {
                 print("recieve value")
             }
             .store(in: &self.cancellable)
-
     }
 }

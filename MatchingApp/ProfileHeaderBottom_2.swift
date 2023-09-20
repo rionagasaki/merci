@@ -7,29 +7,32 @@
 
 import SwiftUI
 
-struct ProfileHeaderBottom_2: View {
+struct ProfileHeaderBottom: View {
     @EnvironmentObject var userModel: UserObservableModel
+    let imageName: String
+    let text: String
+    let textColor: Color
+    let action: ()->Void
     var body: some View {
-        ZStack {
-            Image("BannerBackgroundBlue")
-                .resizable()
-                .scaledToFill()
-                .frame(width: 150, height: 70)
-            Text("アプリの使い方は\nこちらから✨")
-                .foregroundColor(.black)
-                .multilineTextAlignment(.center)
-                .font(.system(size: 15, weight: .bold))
+        Button {
+            action()
+        } label: {
+            ZStack {
+                Image(imageName)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: (UIScreen.main.bounds.width/2)-16, height: 70)
+                Text(text)
+                    .foregroundColor(textColor)
+                    .multilineTextAlignment(.center)
+                    .font(.system(size: 15, weight: .bold))
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(.gray.opacity(0.6), lineWidth: 1)
+            }
+            .cornerRadius(10)
         }
-        .overlay {
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(.gray.opacity(0.6), lineWidth: 1)
-        }
-        .cornerRadius(10)
     }
 }
 
-struct ProfileHeaderBanner_Previews: PreviewProvider {
-    static var previews: some View {
-        ProfileHeaderBottom_2()
-    }
-}

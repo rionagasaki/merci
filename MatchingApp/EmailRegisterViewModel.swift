@@ -6,40 +6,52 @@
 //
 
 import Foundation
+import Combine
+
 class EmailRegisterViewModel: ObservableObject {
     @Published var username: String = ""
     @Published var email: String = ""
     @Published var password: String = ""
-    @Published var isVisibleValidateAlert: Bool = false
-    @Published var isEmailEmpty: Bool = true
-    @Published var isPasswordEmpty: Bool = true
-    @Published var isModal: Bool = false
-    @Published var registerSheet: Bool = false
+    @Published var isErrorAlert: Bool = false
+    @Published var errorMessage: String = ""
+    @Published var isAvailableEmail: Bool = true
+    @Published var isAvailablePassword: Bool = true
     
-    var isEnabledTappedLoginButton: Bool { !isEmailEmpty && !isPasswordEmpty }
+    var isEnabledTappedLoginButton: Bool { isAvailableEmail && isAvailablePassword }
+    private var cancellable = Set<AnyCancellable>()
+    private let userService = UserFirestoreService()
     
-    func signInWithEmail(completion:@escaping ()-> Void){
-    }
     
-    func signIn(username: String, password: String, email: String) async {
-        
-    }
-    
-    func isValidPassword() -> Bool {
-        // 8文字以上英数字
+    func isValidPassword() {
         let passwordTest = NSPredicate(format: "SELF MATCHES %@", "(?=.*[0-9])(?=.*[a-z])[a-z0-9]{8,}")
-        return passwordTest.evaluate(with: password)
+        self.isAvailablePassword = passwordTest.evaluate(with: password)
     }
     
-    func isValidEmail() -> Bool {
-        // 一般的なメールアドレスバリデーション
+    func isValidEmail()  {
         let emailFormat = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"
         let emailPredicate = NSPredicate(format:"SELF MATCHES %@", emailFormat)
-        return emailPredicate.evaluate(with: email)
+        self.isAvailableEmail = emailPredicate.evaluate(with: email)
     }
 
-    
-    func validateEmail(){
-        isEmailEmpty = email == ""
+    func signUpEmail(appState: AppState){
+        AuthenticationService.shared.signUpWithEmail(email: self.email, password: self.password)
+            .flatMap { authResult -> AnyPublisher<Void, AppError> in
+                let email = authResult.user.email ?? ""
+                let uid = authResult.user.uid
+                return self.userService.registerUserEmailAndUid(email: email, uid: uid)
+            }
+            .sink { completion in
+                switch completion {
+                case .finished:
+                    print("successfully signUp")
+                case .failure(let error):
+                    self.errorMessage = error.errorMessage
+                    self.isErrorAlert = true
+                }
+            } receiveValue: { _ in
+                self.email = ""
+                self.password = ""
+            }
+            .store(in: &self.cancellable)
     }
 }

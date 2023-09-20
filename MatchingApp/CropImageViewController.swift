@@ -10,7 +10,7 @@ import CropViewController
 import PhotosUI
 
 class CropImageViewController: UIViewController, PHPickerViewControllerDelegate , CropViewControllerDelegate  {
-
+    
     weak var delegate: CropImageViewControllerDelegate?
     var originalImage: UIImage?
     let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .medium)
@@ -18,8 +18,12 @@ class CropImageViewController: UIViewController, PHPickerViewControllerDelegate 
     override func viewDidLoad() {
         super.viewDidLoad()
         UIIFGeneratorMedium.impactOccurred()
+        var configuration = PHPickerConfiguration()
+        configuration.selectionLimit = 5 // 選択数
+        configuration.filter = .images // 写真のみ
+        configuration.preferredAssetRepresentationMode = .current // これがないとJPEGが選択できなかった
         
-        let picker = PHPickerViewController.init(configuration: .init())
+        let picker = PHPickerViewController.init(configuration: configuration)
         picker.delegate = self
         
         present(picker, animated: true)
@@ -29,6 +33,19 @@ class CropImageViewController: UIViewController, PHPickerViewControllerDelegate 
     
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true)
+        
+        results.forEach { result in
+            let itemProvider = result.itemProvider
+            if itemProvider.canLoadObject(ofClass: UIImage.self) {
+                itemProvider.loadObject(ofClass: UIImage.self) { [weak self] (image, error) in
+                    DispatchQueue.main.async {
+                        if let image = image as? UIImage {
+                            self?.showCrop(image: image)
+                        }
+                    }
+                }
+            }
+        }
         
         if let firstItemProvider = results.first?.itemProvider, firstItemProvider.canLoadObject(ofClass: UIImage.self) {
             firstItemProvider.loadObject(ofClass: UIImage.self) { [weak self] (image, error) in
@@ -42,7 +59,7 @@ class CropImageViewController: UIViewController, PHPickerViewControllerDelegate 
             delegate?.cancel()
         }
     }
-
+    
     func showCrop(image: UIImage){
         let vc = CropViewController(croppingStyle: .default, image: image)
         vc.aspectRatioPreset = .presetSquare

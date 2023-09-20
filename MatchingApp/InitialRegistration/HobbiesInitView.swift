@@ -8,8 +8,9 @@
 import SwiftUI
 
 struct HobbiesInitView: View {
-    @StateObject var viewModel = UserHobbiesEditorViewModel()
+    @StateObject var viewModel = HobbiesInitViewModel() 
     @EnvironmentObject var userModel: UserObservableModel
+    @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) var dismiss
     @Binding var presentationMode: PresentationMode
     let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .medium)
@@ -29,7 +30,10 @@ struct HobbiesInitView: View {
             ScrollView {
                 VStack {
                     GeometryReader { geometry in
-                        generateTags(geometry)
+                        TagViewGenerator.generateEditTags(
+                            allTags: PickerItems.hobbies,
+                            selectedTags: $viewModel.selectedHobbies, geometry
+                        )
                     }
                     .padding()
                 }
@@ -47,13 +51,15 @@ struct HobbiesInitView: View {
             }
             Divider()
             if isEnabled {
-                NavigationLink {
-                    ProfileImageOnboardingView(presentationMode: $presentationMode)
-                        .onAppear {
-                            UIIFGeneratorMedium.impactOccurred()
-                        }
+                Button {
+                    viewModel.completeRegister(
+                        userModel: userModel,
+                        appState: appState
+                    ){
+                        presentationMode.dismiss()
+                    }
                 } label: {
-                    Text("次へ")
+                    Text("登録する")
                         .foregroundColor(.white)
                         .bold()
                         .frame(width: UIScreen.main.bounds.width-32, height: 50)
@@ -61,7 +67,7 @@ struct HobbiesInitView: View {
                         .cornerRadius(10)
                 }
             } else {
-                Text("次へ")
+                Text("登録する")
                     .foregroundColor(.white)
                     .bold()
                     .frame(width: UIScreen.main.bounds.width-32, height: 50)
@@ -88,58 +94,6 @@ struct HobbiesInitView: View {
         }
         .onChange(of: viewModel.selectedHobbies) { _ in
             userModel.user.hobbies = viewModel.selectedHobbies
-        }
-    }
-    
-    
-    private func generateTags(_ geometry: GeometryProxy) -> some View {
-        var leading = CGFloat.zero
-        var top = CGFloat.zero
-        
-        return ZStack(alignment: .topLeading) {
-            
-            ForEach(viewModel.hobbies, id: \.self) { tag in
-                Button {
-                    if viewModel.selectedHobbies.contains(tag){
-                        viewModel.selectedHobbies = viewModel.selectedHobbies.filter({ result in
-                            result != tag
-                        })
-                    } else {
-                        viewModel.selectedHobbies.append(tag)
-                    }
-                } label: {
-                    OneHobbyView(hobby: tag, selected: viewModel.selectedHobbies.contains(tag))
-                }
-                .padding([.horizontal, .vertical], 4)
-                .alignmentGuide(.leading, computeValue: { context in
-                    if abs(leading - context.width) > geometry.size.width {
-                        // 改行の場合はleadingをリセットする
-                        leading = 0
-                        // topも積算する
-                        top -= context.height
-                    }
-                    
-                    // 改行判定後に返却値を代入
-                    let result = leading
-                    
-                    if tag == viewModel.hobbies.last {
-                        // 複数回計算されるためリセットする
-                        leading = 0
-                    } else {
-                        // leadingを積算する (次の基準とするため返却値に積算させない)
-                        leading -= context.width
-                    }
-                    return result
-                })
-                .alignmentGuide(.top, computeValue: { _ in
-                    let result = top
-                    if tag == viewModel.hobbies.last {
-                        // 複数回計算されるためリセットする
-                        top = 0
-                    }
-                    return result
-                })
-            }
         }
     }
 }

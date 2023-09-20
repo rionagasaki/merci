@@ -8,54 +8,26 @@ import Foundation
 import Combine
 import SwiftUI
 
-class ProfileImageOnboardingViewModel: ObservableObject {
+class HobbiesInitViewModel: ObservableObject {
     
     private var cancellable = Set<AnyCancellable>()
-    let imageStorageManager = ImageStorageManager()
-    let setToFirestore = SetToFirestore()
-    let fetchFromFirestore = FetchFromFirestore()
-    @Published var isLoading: Bool = false
-    @Published var selectedImage: UIImage?
-    @Published var subImages:[UIImage] = []
-    @Published var allImages:[UIImage] = []
-    @Published var subImageIndex: Int = 0
+    private let imageStorageManager = ImageStorageManager()
+    private let userService = UserFirestoreService()
+    @Published var selectedHobbies: [String] = []
+    @Published var isSuccessRegister: Bool = false
+    @Published var isErrorAlert: Bool = false
+    @Published var errorMessage: String = ""
     
-    
-    func completeRegister(userModel: UserObservableModel, appState: AppState){
-        guard let selectedImage = selectedImage else { return }
-        imageStorageManager.uploadImageToStorage(folderName: "UserProfile", profileImage: selectedImage)
-            .flatMap { imageURLString -> AnyPublisher<[String], AppError> in
-                userModel.user.profileImageURL = imageURLString
-                guard let uid = AuthenticationManager.shared.uid else {
-                    return Empty(completeImmediately: true).eraseToAnyPublisher()
-                }
-                guard let email = AuthenticationManager.shared.email else {
-                    return Empty(completeImmediately: true).eraseToAnyPublisher()
-                }
-                userModel.user.uid = uid
-                userModel.user.email = email
-                return self.imageStorageManager.uploadMultipleImageToStorage(folderName: "SubImages", images: self.subImages)
+    func completeRegister(userModel: UserObservableModel, appState: AppState, completionHandler:@escaping () -> Void){
+        self.userService.createUser(userInfo: userModel){ result in
+            switch result {
+            case .success(_):
+                completionHandler()
+            case .failure(let error):
+                self.errorMessage = error.errorMessage
+                self.isErrorAlert = true
             }
-            .flatMap { subImageURLStrings in
-                userModel.user.subProfileImageURL = subImageURLStrings
-                return self.setToFirestore.registerInitialUserInfoToFirestore(userInfo: userModel)
-            }
-            .flatMap { _ in
-                return self.fetchFromFirestore.monitorUserUpdates(uid: userModel.user.uid)
-            }
-            .sink { completion in
-                switch completion {
-                case .finished:
-                    print("ここは呼ばれん")
-                case let .failure(error):
-                    print(error)
-                }
-            } receiveValue: { user in
-                userModel.user = user.adaptUserObservableModel()
-                appState.notLoggedInUser = false
-                self.isLoading = true
-            }
-            .store(in: &self.cancellable)
+        }
     }
 }
 

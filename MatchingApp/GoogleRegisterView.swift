@@ -20,7 +20,7 @@ struct GoogleRegisterView: View {
     
     var body: some View {
         Button {
-            viewModel.googleAuth()
+            viewModel.googleAuth(appState: appState)
         } label: {
             HStack {
                 Image("Google")
@@ -36,15 +36,13 @@ struct GoogleRegisterView: View {
             Alert(title: Text("エラー"), message: Text(viewModel.alertText))
         }
         .frame(width: UIScreen.main.bounds.width-32, height: 50)
-        .cornerRadius(5)
+        .background(Color.white)
+        .cornerRadius(30)
         .overlay {
-            RoundedRectangle(cornerRadius: 5)
+            RoundedRectangle(cornerRadius: 30)
                 .stroke(.black,lineWidth: 1)
         }
         .padding(.top, 8)
-        .fullScreenCover(isPresented: $viewModel.isModal) {
-            NickNameView()
-        }
     }
 }
 

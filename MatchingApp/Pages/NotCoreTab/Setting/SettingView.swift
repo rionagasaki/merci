@@ -12,66 +12,76 @@ struct SettingView: View {
     @StateObject var viewModel = SettingViewModel()
     
     var body: some View {
-        NavigationView {
-            List {
-                Section(header: Text("アカウント設定")) {
-                    NavigationLink {
-                        ServiceContentView()
-
-                    } label: {
-                        SettingCellView(systemImageName: "questionmark.circle", text: "サービス内容")
-                    }
-                    NavigationLink {
-                        UsagePolicyView()
-                    } label: {
-                        SettingCellView(systemImageName: "doc.text", text: "利用規約")
-                    }
-                    NavigationLink {
-                        PrivacyPolicyView()
-                    } label: {
-                        SettingCellView(systemImageName: "lock.shield", text: "プライバシポリシー")
-                    }
-                    NavigationLink {
-                        OpenSourceLibraryView()
-                    } label: {
-                        SettingCellView(systemImageName: "person.fill.badge.minus", text: "オープンソースライブラリ")
-                    }
-                    NavigationLink {
-                        AccountDeleteView()
-                    } label: {
-                        SettingCellView(systemImageName: "person.fill.badge.minus", text: "アカウント削除")
-                    }
-                    Button {
-                        viewModel.signOut()
-                    } label: {
-                        SettingCellView(systemImageName: "person.badge.minus.fill", text: "サインアウト")
-                    }
-
+        
+        List {
+            Section(header: Text("アカウント設定")) {
+                Button {
+                    self.viewModel.webUrlString = "https://bow-elm-3dc.notion.site/merci-b6582adddfa346528d17bf0b76c5ec06?pvs=4"
+                    self.viewModel.isWebView = true
+                } label: {
+                    SettingCellView(systemImageName: "questionmark", text: "サービス内容")
                 }
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark")
-                            .foregroundColor(.customBlack)
-                    }
-
+                Button {
+                    self.viewModel.webUrlString = "https://bow-elm-3dc.notion.site/87888d609f734e0eb6d836ae091cd973"
+                    self.viewModel.isWebView = true
+                } label: {
+                    SettingCellView(systemImageName: "doc.text", text: "利用規約")
                 }
+                Button {
+                    self.viewModel.webUrlString = "https://bow-elm-3dc.notion.site/23249233cc484fc390409a809b793985"
+                    self.viewModel.isWebView = true
+                } label: {
+                    SettingCellView(systemImageName: "lock.shield", text: "プライバシポリシー")
+                }
+                NavigationLink {
+                    AccountDeleteView()
+                } label: {
+                    SettingCellView(systemImageName: "person.fill.badge.minus", text: "アカウント削除")
+                }
+                Button {
+                    self.viewModel.isSignOutAlert = true
+                } label: {
+                    SettingCellView(systemImageName: "person.badge.minus.fill", text: "サインアウト")
+                }
+                
             }
-            .onReceive(viewModel.$isSuccess){
-                if $0 {
+        }
+        .navigationTitle("設定")
+        .navigationBarBackButtonHidden()
+        .fullScreenCover(isPresented: $viewModel.isWebView){
+            if let loadUrl = URL(string: viewModel.webUrlString) {
+                WebView(loadUrl: loadUrl)
+            }
+        }
+        .onReceive(viewModel.$isSuccess){
+            if $0 {
+                dismiss()
+            }
+        }
+        .alert(isPresented: $viewModel.isSignOutAlert){
+            Alert(
+                title: Text("ログアウト"),
+                message: Text("一旦ログアウトしても、また遊びに来てね！続ける？"),
+                primaryButton: .cancel(Text("キャンセル")),
+                secondaryButton: .destructive(Text("ログアウト"), action: { viewModel.signOut() })
+            )
+        }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading){
+                Button {
                     dismiss()
-                    DispatchQueue.main.asyncAfter(deadline: .now()+0.1) {
-                        appState.notLoggedInUser = true
+                } label: {
+                    HStack {
+                        Image(systemName: "chevron.backward")
+                        Text("戻る")
                     }
+                    .foregroundColor(.customBlack)
                 }
             }
-            .navigationTitle("⚙️各種設定")
         }
     }
 }
+
 struct SettingView_Previews: PreviewProvider {
     static var previews: some View {
         SettingView()

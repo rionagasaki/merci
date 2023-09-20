@@ -6,29 +6,36 @@
 //
 
 import SwiftUI
-import SDWebImageSwiftUI
 
 struct OtherUserMessageBubbleView: View {
-    let messageInfo: ChatObservableModel
+    let message: ChatObservableModel
+    let user: UserObservableModel
     var body: some View {
         HStack(alignment:  .top){
-            WebImage(url: URL(string: messageInfo.sendUserProfileImageURL))
-                .resizable()
-                .frame(width: 30, height: 30)
-                .clipShape(Circle())
+            NavigationLink {
+                UserProfileView(userId: message.fromUserUid, isFromHome: false)
+            } label: {
+                Image(user.user.profileImageURLString)
+                    .resizable()
+                    .frame(width: 30, height: 30)
+                    .background(Color.gray.opacity(0.1))
+                    .clipShape(Circle())
+            }
+
             VStack(alignment: .leading, spacing: 4){
-                Text(messageInfo.sendUserNickname)
+                Text(message.fromUserNickname)
                     .font(.system(size: 8, weight: .bold))
                     .foregroundColor(.black)
-                Text(messageInfo.message)
-                    .foregroundColor(.black)
-                    .padding(.all, 8)
-                    .background(Color.red.opacity(0.3))
-                    .cornerRadius(10)
+                Text(message.message)
+                    .foregroundColor(.customBlack)
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 12)
+                    .background(Color.gray.opacity(0.2))
+                    .cornerRadius(20)
             }
             VStack {
                 Spacer()
-                Text(messageInfo.createdAt)
+                Text(message.createdAt)
                     .foregroundColor(.gray.opacity(0.7))
                     .font(.system(size: 12, weight: .light))
             }
@@ -36,11 +43,5 @@ struct OtherUserMessageBubbleView: View {
             Spacer()
         }
         .padding(.leading, 8)
-    }
-}
-
-struct OtherUserMessageBubbleView_Previews: PreviewProvider {
-    static var previews: some View {
-        OtherUserMessageBubbleView(messageInfo: .init())
     }
 }

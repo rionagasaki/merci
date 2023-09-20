@@ -15,12 +15,12 @@ class UserIntroductionEditorViewModel: ObservableObject {
     @Published var errorMessage: String = ""
     @Published var isSuccess: Bool = false
     private var cancellable = Set<AnyCancellable>()
-    let setToFirestore = SetToFirestore()
+    private let userService = UserFirestoreService()
     
     func storeUserIntroductionToFirestore(
         userModel: UserObservableModel
     ){
-        setToFirestore.updateMyIntroduction(currentUid: userModel.user.uid, introduction: self.userIntroduction)
+        self.userService.updateUserInfo(currentUid: userModel.user.uid, key: "introduction", value: self.userIntroduction)
             .sink { completion in
                 switch completion {
                 case .finished:

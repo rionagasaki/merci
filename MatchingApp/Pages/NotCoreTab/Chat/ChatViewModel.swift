@@ -9,24 +9,46 @@ import SwiftUI
 import Combine
 
 class ChatViewModel: ObservableObject {
+    
+    enum AlertType {
+        case isRequiredAddFriend
+        case isCallingNow
+    }
+    
     @Published var messageText: String = ""
+    @Published var textFieldHeight: CGFloat = 40
+    @Published var newlineCount: Int = 0
     @Published var chatRoomId: String = ""
+    @Published var messageId: String = ""
+    @Published var channelId: String = ""
+    @Published var channelTitle: String = ""
+    @Published var talkUserNickName: String = ""
     @Published var isErrorAlert: Bool = false
     @Published var errorMessage: String = ""
     @Published var isPairProfileModal: Bool = false
-    @Published var isJoinCallModal: Bool = false
+    @Published var isCreateCallActionSheet: Bool = false
+    @Published var isCreateCall: Bool = false
+    @Published var isJoinCall: Bool = false
     @Published var trigger: Bool?
-    @Published var chatList:[ChatObservableModel] = []
+    @Published var allMessages:[ChatObservableModel] = []
+    @Published var requestedCallNoticeOffSet: CGFloat = 250
+    @Published var isRequiredAddFriend: Bool = false
     @Published var scrollId: UUID = UUID()
     
-    let setToFirestore = SetToFirestore()
-    let fetchFromFirestore = FetchFromFirestore()
-    
+    let chatService = ChatFirestoreService()
+    private let functions: CloudFunctions
     private var cancellable = Set<AnyCancellable>()
     
-    func fetchMessage() {
-        fetchFromFirestore
-            .snapshotOnChat(chatroomID: self.chatRoomId)
+    init(functions: CloudFunctions = CloudFunctions.init()){
+        self.functions = functions
+    }
+    
+    func initial(user: UserObservableModel, chatRoomId: String) {
+        self.chatService
+            .updateMessageCountZero(readUser: user, chatRoomId: chatRoomId)
+            .flatMap { _ in
+                return self.chatService.getUpdateChat(chatroomID: self.chatRoomId)
+            }
             .sink { completion in
                 switch completion {
                 case .finished:
@@ -36,70 +58,100 @@ class ChatViewModel: ObservableObject {
                     self.errorMessage = error.errorMessage
                 }
             } receiveValue: { chat in
-                self.chatList.append(.init(
+                self.scrollId = UUID(uuidString: chat.chatId) ?? .init()
+                self.allMessages.append(.init(
+                    chatId: chat.chatId,
                     message: chat.message,
-                    createdAt: DateFormat.shared.timeFormat(date: chat.createdAt.dateValue()),
-                    sendUserID: chat.sendUserID,
-                    sendUserNickname: chat.sendUserNickname,
-                    sendUserProfileImageURL: chat.sendUserProfileImageURL
+                    createdAt: DateFormat.timeFormat(date: chat.createdAt.dateValue()),
+                    fromUserUid: chat.fromUserUid,
+                    fromUserNickname: chat.fromUserNickname,
+                    fromUserProfileImageUrl: chat.fromUserProfileImageUrl,
+                    toUserToken: chat.toUserToken
                 ))
             }
             .store(in: &self.cancellable)
     }
     
-    func makeChatRoomAndSendMessage(userModel: UserObservableModel, pairModel: PairObservableModel, chatPair: PairObservableModel, appState: AppState){
-        setToFirestore.makeChat(
-            requestPairID: pairModel.pair.id,
-            requestedPairID: chatPair.pair.id,
-            message: messageText,
-            sendUserInfo: userModel,
-            currentPairUserID: appState.pairUserModel.user.uid,
-            currentChatPairUserID_1: chatPair.pair.pair_1_uid,
-            currentChatPairUserID_2: chatPair.pair.pair_2_uid,
-            recieveNotificatonTokens: [
-                chatPair.pair.pair_2_fcmToken,
-                chatPair.pair.pair_1_fmcToken,
-                appState.pairUserModel.user.fcmToken
-            ],
-            createdAt: Date()
-        )
+    func initialChatRoom(chatRoomId: String){
+        self.chatService.getChatRoomData(chatroomID: chatRoomId)
+            .sink { completion in
+                switch completion {
+                case .finished:
+                    print("ここは呼ばれない")
+                case .failure(let error):
+                    self.isErrorAlert = true
+                    self.errorMessage = error.errorMessage
+                }
+            } receiveValue: { chatRoomData in
+                withAnimation {
+                    self.channelId = chatRoomData.channelId
+                }
+            }
+            .store(in: &self.cancellable)
+    }
+    
+    func createChatRoomAndSendMessage(
+        fromUser: UserObservableModel,
+        toUser:UserObservableModel,
+        appState: AppState
+    ){
+        self.chatService.createChatRoomAndSendMessage(
+            message: self.messageText,
+            fromUser: fromUser,
+            toUser: toUser,
+            createdAt: Date.init())
+        .flatMap { chatRoomId -> AnyPublisher<Chat, AppError> in
+            self.chatRoomId = chatRoomId
+            return self.chatService.getUpdateChat(chatroomID: chatRoomId)
+        }
         .sink { completion in
             switch completion {
             case .finished:
-                self.messageText = ""
                 print("success make chatroom and send message!")
             case .failure(let error):
                 self.messageText = ""
                 self.isErrorAlert = true
                 self.errorMessage = error.errorMessage
             }
-        } receiveValue: { chatRoomId in
-            self.chatRoomId = chatRoomId
+        } receiveValue: { chat in
+            self.allMessages.append(.init(
+                chatId: chat.chatId,
+                message: chat.message,
+                createdAt: DateFormat.timeFormat(date: chat.createdAt.dateValue()),
+                fromUserUid: chat.fromUserUid,
+                fromUserNickname: chat.fromUserNickname,
+                fromUserProfileImageUrl: chat.fromUserProfileImageUrl,
+                toUserToken: chat.toUserToken
+            ))
+            withAnimation {
+                self.messageText = ""
+                self.newlineCount = 0
+                self.textFieldHeight = 40
+            }
         }
         .store(in: &self.cancellable)
     }
     
-    func sendMessage(userModel: UserObservableModel, pairModel: PairObservableModel, chatPair: PairObservableModel, appState: AppState) {
-        setToFirestore.sendMessage(
-            chatRoomID: chatRoomId,
-            currentUserPairID: pairModel.pair.id,
-            chatPairID: chatPair.pair.id,
-            currentPairUserID: appState.pairUserModel.user.uid,
-            currentChatPairUserID_1: chatPair.pair.pair_1_uid,
-            currentChatPairUserID_2: chatPair.pair.pair_2_uid,
-            createdAt: Date(),
-            message: messageText,
-            user: userModel,
-            recieveNotificatonTokens: [
-                appState.pairUserModel.user.fcmToken,
-                chatPair.pair.pair_1_fmcToken,
-                chatPair.pair.pair_2_fcmToken
-            ]
+    func sendMessage(
+        fromUser: UserObservableModel,
+        toUser: UserObservableModel,
+        appState: AppState
+    ) {
+        chatService.sendMessage(
+            chatRoomId: self.chatRoomId,
+            fromUser: fromUser,
+            toUser: toUser,
+            createdAt: Date.init(),
+            message: self.messageText
         )
         .sink { completion in
             switch completion {
             case .finished:
-                self.messageText = ""
+                withAnimation {
+                    self.messageText = ""
+                    self.newlineCount = 0
+                    self.textFieldHeight = 40
+                }
                 print("success message send!")
             case .failure(let error):
                 self.messageText = ""
@@ -110,6 +162,22 @@ class ChatViewModel: ObservableObject {
             print("recieve value")
         }
         .store(in: &self.cancellable)
+    }
+    
+    func updateMessageUnReadCountZero(user:UserObservableModel){
+        if self.chatRoomId.isEmpty { return }
+        self.chatService.updateMessageCountZero(readUser: user, chatRoomId: self.chatRoomId)
+            .sink { completion in
+                switch completion {
+                case .finished:
+                    print("success message send!")
+                case .failure(let error):
+                    print("failure: \(error)")
+                }
+            } receiveValue: { _ in
+                print("recieve value")
+            }
+            .store(in: &self.cancellable)
     }
 }
 

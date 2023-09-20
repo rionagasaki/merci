@@ -43,7 +43,7 @@ struct HalfSheetHelper<SheetView: View>: UIViewControllerRepresentable {
 class CustomHostingController<Content: View>: UIHostingController<Content> {
     override func viewDidLoad() {
         if let presentationController = presentationController as? UISheetPresentationController {
-            presentationController.detents = [.medium()]
+            presentationController.detents = [.medium(), .large()]
         }
     }
 }

@@ -29,14 +29,24 @@ struct UserIntroductionEditorView: View {
             focus = true
             viewModel.userIntroduction = userModel.user.introduction
         }
-        .onReceive(viewModel.$isSuccess){ if $0 { dismiss() } }
+        .onReceive(viewModel.$isSuccess){
+            if $0 {
+                self.focus = false
+                DispatchQueue.main.asyncAfter(deadline: .now()+0.5) {
+                    dismiss()
+                }
+            }
+        }
         .navigationBarBackButtonHidden(true)
         .navigationTitle("自己紹介")
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(
                     action: {
-                        dismiss()
+                        focus = false
+                        DispatchQueue.main.asyncAfter(deadline: .now()+0.5) {
+                            dismiss()
+                        }
                     }, label: {
                         Image(systemName: "chevron.left")
                             .foregroundColor(.black)

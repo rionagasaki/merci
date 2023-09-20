@@ -4,17 +4,19 @@
 //
 //  Created by Rio Nagasaki on 2023/05/19.
 //
+import Foundation
 import UIKit
 import SwiftUI
-import Foundation
+import Firebase
 import FirebaseCore
 import FirebaseMessaging
-import Firebase
 import UserNotifications
 import GoogleSignIn
+import AVFoundation
+import Amplify
+import AWSS3StoragePlugin
 
 class AppDelegate: NSObject, UIApplicationDelegate {
-    let setToFirestore = SetToFirestore()
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         FirebaseApp.configure()
@@ -27,16 +29,16 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
         UNUserNotificationCenter.current().requestAuthorization(options: authOptions) { authorized, error in
             if let error = error {
-                print("Error=>UNUserNotificationCenter:\(error)")
+                print("UNUserNotificationCenter:\(error)")
             } else {
                 DispatchQueue.main.async {
                     application.registerForRemoteNotifications()
                 }
             }
         }
-        
+
         Messaging.messaging().delegate = self
-    
+        Messaging.messaging().subscribe(toTopic: "all-users")
         return true
     }
     
@@ -61,7 +63,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any]) {
         // Print message ID.
-        print(userInfo["fcm_options"])
     }
     
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any],
@@ -76,6 +77,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         
         completionHandler(UIBackgroundFetchResult.newData)
     }
+    
+    // 通話実行状態で、アプリが強制キルされたら適切に削除する
+    func applicationWillTerminate(_ application: UIApplication) {
+       
+    }
 }
 
 extension AppDelegate: MessagingDelegate {
@@ -87,22 +93,24 @@ extension AppDelegate: MessagingDelegate {
 }
 
 extension AppDelegate: UNUserNotificationCenterDelegate {
-    func userNotificationCenter(_ center: UNUserNotificationCenter,
-                                willPresent notification: UNNotification) async
+    
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification) async
     -> UNNotificationPresentationOptions {
-        let userInfo = notification.request.content.userInfo
-        
-        return [.badge, .banner, .list, .sound]
+        return []
     }
     
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 didReceive response: UNNotificationResponse,
                                 withCompletionHandler completionHandler: @escaping () -> Void) {
         let userInfo = response.notification.request.content.userInfo
-        if let messageID = userInfo["gcm.message_id"] {
-            print("Message ID: \(messageID)")
+        if let selectedTab = userInfo["selectedTab"] as? String {
+            SelectedTab.shared.selectedTab = Tab(rawValue: selectedTab) ?? .home
+            if let userId = userInfo["userId"] as? String {
+                
+            }
         }
-        print(userInfo)
         completionHandler()
     }
 }

@@ -14,7 +14,7 @@ class PointPurchaseViewModel: ObservableObject {
     @Published var subProducts:[Product] = []
     @Published var isErrorAlert: Bool = false
     @Published var errorMessage: String = ""
-    let setToFirestore = SetToFirestore()
+    private let userService = UserFirestoreService()
     private var cancellable = Set<AnyCancellable>()
     
     func fetchProduct(){
@@ -80,7 +80,9 @@ class PointPurchaseViewModel: ObservableObject {
             }
         }
         .flatMap { _ -> AnyPublisher<Void, AppError> in
-            self.setToFirestore.addCoins(uid: uid, increaseCoins: givenPoint)
+            self.userService.updateUserInfo(
+                currentUid: uid, key: "coins",
+                value: givenPoint)
         }
         .sink { completion in
             switch completion {
@@ -97,5 +99,6 @@ class PointPurchaseViewModel: ObservableObject {
     }
     
     func restorePurchase(){
+        
     }
 }

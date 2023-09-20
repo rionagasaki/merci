@@ -25,9 +25,10 @@ struct EmailAuthButton: View {
                     .font(.system(size: 18, weight: .bold))
             }
             .frame(width: UIScreen.main.bounds.width-32, height: 50)
-            .cornerRadius(5)
+            .background(Color.white)
+            .cornerRadius(30)
             .overlay {
-                RoundedRectangle(cornerRadius: 5)
+                RoundedRectangle(cornerRadius: 30)
                     .stroke(.black,lineWidth: 1)
             }
             .padding(.top, 8)

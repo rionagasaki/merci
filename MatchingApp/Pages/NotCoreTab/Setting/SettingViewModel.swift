@@ -10,6 +10,9 @@ import Combine
 
 class SettingViewModel: ObservableObject {
     @Published var isSuccess: Bool = false
+    @Published var isWebView: Bool = false
+    @Published var webUrlString: String = ""
+    @Published var isSignOutAlert: Bool = false
     @Published var isErrorAlert: Bool = false
     @Published var errorMessage: String = ""
     

@@ -13,7 +13,7 @@ struct WelcomeView: View {
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 Spacer()
                 Text(viewModel.guideText)
@@ -50,20 +50,20 @@ struct WelcomeView: View {
                     }
                 }
                 
-                if viewModel.guideCount >= 4 {
-                    PairCardView(pairModel: .init(
-                        pairModel: .init(
-                            pair_1_nickname: "あかり",
-                            pair_1_activeRegion: "新宿",
-                            pair_1_birthDate: "2002/06/28",
-                            pair_2_nickname: "はなこ",
-                            pair_2_activeRegion: "渋谷",
-                            pair_2_birthDate: "2001/06/28"
-                        )
-                    ), localImageName_1: "ExplanationGirl_1",
-                                 localImageName_2: "ExplanationGirl_2"
-                    )
-                }
+//                if viewModel.guideCount >= 4 {
+//                    PairCardView(pairModel: .init(
+//                        pairModel: .init(
+//                            pair_1_nickname: "あかり",
+//                            pair_1_activeRegion: "新宿",
+//                            pair_1_birthDate: "2002/06/28",
+//                            pair_2_nickname: "はなこ",
+//                            pair_2_activeRegion: "渋谷",
+//                            pair_2_birthDate: "2001/06/28"
+//                        )
+//                    ), localImageName_1: "ExplanationGirl_1",
+//                                 localImageName_2: "ExplanationGirl_2"
+//                    )
+//                }
                 Spacer()
                 Button {
                     viewModel.doneOnboarding(userModel: userModel)

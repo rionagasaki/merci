@@ -8,58 +8,87 @@
 import Foundation
 import FirebaseFirestore
 
-class Chat {
-    var chatID: String
-    var message: String
-    var createdAt: Timestamp
-    var sendUserID: String
-    var sendUserNickname: String
-    var sendUserProfileImageURL: String
-    var notificationUserTokens:[String]
+class ChatRoomData {
+    var chatmate: [String]
+    var channelId: String
+    var callingMate: [String]
     
     init(document: QueryDocumentSnapshot){
-        self.chatID = document.documentID
         let chatDic = document.data()
-        // TextかImageかのどちらかが入る。
+        self.chatmate = (chatDic["chatmate"] as? [String]).orEmptyArray
+        self.channelId = (chatDic["channelId"] as? String).orEmpty
+        self.callingMate = (chatDic["callingMate"] as? [String]).orEmptyArray
+    }
+    
+    init(document: DocumentSnapshot){
+        let chatDic = document.data()
+        self.chatmate = (chatDic?["chatmate"] as? [String]).orEmptyArray
+        self.channelId = (chatDic?["channelId"] as? String).orEmpty
+        self.callingMate = (chatDic?["callingMate"] as? [String]).orEmptyArray
+    }
+}
+
+class Chat {
+    var chatId: String
+    var message: String
+    var createdAt: Timestamp
+    var fromUserUid: String
+    var fromUserNickname: String
+    var fromUserProfileImageUrl: String
+    var toUserToken: String
+    
+    init(document: QueryDocumentSnapshot){
+        self.chatId = document.documentID
+        let chatDic = document.data()
         self.message = (chatDic["message"] as? String).orEmpty
         self.createdAt = ((chatDic["createdAt"] as? Timestamp)!)
-        self.sendUserID = (chatDic["sendUserID"] as? String).orEmpty
-        self.sendUserNickname = (chatDic["sendUserNickname"] as? String).orEmpty
-        self.sendUserProfileImageURL = (chatDic["sendUserProfileImageURL"] as? String).orEmpty
-        self.notificationUserTokens = (chatDic["notificationUserTokens"] as? [String]).orEmptyArray
+        self.fromUserUid = (chatDic["fromUserUid"] as? String).orEmpty
+        self.fromUserNickname = (chatDic["fromUserNickname"] as? String).orEmpty
+        self.fromUserProfileImageUrl = (chatDic["fromUserProfileImageUrl"] as? String).orEmpty
+        self.toUserToken = (chatDic["toUserToken"] as? String).orEmpty
     }
+    
     init(document: DocumentSnapshot){
-        self.chatID = document.documentID
+        self.chatId = document.documentID
         let chatDic = document.data()
         self.message = (chatDic?["message"] as? String).orEmpty
         self.createdAt = ((chatDic?["createdAt"] as? Timestamp)!)
-        self.sendUserID = (chatDic?["sendUserID"] as? String).orEmpty
-        self.sendUserNickname = (chatDic?["sendUserNickName"] as? String).orEmpty
-        self.sendUserProfileImageURL = (chatDic?["sendUserProfileImageURL"] as? String).orEmpty
-        self.notificationUserTokens = (chatDic?["notificationUserTokens"] as? [String]).orEmptyArray
+        self.fromUserUid = (chatDic?["fromUserUid"] as? String).orEmpty
+        self.fromUserNickname = (chatDic?["fromUserNickname"] as? String).orEmpty
+        self.fromUserProfileImageUrl = (chatDic?["fromUserProfileImageUrl"] as? String).orEmpty
+        self.toUserToken = (chatDic?["toUserToken"] as? String).orEmpty
     }
 }
 
-
-// User情報を管理するObservableObject
-final class ChatObservableModel: ObservableObject, Identifiable {
+final class ChatObservableModel: ObservableObject, Identifiable, Equatable {
+    static func == (lhs: ChatObservableModel, rhs: ChatObservableModel) -> Bool {
+        return true
+    }
+    
     var id = UUID()
-    @Published var chatID: String = ""
+    @Published var chatId: String = ""
     @Published var message: String = ""
     @Published var createdAt: String = ""
-    @Published var sendUserID: String = ""
-    @Published var sendUserNickname: String = ""
-    @Published var sendUserProfileImageURL: String = ""
-    @Published var notificationUserTokens:[String] = []
+    @Published var fromUserUid: String = ""
+    @Published var fromUserNickname: String = ""
+    @Published var fromUserProfileImageUrl: String = ""
+    @Published var toUserToken: String = ""
     
-    init(chatID: String = "", message: String = "", createdAt: String = "", sendUserID:String = "", sendUserNickname: String = "", sendUserProfileImageURL: String = "", notificationUserTokens:[String] = []){
-        self.chatID = chatID
+    init(
+        chatId: String = "",
+        message: String = "",
+        createdAt: String = "",
+        fromUserUid:String = "",
+        fromUserNickname: String = "",
+        fromUserProfileImageUrl: String = "",
+        toUserToken: String = ""
+    ){
+        self.chatId = chatId
         self.message = message
         self.createdAt = createdAt
-        self.sendUserID = sendUserID
-        self.sendUserNickname = sendUserNickname
-        self.sendUserProfileImageURL = sendUserProfileImageURL
-        self.notificationUserTokens = notificationUserTokens
+        self.fromUserUid = fromUserUid
+        self.fromUserNickname = fromUserNickname
+        self.fromUserProfileImageUrl = fromUserProfileImageUrl
+        self.toUserToken = toUserToken
     }
 }
-

@@ -135,7 +135,6 @@ enum AppError: Error {
             } else {
                 return "無効な購入が発生しました。心当たりがない場合は、お手数ですがサポートまでご連絡お願いいたします。"
             }
-            
         case .other(let error):
             switch error {
             case .alreadyHasAccountError:

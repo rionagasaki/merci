@@ -7,43 +7,35 @@
 
 import SwiftUI
 import Combine
+import FirebaseAuth
 
 class ContentViewModel: ObservableObject {
-    
-    let fetchFromFirestore = FetchFromFirestore()
-    let setToFirestore = SetToFirestore()
-    
     @Published var isLoginModal: Bool = false
     @Published var isRequiredOnboarding: Bool = false
     @Published var isUserInfoSetupRequired: Bool = false
-    @Published var selectedTab: Tab = .home
-    @Published var navigationTitle:String = ""
-    @Published var navigationStyle:Bool = true
+
     @Published var searchWord = ""
-    @Published var isLoading: Bool = false
-    @Published var cancellable = Set<AnyCancellable>()
     @Published var isErrorAlert = false
     @Published var errorMessage: String = ""
     @Published var isPairSetUpRequired = false
     @AppStorage("isFirstLaunch") var isFirstLaunch: Bool = true
     
-    func resetUserInfo(userModel: UserObservableModel,pairModel: PairObservableModel, appState: AppState){
+    private let userService = UserFirestoreService()
+    private let postService = PostFirestoreService()
+    private let noticeService = NoticeFirestoreService()
+    private var cancellable = Set<AnyCancellable>()
+    private let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .heavy)
+    
+    func resetUserInfo(userModel: UserObservableModel, appState: AppState){
         AuthenticationService.shared.signOut()
             .sink(receiveCompletion: { completion in
                 switch completion {
                 case .finished:
-                    appState.messageListViewInit = true
-                    appState.notLoggedInUser = true
+                    print("successfully logout")
                     userModel.initial()
-                    pairModel.initial()
                     self.isFirstLaunch = false
-                    self.fetchFromFirestore.deleteUserListener()
-                    self.fetchFromFirestore.deletePairListener()
-                    self.fetchFromFirestore.deleteChatListener()
-                    self.isLoading = false
                 case let .failure(error):
                     print("Error",error)
-                    self.isLoading = false
                 }
             }, receiveValue: { _ in
                 print("Recieve Value!")
@@ -51,74 +43,101 @@ class ContentViewModel: ObservableObject {
             .store(in: &cancellable)
     }
     
-    
-    func initialUserInfo(userModel: UserObservableModel, pairModel: PairObservableModel, appState: AppState){
-        isLoading = true
-        guard let uid = AuthenticationManager.shared.uid else { return }
-        self.fetchFromFirestore.monitorUserUpdates(uid: uid)
-            .flatMap { user -> AnyPublisher<Pair, AppError> in
-                userModel.user = user.adaptUserObservableModel()
-                // ユーザー登録を最後まで完了していない場合
-                if userModel.user.nickname.isEmpty || userModel.user.gender.isEmpty || userModel.user.activeRegion.isEmpty || userModel.user.birthDate.isEmpty || userModel.user.profileImageURL.isEmpty {
-                    print(user.nickname)
-                    print(user.gender)
-                    print(user.activityRegion)
-                    print(user.birthDate)
-                    print(user.profileImageURL)
+    func initialUserInfo(user: FirebaseAuth.User, userModel: UserObservableModel, appState: AppState) {
+        self.userService.getUpdateUser(uid: user.uid) { result in
+            switch result {
+            case .success(let user):
+                userModel.user = user
+                if user.email.isEmpty || user.uid.isEmpty { return }
+                
+                if user.nickname.isEmpty {
                     self.isUserInfoSetupRequired = true
-                    self.isLoading = false
-                    appState.messageListViewInit = true
-                    return Empty(completeImmediately: true).eraseToAnyPublisher()
+                    return
                 }
-                
                 // オンボーディングを最後まで完了していない場合
-                
                 if !user.onboarding {
                     self.isRequiredOnboarding = true
-                    self.isLoading = false
-                    return Empty(completeImmediately: true).eraseToAnyPublisher()
+                    return
                 }
-                
                 // 未既読なチャットがある場合
-                if userModel.user.unreadMessageCount.values.contains(where: { $0 > 0 }) {
-                    appState.messageListNotification = true
+                let allUnreadMessageCount =  user.unreadMessageCount.values.reduce(0) { partialResult, next in
+                    return partialResult + next
                 }
-                
-                // ペアを組んでいない場合
-                if userModel.user.pairID.isEmpty {
-                    self.isLoading = false
-                    return Empty(completeImmediately: true).eraseToAnyPublisher()
+                if user.unreadMessageCount.values.contains(where: { $0 > 0 }) {
+                    if !appState.tabWithNotice.contains(.message) {
+                        self.UIIFGeneratorMedium.impactOccurred()
+                        appState.tabWithNotice.append(.message)
+                    } else {
+                        if appState.unreadMessageAllCount < allUnreadMessageCount {
+                            self.UIIFGeneratorMedium.impactOccurred()
+                            appState.tabWithNotice = appState.tabWithNotice.filter { $0 != .message }
+                            appState.tabWithNotice.append(.message)
+                        }
+                    }
                 } else {
-                    return self.fetchFromFirestore.monitorPairInfoUpdate(pairID: userModel.user.pairID)
+                    if appState.tabWithNotice.contains(.message) {
+                        appState.tabWithNotice = appState.tabWithNotice.compactMap { message in
+                            if message == .message {
+                                return nil
+                            } else {
+                                return message
+                            }
+                        }
+                    }
+                }
+                appState.unreadMessageAllCount = allUnreadMessageCount
+                
+                self.noticeService.getAllNotices(userID: user.uid)
+                    .sink { completion in
+                        switch completion {
+                        case .finished:
+                            print("successfully initialize")
+                        case .failure(let error):
+                            self.errorMessage = error.errorMessage
+                            self.isErrorAlert = true
+                        }
+                    } receiveValue: { (_, commentNotices, requestNotice) in
+                        self.confirmNotice(
+                            appState: appState,
+                            commentNotices: commentNotices,
+                            followNotices: requestNotice
+                        )
+                    }
+                    .store(in: &self.cancellable)
+
+            case .failure(let error):
+                self.errorMessage = error.errorMessage
+                self.isErrorAlert = true
+            }
+        }
+    }
+    
+    func confirmNotice(appState: AppState, commentNotices: [CommentNoticeObservableModel], followNotices:[RequestNoticeObservableModel]){
+        let commentNoticeReadStatus:[Bool] = commentNotices.map { $0.isRead }
+        let followNoticeReadStatus:[Bool] = followNotices.map { $0.isRead }
+        let allNoticesReadStatus:[Bool] = commentNoticeReadStatus + followNoticeReadStatus
+        
+        // 未既読の通知が存在する
+        if allNoticesReadStatus.contains(false) {
+            if !appState.tabWithNotice.contains(.notification) {
+                appState.tabWithNotice.append(.notification)
+            }
+        } else {
+            if appState.tabWithNotice.contains(.notification) {
+                appState.tabWithNotice = appState.tabWithNotice.compactMap { notice in
+                    if notice == .notification {
+                        return nil
+                    } else {
+                        return notice
+                    }
                 }
             }
-            .flatMap { pair -> AnyPublisher<User?, AppError> in
-                pairModel.pair = pair.adaptPairModel()
-                return self.fetchFromFirestore.fetchUserInfoFromFirestoreByUserID(uid: userModel.user.pairUid)
-            }
-            .sink { completion in
-                switch completion {
-                case .finished:
-                    print("remove listener when application is not active")
-                case let .failure(error):
-                    print(error)
-                    self.isErrorAlert = true
-                    self.isLoading = false
-                }
-            } receiveValue: { user in
-                if let user = user {
-                    appState.pairUserModel.user =
-                    user.adaptUserObservableModel()
-                    appState.messageListViewInit = true
-                    self.isLoading = false
-                }
-            }
-            .store(in: &self.cancellable)
+        }
     }
     
     func updateUserTokenAndInitialUserInfo(token: String){
-        guard let uid = AuthenticationManager.shared.uid else { return }
-        setToFirestore.userFcmTokenUpdate(uid: uid, token: token)
+        guard let user = AuthenticationManager.shared.user else { return }
+        userService.updateUserInfo(currentUid: user.uid, key: "fcmToken", value: token)
             .receive(on: DispatchQueue.main)
             .sink { completion in
                 switch completion {

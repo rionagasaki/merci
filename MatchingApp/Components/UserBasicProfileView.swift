@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SDWebImageSwiftUI
+import Combine
 
 struct UserBasicProfileView: View {
     
@@ -22,13 +23,12 @@ struct UserBasicProfileView: View {
                     UIIFGeneratorMedium.impactOccurred()
                     pictureSelectedViewVisible = true
                 } label: {
-                    WebImage(url: URL(string: userModel.user.profileImageURL))
+                    Image(userModel.user.profileImageURLString)
                         .resizable()
-                        .frame(width: 150, height: 150)
-                        .cornerRadius(10)
-                }
-                .fullScreenCover(isPresented: $pictureSelectedViewVisible) {
-                    ProfileImageChangeView()
+                        .frame(width: 120, height: 120)
+                        .padding(.all, 16)
+                        .background(Color.gray.opacity(0.1))
+                        .clipShape(Circle())
                 }
                 
                 VStack(alignment: .center){
@@ -83,7 +83,7 @@ struct UserBasicProfileView: View {
                         }
                         Divider()
                         VStack(spacing: .zero){
-                            Text("ポイント")
+                            Text("資産")
                                 .foregroundColor(.gray.opacity(0.6))
                                 .font(.system(size: 13))
                                 .fontWeight(.light)
@@ -98,32 +98,14 @@ struct UserBasicProfileView: View {
                             }
                         }
                     }
-                    NavigationLink {
-                        PointPurchaseView()
-                            .onAppear {
-                                UIIFGeneratorMedium.impactOccurred()
-                            }
-                    } label: {
-                        Image("PurchaseBanner")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: UIScreen.main.bounds.width-32)
-                            .cornerRadius(10)
-                    }
-                }
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack {
-                        ProfileHeaderBottom_2()
-                        ProfileHeaderBottom_2()
-                        ProfileHeaderBottom_2()
-                        ProfileHeaderBottom_2()
-                    }
-                    .padding(.horizontal, 16)
                 }
             }
             CustomDivider()
         }
         .padding(.top, 16)
+        .fullScreenCover(isPresented: $pictureSelectedViewVisible) {
+            ProfileImageChangeView()
+        }
     }
 }
 

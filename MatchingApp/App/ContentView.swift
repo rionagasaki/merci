@@ -8,95 +8,79 @@
 import SwiftUI
 import Combine
 
+
 struct ContentView: View {
     @StateObject var viewModel = ContentViewModel()
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var userModel: UserObservableModel
-    @EnvironmentObject var pairModel: PairObservableModel
     @ObservedObject var tokenData = TokenData.shared
-    
+    @ObservedObject var selectedTab = SelectedTab.shared
+    @ObservedObject var authManager = AuthenticationManager.shared
+    @State var homePath = [String]()
     var body: some View {
         VStack {
-            if viewModel.isLoading {
-                LottieView(animationResourceName: "loading")
-                    .frame(width: 300, height: 300)
-            } else {
-                TabView(selection: $viewModel.selectedTab){
-                    NavigationView {
-                        VStack{
-                            HomeView()
-                            Divider()
-                            CustomTabView(
-                                selectedTab: $viewModel.selectedTab,
-                                navigationTitle: $viewModel.navigationTitle
-                            )
-                        }
-                        .navigationBarTitleDisplayMode(.large)
-                        .navigationTitle("🔍相手を探す")
+            TabView(selection: $selectedTab.selectedTab){
+                VStack(spacing: .zero){
+                    NavigationStack{
+                        HomeView()
+                            .navigationBarTitleDisplayMode(.inline)
                     }
-                    .tag(Tab.home)
+                    .ignoresSafeArea()
+                    CustomTabView(selectedTab: $selectedTab.selectedTab)
+                }
+                .tag(Tab.home)
+                
+                VStack(spacing: .zero){
+                    NavigationStack {
+                        MessageListView()
+                            .navigationBarTitleDisplayMode(.inline)
+                    }
+                    .ignoresSafeArea()
+                    CustomTabView(selectedTab: $selectedTab.selectedTab)
+                }
+                .tag(Tab.message)
+                
+                VStack(spacing: .zero){
+                    NavigationView {
+                        NotificationListView()
+                            .navigationBarTitleDisplayMode(.inline)
+                    }
                     .ignoresSafeArea()
                     
-                    NavigationView {
-                        VStack {
-                            MessageListView()
-                            Divider()
-                            CustomTabView(selectedTab: $viewModel.selectedTab, navigationTitle: $viewModel.navigationTitle)
-                        }
-                    }
-                    .tag(Tab.message)
-                    
-                    ZStack {
-                        NavigationView {
-                            VStack{
-                                ProfileView(
-                                    noPairPopup: $viewModel.isPairSetUpRequired)
-                                Divider()
-                                CustomTabView(
-                                    selectedTab: $viewModel.selectedTab,
-                                    navigationTitle: $viewModel.navigationTitle
-                                )
-                            }
-                            .navigationBarTitleDisplayMode(.inline)
-                            .navigationTitle("プロフィール")
-                            
-                        }
-                    }
-                    .tag(Tab.profile)
+                    CustomTabView(selectedTab: $selectedTab.selectedTab)
                 }
+                .tag(Tab.notification)
+                
+                NavigationView {
+                    VStack(spacing: .zero){
+                        ProfileView()
+                        CustomTabView(selectedTab: $selectedTab.selectedTab)
+                    }
+                }
+                .tag(Tab.profile)
             }
         }
-        
-        .onReceive(tokenData.$token, perform: { token in
-            viewModel.updateUserTokenAndInitialUserInfo(token: token)
-        })
         .onAppear {
             UITabBar.appearance().isHidden = true
-            
-            if !appState.notLoggedInUser {
-                // 初回起動時なのにログイン中である場合はサインアウトさせる。
-                if viewModel.isFirstLaunch {
-                    viewModel.resetUserInfo(
-                        userModel: userModel,
-                        pairModel: pairModel,
-                        appState: appState
-                    )
-                } else {
-                    viewModel.initialUserInfo(
-                        userModel: userModel,
-                        pairModel: pairModel,
-                        appState: appState
-                    )
-                }
+        }
+        .onReceive(tokenData.$token){ token in
+            viewModel.updateUserTokenAndInitialUserInfo(token: token)
+        }
+        .onReceive(authManager.$user.compactMap { $0 }){ user in
+            if viewModel.isFirstLaunch {
+                viewModel.resetUserInfo(
+                    userModel: userModel,
+                    appState: appState
+                )
+            } else {
+                viewModel.initialUserInfo(user: user, userModel: userModel, appState: appState)
             }
         }
-        .fullScreenCover(isPresented: $appState.notLoggedInUser) {
+        .fullScreenCover(isPresented: Binding(get: { authManager.user == nil }, set: { _ in })) {
             EntranceView()
         }
-        .fullScreenCover(isPresented: $viewModel.isUserInfoSetupRequired, onDismiss: {
-            viewModel.isRequiredOnboarding = true
-        }) {
-            NickNameView()
+        .fullScreenCover(isPresented: $viewModel.isUserInfoSetupRequired) {
+            NickNameInitView()
         }
         .fullScreenCover(isPresented: $viewModel.isRequiredOnboarding){
             WelcomeView()

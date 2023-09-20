@@ -16,11 +16,11 @@ class ReportAbuseViewModel: ObservableObject {
     @Published var errorMessage: String = ""
     @Published var isErrorAlert: Bool = false
     @Published var isReportSuccess: Bool = false
-    let setToFirestore = SetToFirestore()
+    private let noticeService = NoticeFirestoreService()
     private var cancellable = Set<AnyCancellable>()
     
     func report(reportUserID: String){
-        setToFirestore.report(reportUserID: reportUserID, reportedUserID: self.reportedUserID, reportText: self.reportText)
+        self.noticeService.createReport(reportUserID: reportUserID, reportedUserID: self.reportedUserID, reportText: self.reportText)
             .sink { completion in
                 switch completion {
                 case .finished:

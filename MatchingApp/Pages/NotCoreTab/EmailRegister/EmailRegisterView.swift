@@ -18,10 +18,6 @@ struct EmailRegisterView: View {
     @StateObject private var viewModel = EmailRegisterViewModel()
     @Binding var isShow: Bool
     let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .light)
-    @State var errorToast: Bool = false
-    @State private var isProcessingFailedAlertPresented = false
-    @State var cancellable = Set<AnyCancellable>()
-    @State var isRequieredOnboarding: Bool = false
     
     var body: some View {
         VStack {
@@ -52,18 +48,18 @@ struct EmailRegisterView: View {
                 Text("📧メールアドレス")
                     .foregroundColor(.customBlack)
                     .font(.system(size: 13, weight: .bold))
-                TextField("", text: $viewModel.email , prompt: Text("sample@icloud.com").foregroundColor(.gray.opacity(0.5)))
+                TextField("", text: $viewModel.email , prompt: Text("sample@icloud.com"))
                     .padding(.leading, 10)
                     .frame(height: 38)
                     .onChange(of: viewModel.email, perform: { _ in
-                        viewModel.validateEmail()
+                        viewModel.isValidEmail()
                     })
                     .focused($focusState, equals: .email)
                     .overlay {
                         RoundedRectangle(cornerRadius: 5)
-                            .stroke(focusState == .email ? .black: viewModel.isValidEmail() || viewModel.email == "" ? .gray.opacity(0.3): .red, lineWidth: 1)
+                            .stroke(focusState == .email ? .black: viewModel.isAvailableEmail || viewModel.email == "" ? .gray.opacity(0.3): .red, lineWidth: 1)
                     }
-                if !(viewModel.isValidEmail() || viewModel.email == "") {
+                if !(viewModel.isAvailableEmail || viewModel.email == "") {
                     HStack {
                         Image(systemName: "exclamationmark.circle.fill")
                             .resizable()
@@ -87,16 +83,14 @@ struct EmailRegisterView: View {
                     .padding(.leading, 10)
                     .frame(height: 38)
                     .onChange(of: viewModel.password, perform: { _ in
-                        if !viewModel.isValidPassword(){
-                            
-                        }
+                        viewModel.isValidPassword()
                     })
                     .focused($focusState, equals: .password)
                     .overlay {
                         RoundedRectangle(cornerRadius: 5)
-                            .stroke(focusState == .password ? .black: viewModel.isValidPassword() || viewModel.password == "" ? .gray.opacity(0.3): .red , lineWidth: 1)
+                            .stroke(focusState == .password ? .black: viewModel.isAvailablePassword || viewModel.password == "" ? .gray.opacity(0.3): .red , lineWidth: 1)
                     }
-                if viewModel.isValidPassword() || viewModel.password == "" {
+                if viewModel.isAvailablePassword || viewModel.password == "" {
                     Text("※半角英数字含み8文字以上")
                         .font(.system(size: 12, weight: .light))
                         .foregroundColor(.customBlack)
@@ -117,25 +111,13 @@ struct EmailRegisterView: View {
             .padding(.horizontal, 16)
             .padding(.top, 8)
             Button {
-                AuthenticationService.shared.signUpWithEmail(email: viewModel.email, password: viewModel.password)
-                    .sink { completion in
-                        switch completion {
-                        case .finished:
-                            viewModel.isModal = true
-                        case .failure(_):
-                            isProcessingFailedAlertPresented = true
-                        }
-                    } receiveValue: { authDataResult in
-                        viewModel.email = ""
-                        viewModel.password = ""
-                    }
-                    .store(in: &cancellable)
+                viewModel.signUpEmail(appState: appState)
             } label: {
                 Text("新規登録")
                     .foregroundColor(.white)
                     .bold()
                     .frame(width: UIScreen.main.bounds.width-32, height: 50)
-                    .background(Color.customRed)
+                    .background(Color.customBlue)
                     .cornerRadius(5)
             }
             .padding(.top, 40)
@@ -143,16 +125,12 @@ struct EmailRegisterView: View {
             Spacer()
         }
         .background(Color.white)
-        .fullScreenCover(isPresented: $viewModel.isModal, onDismiss: {
-            self.isRequieredOnboarding = true
-        }) {
-            NickNameView()
-        }
-        .fullScreenCover(isPresented: $isRequieredOnboarding){
-            WelcomeView()
-        }
-        .alert(isPresented: $isProcessingFailedAlertPresented) {
-            Alert(title: Text("エラー"), message: Text("アカウントの作成に失敗しました。ネットワーク環境等を確認し、再度お試しください。"))
+        
+        .alert(isPresented: $viewModel.isErrorAlert) {
+            Alert(
+                title: Text("エラー"),
+                message: Text(viewModel.errorMessage)
+            )
         }
     }
 }

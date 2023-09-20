@@ -17,33 +17,14 @@ struct PairSettingView: View {
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
-        
         VStack {
             SearchBar(viewModel: viewModel, user: userModel)
             ScrollView(showsIndicators: false){
-               
-                if userModel.user.pairUid.isEmpty && viewModel.requestPairUser == nil {
-                    VStack(alignment: .leading){
-                        Label {
-                            Text("現在のペア")
-                                .foregroundColor(.customBlack)
-                                .font(.system(size: 20, weight: .bold))
-                                .frame(maxWidth: UIScreen.main.bounds.width, alignment: .leading)
-                        } icon: {
-                            Image(systemName: "person.2")
-                                .foregroundColor(.customBlack)
-                        }
-                        .padding(.top, 24)
-                        Text("現在ペアは未設定です。ペアを決めてみよう。")
-                            .foregroundColor(.customBlack)
-                            .font(.system(size: 12))
-                            .padding(.top, 12)
-                            .padding(.leading, 8)
-                    }
-                } else if let requestPairUser = viewModel.requestPairUser {
+                
+                if viewModel.requestedFriendUsers.count != 0 {
                     VStack {
                         Label {
-                            Text("リクエストを送っている相手")
+                            Text("送っているリクエスト")
                                 .foregroundColor(.customBlack)
                                 .font(.system(size: 20, weight: .bold))
                                 .frame(maxWidth: UIScreen.main.bounds.width, alignment: .leading)
@@ -53,38 +34,19 @@ struct PairSettingView: View {
                         }
                         .padding(.top, 24)
                         
-                        Text("新しくペアを決める場合、現在のペアを解除する必要があります")
-                            .foregroundColor(.customDarkGray)
-                            .font(.system(size: 12))
-                        UserCellView(buttonText: "リクエスト取消し", buttonColor: .customOrange, user: requestPairUser) {
-                            viewModel.cancelPair(requestingUser: userModel, requestedUser: requestPairUser)
+                        ForEach(viewModel.requestFriendUsers) { user in
+                            UserCellView(buttonText: "承認する", buttonColor: .customOrange, user: user) {
+                                viewModel.approveRequest(
+                                    requestUser: userModel,
+                                    requestedUser: user)
+                            }
                         }
-                    }
-                } else if let currentPairUser = viewModel.currentPairUser {
-                    VStack(alignment: .leading){
-                        Label {
-                            Text("現在のペア")
-                                .foregroundColor(.customBlack)
-                                .font(.system(size: 20, weight: .bold))
-                                .frame(maxWidth: UIScreen.main.bounds.width, alignment: .leading)
-                        } icon: {
-                            Image(systemName: "person.2")
-                                .foregroundColor(.customBlack)
-                        }
-                        .padding(.top, 24)
-                        Text("新しくペアを決める場合、現在のペアを解除する必要があります")
-                            .foregroundColor(.customDarkGray)
-                            .font(.system(size: 12))
-                        UserCellView(buttonText: "ペア解除", buttonColor: .customOrange, user: currentPairUser) {
-                            viewModel.dissolvePair(requestUser: userModel, requestedUser: appState.pairUserModel)
-                        }
-                        
                     }
                 }
                 
                 VStack(alignment: .leading){
                     Label {
-                        Text("リクエストされている相手")
+                        Text("受け取ったリクエスト")
                             .foregroundColor(.customBlack)
                             .font(.system(size: 20, weight: .bold))
                             .frame(maxWidth: UIScreen.main.bounds.width, alignment: .leading)
@@ -94,16 +56,16 @@ struct PairSettingView: View {
                     }
                     .padding(.top, 48)
                     
-                    if viewModel.requestedPairUsers.count == 0 {
-                        Text("現在リクエストされている相手はいません。")
+                    if viewModel.requestedFriendUsers.count == 0 {
+                        Text("現在受け取っているリクエストはありません💦")
                             .foregroundColor(.customBlack)
                             .font(.system(size: 12))
                             .padding(.top, 12)
                             .padding(.leading, 8)
                     } else {
-                        ForEach(viewModel.requestedPairUsers) { user in
+                        ForEach(viewModel.requestedFriendUsers) { user in
                             UserCellView(buttonText: "ペアになる", buttonColor: .customOrange, user: user) {
-                                viewModel.createPair(
+                                viewModel.approveRequest(
                                     requestUser: userModel,
                                     requestedUser: user)
                             }
@@ -111,8 +73,8 @@ struct PairSettingView: View {
                     }
                 }
                 
-                if userModel.user.pairMapping != [:] {
-                    Text("過去にペアだった相手")
+                if userModel.user.friendUids != [] {
+                    Text("フレンド")
                         .foregroundColor(.customBlack)
                         .font(.system(size: 16, weight: .bold))
                         .frame(maxWidth: UIScreen.main.bounds.width, alignment: .leading)
@@ -121,25 +83,43 @@ struct PairSettingView: View {
                     
                     ScrollView(.horizontal, showsIndicators: false){
                         HStack {
-                            ForEach(viewModel.pastPairUsers) { user in
-                                UserRequestItem(user: user){
-                                    viewModel.unPairRequestModal = true
+                            ForEach(viewModel.friendUsers) { user in
+                                NavigationLink {
+                                    UserProfileView(userId: user.user.uid, isFromHome: false)
+                                } label: {
+                                    UserRequestItem(user: user){
+                                        viewModel.approveRequest(requestUser: userModel, requestedUser: user)
+                                    }
                                 }
                                 .padding(.trailing, 14)
+                                
+                                NavigationLink {
+                                    EmptyView()
+                                } label: {
+                                    EmptyView()
+                                }
+                                NavigationLink {
+                                    EmptyView()
+                                } label: {
+                                    EmptyView()
+                                }
                             }
                         }
                     }
                 }
-                
                 Spacer()
             }
-            if let user = viewModel.searchResultUser {
-                NavigationLink(isActive: $viewModel.submit){
-                    UserProfileView(user: user)
-                } label: {
-                    EmptyView()
+            
+            NavigationLink(isActive: $viewModel.submit){
+                if let user = viewModel.searchResultUser {
+                    UserProfileView(userId: userModel.user.uid, isFromHome: false)
                 }
+            } label: {
+                EmptyView()
             }
+        }
+        .refreshable {
+            viewModel.initialFriendList(userModel: userModel)
         }
         .padding(.horizontal, 16)
         .onAppear {
@@ -150,9 +130,6 @@ struct PairSettingView: View {
         }
         .halfModal(isPresented: $snsShareHalfModal){
             SNSShareView()
-        }
-        .halfModal(isPresented: $viewModel.unPairRequestModal){
-            UnPairRequestView(requestedUser: userModel)
         }
         .navigationBarBackButtonHidden()
         .toolbar {
@@ -228,7 +205,7 @@ struct UserCellView: View {
     
     var body: some View {
         HStack {
-            WebImage(url: URL(string: user.user.profileImageURL))
+            WebImage(url: URL(string: user.user.profileImageURLString))
                 .resizable()
                 .scaledToFill()
                 .frame(width: 120, height: 120)
@@ -269,25 +246,24 @@ struct UserRequestItem: View {
     let action: () -> Void
     var body: some View {
         VStack(spacing: 12){
-            WebImage(url: URL(string: user.user.profileImageURL))
+            WebImage(url: URL(string: user.user.profileImageURLString))
                 .resizable()
                 .scaledToFill()
                 .frame(width: 120, height: 120)
-                .clipShape(
-                    RoundedRectangle(cornerRadius: 10)
-                )
+                .clipShape(Circle())
             
-            Button {
-                action()
-            } label: {
-                Text("ペア申請")
-                    .foregroundColor(.white)
-                    .font(.system(size: 12, weight: .bold))
-                    .frame(width: 120, height: 35)
-                    .background(Color.customOrange)
-                    .cornerRadius(20)
-            }
+//            Button {
+//                action()
+//            } label: {
+//                Text("ペア申請")
+//                    .foregroundColor(.white)
+//                    .font(.system(size: 12, weight: .bold))
+//                    .frame(width: 120, height: 35)
+//                    .background(Color.customOrange)
+//                    .cornerRadius(20)
+//            }
         }
         .shadow(radius: 2)
+        .padding(.all, 4)
     }
 }

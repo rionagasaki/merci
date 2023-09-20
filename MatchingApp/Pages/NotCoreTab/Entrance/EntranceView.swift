@@ -16,13 +16,24 @@ struct EntranceView: View {
     @State var alert: Bool = false
     @State var alertText: String = ""
     @EnvironmentObject var userModel: UserObservableModel
-    @EnvironmentObject var pairModel: PairObservableModel
+    @EnvironmentObject var appState: AppState
+    @Environment(\.dismiss) var dismiss
     var body: some View {
         ZStack {
             VStack {
-                Text("NiNi")
-                    .foregroundColor(.pink)
-                    .frame(height: UIScreen.main.bounds.height/2.5)
+                VStack {
+                    Image("Entrance")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 144, height: 144)
+                    
+                    Image("Logo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 144)
+                    Text("~ 匿名通話、チャットアプリ ~")
+                }
+                .frame(height: (UIScreen.main.bounds.height/2)-56)
                 HStack {
                     ForEach(tabSection.indices, id: \.self) { index in
                         Button {
@@ -42,23 +53,20 @@ struct EntranceView: View {
                         .foregroundColor(.gray.opacity(0.8))
                         .frame(width: UIScreen.main.bounds.width, height: 2)
                     Rectangle()
-                        .foregroundColor(.pink.opacity(0.7))
+                        .foregroundColor(Color.customBlue)
                         .frame(width: (UIScreen.main.bounds.width/2), height: 2)
                 }
                 TabView(selection: $selection){
-                    ForEach(tabSection.indices, id: \.self) { index in
-                        if index == 0 {
-                            RegisterView(
-                                isShow: $isShow,
-                                alreadyHasAccount: $alert,
-                                alertText: $alertText)
-                        } else {
-                            LoginView(
-                                isShow: $isLoginShow,
-                                noAccountAlert: $alert,
-                                alertText: $alertText)
-                        }
-                    }
+                    RegisterView(
+                        isShow: $isShow,
+                        alreadyHasAccount: $alert,
+                        alertText: $alertText)
+                    .tag(0)
+                    LoginView(
+                        isShow: $isLoginShow,
+                        noAccountAlert: $alert,
+                        alertText: $alertText)
+                    .tag(1)
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
             }
@@ -74,7 +82,6 @@ struct EntranceView: View {
         }
         .onAppear {
             userModel.initial()
-            pairModel.initial()
         }
     }
 }

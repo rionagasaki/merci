@@ -19,11 +19,9 @@ struct EmailLoginView: View {
     @FocusState private var focusState: FocusTextFields?
     @StateObject private var viewModel = EmailLoginViewModel()
     @EnvironmentObject var userModel: UserObservableModel
-    @EnvironmentObject var pairModel: PairObservableModel
     @EnvironmentObject var appState: AppState
-    @State var isInitialLoadingFailed: Bool = false
     let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .light)
-    @State var cancellable = Set<AnyCancellable>()
+    
     
     var body: some View {
         VStack {
@@ -53,13 +51,17 @@ struct EmailLoginView: View {
                 Text("📧メールアドレス")
                     .foregroundColor(.customBlack)
                     .font(.system(size: 13, weight: .bold))
-                TextField("", text: $viewModel.email , prompt: Text("sample@icloud.com").foregroundColor(.gray.opacity(0.5)))
+                TextField("", text: $viewModel.email , prompt: Text("sample@icloud.com").foregroundColor(.gray.opacity(0.5))
+                    .foregroundColor(.gray.opacity(0.5)))
                     .padding(.leading, 10)
                     .frame(height: 38)
                     .onChange(of: viewModel.email, perform: { _ in
                         viewModel.validateEmail()
                     })
                     .focused($focusState, equals: .email)
+                    .onTapGesture {
+                        UIIFGeneratorMedium.impactOccurred()
+                    }
                     
                     .overlay {
                         RoundedRectangle(cornerRadius: 5)
@@ -79,8 +81,10 @@ struct EmailLoginView: View {
                     .onChange(of: viewModel.password, perform: { _ in
                         viewModel.validatePassword()
                     })
+                    .onTapGesture {
+                        UIIFGeneratorMedium.impactOccurred()
+                    }
                     .focused($focusState, equals: .password)
-                
                     .overlay {
                         RoundedRectangle(cornerRadius: 5)
                             .stroke(focusState == .password ? .black: .gray.opacity(0.3) , lineWidth: 1)
@@ -89,13 +93,13 @@ struct EmailLoginView: View {
             .padding(.horizontal, 16)
             .padding(.top, 8)
             Button {
-                viewModel.signInWithEmail(userModel: userModel, pairModel: pairModel, appState: appState)
+                viewModel.signInWithEmail(userModel: userModel, appState: appState)
             } label: {
                 Text("ログイン")
                     .foregroundColor(.white)
                     .bold()
                     .frame(width: UIScreen.main.bounds.width-32, height: 50)
-                    .background(Color.customRed)
+                    .background(Color.customBlue)
                     .cornerRadius(5)
             }
             .padding(.top, 40)

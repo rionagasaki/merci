@@ -24,7 +24,8 @@ struct GenderView: View {
                         userModel.user.gender = gender
                     } label: {
                         Text(gender)
-                            .foregroundColor(userModel.user.gender == gender ? Color.customBlack: .gray.opacity(0.6))
+                            .foregroundColor(
+                                userModel.user.gender == gender ? Color.customBlack: .gray.opacity(0.6))
                             .fontWeight(.semibold)
                             .font(.system(size: 23))
                             .padding(.horizontal, 32)
@@ -37,23 +38,20 @@ struct GenderView: View {
             Spacer()
             if isEnabled {
                 NavigationLink {
-                    ActiveRegionInitView(presentationMode: $presentationMode)
-                        .onAppear {
-                            UIIFGeneratorMedium.impactOccurred()
-                        }
+                    ProfileImageInitView(presentationMode: $presentationMode)
                 } label: {
                     Text("次へ")
                         .foregroundColor(.white)
                         .bold()
-                        .frame(width: UIScreen.main.bounds.width-32, height: 50)
-                        .background(Color.pink)
+                        .frame(width: UIScreen.main.bounds.width-32, height: 60)
+                        .background(Color.customBlue)
                         .cornerRadius(10)
                 }
             } else {
                 Text("次へ")
                     .foregroundColor(.white)
                     .bold()
-                    .frame(width: UIScreen.main.bounds.width-32, height: 50)
+                    .frame(width: UIScreen.main.bounds.width-32, height: 60)
                     .background(Color.gray.opacity(0.8))
                     .cornerRadius(10)
             }

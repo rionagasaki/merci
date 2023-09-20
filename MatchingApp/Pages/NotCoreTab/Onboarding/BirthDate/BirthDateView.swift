@@ -21,7 +21,7 @@ struct BirthDateView: View {
     
     let dateRange: ClosedRange<Date> = {
         let calendar = Calendar.current
-        let start = calendar.date(byAdding: .year, value: -30, to: Date())!
+        let start = calendar.date(byAdding: .year, value: -99, to: Date())!
         let end = calendar.date(byAdding: .year, value: -18, to: Date())!
         return start...end
     }()
@@ -79,7 +79,7 @@ struct BirthDateView: View {
             Spacer()
             if isEnabled {
                 NavigationLink {
-                    IntroductionInitView(presentationMode: $presentationMode)
+                    HobbiesInitView(presentationMode: $presentationMode)
                         .onAppear {
                             UIIFGeneratorMedium.impactOccurred()
                         }

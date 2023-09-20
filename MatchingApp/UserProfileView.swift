@@ -10,180 +10,134 @@ import SDWebImageSwiftUI
 import AlertToast
 import Popovers
 
-enum PairStatus {
-    case noPair
-    case alreadyHasPair
-}
 
 struct UserProfileView: View {
-    let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .medium)
+    let userId: String
+    let isFromHome: Bool
+    @Environment(\.presentationMode) var presentationMode
     @StateObject var viewModel = UserProfileViewModel()
     @EnvironmentObject var userModel: UserObservableModel
-    @EnvironmentObject var appState: AppState
-    @Environment(\.dismiss) var dismiss
-    @State private var showToast = false
-    let user: UserObservableModel
-    var pairStatus: PairStatus {
-        if !userModel.user.pairUid.isEmpty {
-            return .alreadyHasPair
-        } else {
-            return .noPair
-        }
-    }
+    let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .heavy)
     
     var body: some View {
-        VStack{
-            Text("\(user.user.nickname)さんはまだペアを組んでいません。")
-                .frame(width: UIScreen.main.bounds.width-32)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(.white)
-                .padding(.vertical, 8)
-                .background(Color.orange.opacity(0.7))
-                .cornerRadius(10)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(.orange, lineWidth: 2)
-                }
-                .padding(.top, 16)
-            
-            ZStack(alignment: .top){
-                ScrollView {
-                    VStack {
-                        WebImage(url: URL(string: user.user.profileImageURL))
-                            .resizable()
-                            .frame(width: UIScreen.main.bounds.width-30, height:UIScreen.main.bounds.width-30)
-                            .cornerRadius(10)
-                            .padding(.top, 32)
-                        
-                        if let age = CalculateAge.calculateAge(from: user.user.birthDate) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: .zero){
-                                    Text(user.user.nickname)
-                                        .foregroundColor(.black)
-                                        .font(.system(size: 25))
-                                        .fontWeight(.bold)
-                                        .padding(.top, 8)
-                                        .padding(.leading, 16)
-                                    Text("\(age)歳・\(user.user.activeRegion)")
-                                        .foregroundColor(.customBlack.opacity(0.8))
-                                        .font(.system(size: 13))
-                                        .fontWeight(.bold)
-                                        .padding(.vertical, 2)
-                                        .padding(.leading, 16)
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack {
+                if let user = viewModel.user {
+                    UserBaseProfileView(user: user)
+                        .padding(.top, 32)
+                    LazyVStack {
+                        if viewModel.isLoading {
+                            ProgressView()
+                        } else {
+                            ForEach(viewModel.usersPost.indices, id: \.self) { index in
+                                let post = viewModel.usersPost[index]
+                                NavigationLink {
+                                    PostDetailView(savedScrollDocumentID: .constant(nil), postId: post.id)
+                                } label: {
+                                    PostView(post: post)
+                                        .background(Color.white)
+                                        .cornerRadius(20)
+                                        .onAppear {
+                                            if index == viewModel.usersPost.count - 1 {
+                                                if !viewModel.isLastDocumentLoaded {
+                                                    viewModel.getNextPage(userID: userId)
+                                                }
+                                            }
+                                        }
                                 }
-                                Spacer()
                             }
-                            .padding(.top, 8)
                         }
-                        VStack(spacing: .zero){
-                            Text("自己紹介")
-                                .padding(.vertical, 8)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .padding(.bottom, 16)
+                }
+            }
+        }
+        .frame(width: UIScreen.main.bounds.width)
+        .background(Color.gray.opacity(0.1))
+        .navigationBarBackButtonHidden(true)
+        .refreshable {
+            UIIFGeneratorMedium.impactOccurred()
+            viewModel.getLatestPosts()
+        }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading){
+                if !isFromHome {
+                    Button {
+                        presentationMode.wrappedValue.dismiss()
+                    } label: {
+                        HStack {
+                            Image(systemName: "chevron.left")
+                                .resizable()
+                                .scaledToFit()
                                 .foregroundColor(.customBlack)
-                                .font(.system(size: 18, weight: .bold))
-                            
-                            HStack {
-                                Text(user.user.introduction)
-                                    .foregroundColor(.customBlack)
-                                    .font(.system(size: 16))
-                                Spacer()
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 32)
-                        VStack(spacing: .zero){
-                            Text("興味")
-                                .padding(.vertical, 8)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                            Text("戻る")
                                 .foregroundColor(.customBlack)
-                                .font(.system(size: 18, weight: .bold))
-                            
-                            HStack {
-                                TagViewGenerator.generateTags(UIScreen.main.bounds.width-32, tags: user.user.hobbies)
-                                Spacer()
-                            }
+                                .font(.system(size: 16, weight: .bold))
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 32)
-                        
-                        VStack {
-                            Text("プロフィール")
-                                .padding(.vertical, 8)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .foregroundColor(.customBlack)
-                                .font(.system(size: 18, weight: .bold))
-                            
-                            ForEach(ProfileDetailItem.allCases) { detailProfile in
-                                ProfileAttributeView(user: user, selectedDetailProfile: detailProfile)
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 32)
                     }
                 }
             }
-            
-            Button {
-                viewModel.createPairRequest(requestingUser: userModel, requestedUser: user)
-            } label: {
-                Text("ペアリクエスト")
-                    .foregroundColor(.white)
-                    .font(.system(size: 16, weight: .bold))
-                    .frame(width: UIScreen.main.bounds.width-32, height: 50)
-                    .background(Color.customRed)
-                    .cornerRadius(30)
-                    .padding(.bottom, 16)
-            }
-
         }
-        .alert(isPresented: $viewModel.isErrorAlert){
-            Alert(title: Text("エラー"), message: Text(viewModel.errorMessage))
+        .onAppear {
+            viewModel.initial(userId: self.userId)
         }
-        .navigationBarBackButtonHidden()
-        .navigationTitle("\(user.user.nickname)のプロフ")
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .foregroundColor(.black)
-                }
-            }
-        }
-        .toolbar {
-            ToolbarItem {
-                Menu {
-                    Button("問題を報告する", action: { self.viewModel.isReportAbuseModal = true })
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .foregroundColor(.black)
-                }
-            }
+        .alert(isPresented: $viewModel.isDeleteAccount){
+            Alert(
+                title: Text("削除されたアカウント"),
+                message: Text("このアカウントは現在存在しません。"),
+                dismissButton: .default(
+                    Text("戻る"), action: {
+                        presentationMode.wrappedValue.dismiss()
+                    }
+                )
+            )
         }
     }
 }
 
-struct PairButtonView: View {
-    
-    let requestingUser: UserObservableModel
-    let requestedUser: UserObservableModel
-    @StateObject var viewModel: UserProfileViewModel
-    
-    var body: some View {
-        Button {
-            viewModel.createPairRequest(
-                requestingUser: requestingUser,
-                requestedUser: requestedUser
-            )
-        } label: {
-            Text("ペアを組む")
-                .foregroundColor(.white)
+struct UserBaseProfileView: View {
+    let user: UserObservableModel
+    @EnvironmentObject var userModel: UserObservableModel
+    var body: some View{
+        VStack(spacing: .zero){
+            Image(user.user.profileImageURLString)
+                .resizable()
+                .scaledToFill()
+                .frame(width: 100, height: 100)
+                .background(Color.gray.opacity(0.1))
+                .clipShape(Circle())
+            
+            Text(user.user.nickname)
                 .font(.system(size: 16, weight: .bold))
+                .foregroundColor(.customBlack)
+                .padding(.top, 5)
+            
+            Spacer()
+            Image(user.user.gender == "男性" ? "Man": "Woman")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 24, height: 24)
+            Text(user.user.introduction)
+                .font(.caption)
+                .padding(.horizontal,16)
+                .padding(.top, 8)
+            HStack {
+                TagViewGenerator.generateTags(
+                    UIScreen.main.bounds.width-32,
+                    tags: user.user.hobbies
+                )
+                Spacer()
+            }
+            .padding(.top, 8)
+            if userModel.user.uid == user.user.uid {
+                CurrentUserProfileBottomView()
+            } else {
+                UserProfileBottomView(user: user)
+            }
         }
-        .frame(width: UIScreen.main.bounds.width-32, height: 50)
-        .background(Color.customRed)
-        .cornerRadius(30)
-
+        .padding(.all, 16)
+        .frame(width: UIScreen.main.bounds.width-32)
+        .background(Color.white)
+        .cornerRadius(20)
     }
 }

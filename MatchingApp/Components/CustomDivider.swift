@@ -11,10 +11,8 @@ struct CustomDivider: View {
     var body: some View {
         ZStack(alignment: .top){
             Rectangle()
-                .foregroundColor(.gray.opacity(0.2))
+                .foregroundColor(.gray.opacity(0.1))
                 .frame(width: UIScreen.main.bounds.width, height: 10)
-            Divider()
-                .frame(height: 3)
         }
     }
 }

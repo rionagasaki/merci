@@ -30,7 +30,7 @@ struct ChatRoomRequirementsView: View {
                     }
                 }
                 Spacer()
-                if !userModel.user.pairUid.isEmpty {
+                if !userModel.user.friendUids.isEmpty {
                     ClearView(title: "ペア", buttonTitle: "追加済み", systemImage: "person.2")
                 } else {
                     UnClearView(title: "ペア", buttonTitle: "追加する", systemImage: "person.2"){

@@ -13,52 +13,60 @@ struct MessageListView: View {
     @State var selection: Int = 0
     @StateObject var viewModel = MessageListViewModel()
     @EnvironmentObject var userModel: UserObservableModel
-    @EnvironmentObject var pairModel: PairObservableModel
-    
     @EnvironmentObject var appState: AppState
-    @State var selected: Bool = false
-    @State var offset: CGFloat = 200
-    
-    func rowRemove(indexSet: IndexSet){
-        
-    }
+    let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .heavy)
     
     var body: some View {
         VStack {
-            if viewModel.selectedChatPartnerMessageList.count == 0 {
-                Spacer()
-                VStack(spacing: 8){
-                    Text("💬")
-                        .font(.system(size: 30, weight: .bold))
-                    Text("表示できるメッセージがありません")
-                        .foregroundColor(.customBlack)
-                        .font(.system(size: 18, weight: .bold))
+            if viewModel.allChatmateUsers.count == 0 {
+                ScrollView {
+                    VStack {
+                        Spacer()
+                        Image("Ice")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 96, height: 96)
+                        Text("表示できるメッセージがありません")
+                            .foregroundColor(.customBlack)
+                            .font(.system(size: 18, weight: .bold))
+                    }
+                    .padding(.top, 128)
                 }
-                Spacer()
+                .refreshable {
+                    UIIFGeneratorMedium.impactOccurred()
+                    viewModel.fetchChatmateInfo(chatmateUsersMapping: userModel.user.chatmateMapping, userModel: userModel)
+                }
             } else {
                 List {
-                    ForEach(viewModel.selectedChatPartnerMessageList) { pair in
+                    ForEach(viewModel.chatmateUsers.count == 0 ? viewModel.allChatmateUsers :viewModel.chatmateUsers) { user in
                         NavigationLink {
-                            ChatView(pair: pair)
+                            ChatView(user: user)
                         } label: {
-                            MessageListCellView(pair: pair)
+                            MessageListCellView(chatmate: user)
                         }
                     }
-                    .onDelete(perform: rowRemove)
                 }
+                .padding(.top, 8)
                 .listStyle(.plain)
+                .refreshable {
+                    UIIFGeneratorMedium.impactOccurred()
+                    viewModel.fetchChatmateInfo(chatmateUsersMapping: userModel.user.chatmateMapping, userModel: userModel)
+                }
             }
         }
-        .halfModal(
-            isPresented: $viewModel.isSelectChatPairHalfModal){
-            FilterlingFriendView(userModel: userModel, viewModel: viewModel)
+        .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $viewModel.isSelectChatPairHalfModal){
+            FilterlingChatmateView(
+                user: userModel,
+                allChatmateUsers: viewModel.allChatmateUsers,
+                chatmateUsers: $viewModel.chatmateUsers,
+                chatmateKind: $viewModel.chatmateKind
+            )
+            .presentationDetents([.height(150)])
         }
         .onAppear {
-            if appState.messageListViewInit {
-                viewModel.selectedChatPartnerMessageList = []
-                viewModel.fetchChatPartnerInfo(chatPartnerUsersMapping: userModel.user.pairMapping)
-                appState.messageListViewInit = false
-            }
+            viewModel.chatmateUsers = []
+            viewModel.fetchChatmateInfo(chatmateUsersMapping: userModel.user.chatmateMapping, userModel: userModel)
         }
         .alert(isPresented: $viewModel.isErrorAlert){
             Alert(title: Text("エラー"), message: Text(viewModel.errorMessage))
@@ -74,13 +82,17 @@ struct MessageListView: View {
             }
         }
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text("メッセージルーム")
-                    .foregroundColor(.black)
-                    .font(.system(size: 22, weight: .bold))
+            ToolbarItem(placement: .navigationBarLeading) {
+                VStack(spacing: 2){
+                    Text("メッセージ・通話")
+                        .foregroundColor(.customBlack)
+                        .font(.system(size: 24, weight: .bold))
+                    RoundedRectangle(cornerRadius: 10)
+                        .foregroundColor(.customBlue.opacity(0.5))
+                        .frame(height: 3)
+                }
             }
         }
-        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

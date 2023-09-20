@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SubImageColumnView: View {
-    @Binding var sheetItem: ImageSheetItem?
+    
     @Binding var subImagesIndex: Int
     @Binding var subImages: [UIImage]
     
@@ -17,7 +17,7 @@ struct SubImageColumnView: View {
             ForEach(0..<4) { index in
                 Button {
                     subImagesIndex = index
-                    sheetItem = .subImages
+                    
                 } label: {
                     if subImages.count <= index {
                         ZStack {

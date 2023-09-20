@@ -51,4 +51,49 @@ class TagViewGenerator {
             }
         }
     }
+    
+    static func generateEditTags(allTags: [String], selectedTags: Binding<[String]>, _ geometry: GeometryProxy) -> some View {
+        var leading = CGFloat.zero
+        var top = CGFloat.zero
+        
+        return ZStack(alignment: .topLeading) {
+            
+            ForEach(allTags, id: \.self) { tag in
+                Button {
+                    if selectedTags.wrappedValue.contains(tag) {
+                        selectedTags.wrappedValue = selectedTags.wrappedValue.filter({ result in
+                            result != tag
+                        })
+                    } else {
+                        selectedTags.wrappedValue.append(tag)
+                    }
+                } label: {
+                    OneHobbyView(hobby: tag, selected: selectedTags.wrappedValue.contains(tag))
+                }
+                .padding([.horizontal, .vertical], 4)
+                .alignmentGuide(.leading, computeValue: { context in
+                    if abs(leading - context.width) > geometry.size.width {
+                        leading = 0
+                        top -= context.height
+                    }
+                    
+                    let result = leading
+                    
+                    if tag == allTags.last {
+                        leading = 0
+                    } else {
+                        leading -= context.width
+                    }
+                    return result
+                })
+                .alignmentGuide(.top, computeValue: { _ in
+                    let result = top
+                    if tag == allTags.last {
+                        top = 0
+                    }
+                    return result
+                })
+            }
+        }
+    }
 }

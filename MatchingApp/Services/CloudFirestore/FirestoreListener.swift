@@ -16,5 +16,6 @@ final class FirestoreListener {
     var userListener: ListenerRegistration? = nil
     var pairListener: ListenerRegistration? = nil
     var chatListener: ListenerRegistration? = nil
-    
+    var chatRoomListener: ListenerRegistration? = nil
+    var callListener: ListenerRegistration? = nil
 }

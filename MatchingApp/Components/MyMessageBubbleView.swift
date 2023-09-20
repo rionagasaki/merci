@@ -6,22 +6,21 @@
 //
 
 import SwiftUI
-import SDWebImageSwiftUI
 
 struct MyMessageBubbleView: View {
-    let messageInfo: ChatObservableModel
+    let message: ChatObservableModel
     var body: some View {
         HStack(alignment: .bottom){
             Spacer()
-            Text(messageInfo.createdAt)
+            Text(message.createdAt)
                 .foregroundColor(.gray.opacity(0.7))
                 .font(.system(size: 12, weight: .light))
-            Text(messageInfo.message)
-                .foregroundColor(.black)
-                .padding(.all, 8)
-                .background(Color.red.opacity(0.3))
-                .cornerRadius(10)
-                .blur(radius: 10)
+            Text(message.message)
+                .foregroundColor(.customBlack)
+                .padding(.vertical, 8)
+                .padding(.horizontal, 12)
+                .background(Color.customRed.opacity(0.2))
+                .cornerRadius(20)
         }
         .padding(.horizontal, 8)
     }
@@ -29,6 +28,6 @@ struct MyMessageBubbleView: View {
 
 struct MyMessageBubbleView_Previews: PreviewProvider {
     static var previews: some View {
-        MyMessageBubbleView(messageInfo: .init())
+        MyMessageBubbleView(message: .init())
     }
 }

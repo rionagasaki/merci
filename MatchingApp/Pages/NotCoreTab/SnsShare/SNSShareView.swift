@@ -17,7 +17,7 @@ struct SNSShareView: View {
     @EnvironmentObject var userModel: UserObservableModel
     var body: some View {
         VStack(alignment: .leading){
-            Text("SNSで友達を招待して、ペアになってみましょう！")
+            Text("SNSでプロフィールを公開して、友達になってみよう!")
                 .foregroundColor(.customBlack)
                 .font(.system(size: 20, weight: .bold))
                 .frame(width: UIScreen.main.bounds.width-32)
@@ -42,7 +42,7 @@ struct SNSShareView: View {
                     .resizable()
                     .frame(width: 70, height:70)
                     .cornerRadius(10)
-                Text("Twitterで招待する")
+                Text("Xで招待する")
                     .foregroundColor(.customBlack)
                     .font(.system(size: 20, weight: .bold))
                     .padding(.leading, 8)
@@ -64,6 +64,7 @@ struct SNSShareView: View {
             .padding(.top, 28)
             Spacer()
         }
+        .frame(height: UIScreen.main.bounds.height/2.1)
     }
 }
 

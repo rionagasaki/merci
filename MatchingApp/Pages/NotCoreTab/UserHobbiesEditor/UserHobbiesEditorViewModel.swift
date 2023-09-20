@@ -14,16 +14,13 @@ class UserHobbiesEditorViewModel: ObservableObject {
     @Published var isSuccess: Bool = false
     @Published var isFailedStoreData: Bool = false
     private var cancellable = Set<AnyCancellable>()
-    let setTofirestore = SetToFirestore()
-    let hobbies = [
-        "お酒", "飲み会","韓国料理","中華料理","インド料理","スイーツ好き","食べる専門","食べ歩き","自炊っ子","焼肉","お菓子作り","アートイベント巡り","シーシャ","タバコ", "アニメ","ゲーム","APEX","漫画", "コーヒー", "カフェ", "カラオケ","音楽","邦ロック","HIPHOP","K-POP", "スポーツ観戦", "読書", "スノボ", "旅行", "サウナ","映画鑑賞", "バスケ", "野球", "サッカー", "ラグビー","スキンケア", "ポエム", "ファッション", "ジム", "散歩"
-    ]
+    private let userService = UserFirestoreService()
     
     func storeHobbiesToFirestore(userModel: UserObservableModel) {
-        setTofirestore.updateHobbies(
-            uid: userModel.user.uid,
-            hobbies: self.selectedHobbies
-        )
+        self.userService.updateUserInfo(
+            currentUid: userModel.user.uid,
+            key: "hobbies",
+            value: self.selectedHobbies)
             .sink { completion in
                 switch completion {
                 case .finished:

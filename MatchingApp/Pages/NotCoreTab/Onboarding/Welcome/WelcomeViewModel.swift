@@ -10,7 +10,7 @@ import SwiftUI
 import Combine
 
 class WelcomeViewModel: ObservableObject {
-    let setToFirestore = SetToFirestore()
+    private let userService = UserFirestoreService()
     let uiifGeneratorMedium = UIImpactFeedbackGenerator(style: .medium)
     var guideText: String {
         if guideCount == 0 {
@@ -22,7 +22,7 @@ class WelcomeViewModel: ObservableObject {
         } else if guideCount == 3 {
             return "すでに友達からNiNi IDを受け取っている場合は\n入力してください"
         } else {
-            return "気になるペアがいたら、メッセージをしてみましょう"
+            return "気になる相手がいたら、チャット・通話で繋がろう"
         }
     }
     @Published var guideCount: Int = 0
@@ -33,7 +33,9 @@ class WelcomeViewModel: ObservableObject {
     private var cancellable = Set<AnyCancellable>()
     
     func doneOnboarding(userModel: UserObservableModel){
-        setToFirestore.doneOnboarding(user: userModel)
+        self.userService.updateUserInfo(
+            currentUid: userModel.user.uid, key: "onboarding", value: true
+        )
             .sink { completion in
                 switch completion {
                 case .finished:

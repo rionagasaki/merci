@@ -6,7 +6,6 @@ import CryptoKit
 
 struct LoginView: View {
     @EnvironmentObject var userModel: UserObservableModel
-    @EnvironmentObject var pairModel: PairObservableModel
     @StateObject private var viewModel = EmailLoginViewModel()
     @EnvironmentObject var appState: AppState
     @Binding var isShow: Bool
