@@ -10,12 +10,22 @@ import Combine
 import FirebaseFirestore
 
 class CallFirestoreService {
-    let chatPath = "Chat"
-    let messagePath = "Message"
-    let channelPath = "Channel"
+    private let userPath = "User"
+    private let chatPath = "Chat"
+    private let messagePath = "Message"
+    private let channelPath = "Channel"
     
     func createCall(channelId: String, channelTitle: String, user: UserObservableModel, completionHandler: @escaping(Result<Void, AppError>)->Void){
-        db.collection(self.channelPath).document(channelId).setData([
+        
+        let batch = db.batch()
+        let userDocRef = db.collection(self.userPath).document(user.user.uid)
+        let channelDocRef = db.collection(self.channelPath).document(channelId)
+        
+        batch.updateData([
+            "isCallingChannelId": channelId
+        ], forDocument: userDocRef)
+        
+        batch.setData([
             "channelId": channelId,
             "channelTitle": channelTitle,
             "hostUserId": user.user.uid,
@@ -24,8 +34,10 @@ class CallFirestoreService {
             "userIdToUserName": [user.user.uid: user.user.nickname],
             "callingNow": true,
             "createdAt": Date.init()
-        ]){ error in
-            if let error {
+        ], forDocument: channelDocRef, merge: false)
+        
+        batch.commit { error in
+            if let error = error {
                 completionHandler(.failure(.firestore(error)))
             } else {
                 completionHandler(.success(()))
@@ -34,11 +46,22 @@ class CallFirestoreService {
     }
     
     func joinCall(channelId: String, user: UserObservableModel, completionHandler: @escaping(Result<Void, AppError>)->Void){
-        db.collection(self.channelPath).document(channelId).setData([
+        
+        let batch = db.batch()
+        let userDocRef = db.collection(self.userPath).document(user.user.uid)
+        let channelDocRef = db.collection(self.channelPath).document(channelId)
+        
+        batch.updateData([
+            "isCallingChannelId": channelId
+        ], forDocument: userDocRef)
+        
+        batch.setData([
             "userIdToUserIconImageUrlString": [user.user.uid: user.user.profileImageURLString],
             "userIdToUserName": [user.user.uid: user.user.nickname]
-        ], merge: true){ error in
-            if let error {
+        ],forDocument: channelDocRef ,merge: true)
+        
+        batch.commit { error in
+            if let error = error {
                 completionHandler(.failure(.firestore(error)))
             } else {
                 completionHandler(.success(()))
@@ -61,11 +84,13 @@ class CallFirestoreService {
         }.eraseToAnyPublisher()
     }
     
-    func stopCall(channelId: String, completionHandler: @escaping(Result<Void, AppError>) -> Void){
-        db.collection(self.channelPath).document(channelId).setData([
-            "callingNow": false
-        ], merge: true){ error in
-            if let error {
+    func stopCall(userID: String, channelId: String, completionHandler: @escaping(Result<Void, AppError>) -> Void){
+        let userDocRef = db.collection(self.userPath).document(userID)
+        
+        userDocRef.updateData([
+            "isCallingChannelId": ""
+        ]) { error in
+            if let error = error {
                 completionHandler(.failure(.firestore(error)))
             } else {
                 completionHandler(.success(()))
@@ -73,7 +98,29 @@ class CallFirestoreService {
         }
     }
     
-    
+    func stopCallConcurrentlly(userIDs:[String], channelID: String, completionHandler: @escaping(Result<Void, AppError>)->Void) {
+        let dispatchGroup =  DispatchGroup()
+        let batch = db.batch()
+        let channelDocRef = db.collection(self.channelPath).document(channelID)
+        
+        batch.updateData([
+            "callingNow": false
+        ], forDocument: channelDocRef)
+        for userID in userIDs {
+            dispatchGroup.enter()
+            self.stopCall(userID: userID, channelId: channelID) { _ in do { dispatchGroup.leave() } }
+        }
+        
+        dispatchGroup.notify(queue: .main) {
+            batch.commit { error in
+                if let error = error {
+                    completionHandler(.failure(.firestore(error)))
+                } else {
+                    completionHandler(.success(()))
+                }
+            }
+        }
+    }
     
     func getUpdateCallById(channelId: String) -> AnyPublisher<CallObservableModel, AppError> {
         let subject = PassthroughSubject<CallObservableModel, AppError>()
@@ -90,11 +137,21 @@ class CallFirestoreService {
     }
     
     func leaveChannel(channelId: String, userId: String) -> AnyPublisher<Void, AppError> {
+        let batch = db.batch()
+        let userDocRef = db.collection(self.userPath).document(userId)
+        let channelDocRef = db.collection(self.channelPath).document(channelId)
+        
         return Future { promise in
-            db.collection(self.channelPath).document(channelId).updateData([
+            batch.updateData([
+                "isCallingChannelId": channelId
+            ], forDocument: userDocRef)
+            
+            batch.updateData([
                 "userIdToUserIconImageUrlString.\(userId)": FieldValue.delete(),
                 "userIdToUserName.\(userId)": FieldValue.delete()
-            ]){ error in
+            ], forDocument: channelDocRef)
+            
+            batch.commit { error in
                 if let error = error {
                     promise(.failure(.firestore(error)))
                 } else {

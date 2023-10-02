@@ -10,7 +10,7 @@ import SDWebImageSwiftUI
 
 // ホスト以外の参加者の通話画面
 struct AttendeeCallView: View {
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var appState: AppState
     @StateObject var viewModel = AttendeeCallViewModel()
     @ObservedObject var realTimeCall = RealTimeCallStatus.shared
@@ -20,14 +20,13 @@ struct AttendeeCallView: View {
     var body: some View {
         VStack {
             if viewModel.isLoading {
-                ZStack {
-                    VStack {
-                        LottieView(animationResourceName: "calling", loopMode: .loop, isActive: true)
-                            .frame(width: 120, height: 120)
-                        Text("通話ルームに接続しています。少々お待ちください。")
-                            .foregroundColor(.white)
-                            .font(.system(size: 16, weight: .medium))
-                    }
+                VStack {
+                    LottieView(animationResourceName: "calling", loopMode: .loop, isActive: true)
+                        .frame(width: 120, height: 120)
+                    Text("通話ルームに参加しているよ。少し待ってね。")
+                        .foregroundColor(.customBlack)
+                        .font(.system(size: 14, weight: .medium))
+                        .padding(.top, 24)
                 }
             } else {
                 if let call = viewModel.call {
@@ -71,8 +70,31 @@ struct AttendeeCallView: View {
                 }
             }
         }
+        .onAppear {
+            if appState.isAttendeeCallReload {
+                viewModel.joinCall(channelId: channelId, userModel: user)
+                appState.isAttendeeCallReload = false
+            }
+        }
+        .onReceive(viewModel.$isFinishedCall) {
+            if $0 {
+                viewModel.alertType = .leaveHost
+                viewModel.isAlert = true
+            }
+        }
+        .onReceive(realTimeCall.$dropUser) { dropUsers in
+            if let call = viewModel.call, dropUsers.contains(call.call.hostUserId) {
+                viewModel.finishChannel(callInfo: call)
+            }
+        }
         .navigationBarBackButtonHidden()
-        .navigationTitle("通話ルーム")
+        .toolbar {
+            ToolbarItem(placement: .principal){
+                Text("通話ルーム")
+                    .foregroundColor(.customBlack)
+                    .font(.system(size: 16, weight: .medium))
+            }
+        }
         .alert(isPresented: $viewModel.isAlert){
             switch viewModel.alertType {
             case .connectionFatalWarning:
@@ -81,7 +103,7 @@ struct AttendeeCallView: View {
                     message: Text("すでに終了された通話です。"),
                     dismissButton: .default(Text("戻る"), action: {
                         appState.isAttendeeCallReload = true
-                        dismiss()
+                        presentationMode.wrappedValue.dismiss()
                     })
                 )
             case .leaveHost:
@@ -90,7 +112,7 @@ struct AttendeeCallView: View {
                     message: Text("すでに終了された通話です。"),
                     dismissButton: .default(Text("戻る"), action: {
                         appState.isAttendeeCallReload = true
-                        dismiss()
+                        presentationMode.wrappedValue.dismiss()
                     })
                 )
             case .leaveWarning:
@@ -100,38 +122,12 @@ struct AttendeeCallView: View {
                     primaryButton: .default(
                         Text("退出する"), action: {
                             viewModel.leaveChannelAndUpdateAttendeeCallStatus(
-                                userId: user.user.uid,
-                                channelId: channelId
-                            )
+                                userID: user.user.uid,
+                                channelID: channelId)
                             appState.isAttendeeCallReload = true
-                            dismiss()
+                            presentationMode.wrappedValue.dismiss()
                         }),
                     secondaryButton: .default(Text("キャンセル")))
-            }
-        }
-        .onAppear {
-            if appState.isAttendeeCallReload {
-                viewModel.joinCall(channelId: channelId, userModel: user)
-                appState.isAttendeeCallReload = false
-            }
-        }
-        .onReceive(viewModel.$isFinishedCall) {
-            if $0 {
-                viewModel.leaveChannelAndUpdateAttendeeCallStatus(
-                    userId: user.user.uid,
-                    channelId: channelId
-                )
-                viewModel.alertType = .leaveHost
-                viewModel.isAlert = true
-            }
-        }
-        .onReceive(realTimeCall.$dropUser) { dropUsers in
-            guard let call = viewModel.call else { return }
-            if dropUsers.contains(call.call.hostUserId) {
-                viewModel.finishChannel(
-                    callInfo: call,
-                    appState: appState
-                )
             }
         }
     }

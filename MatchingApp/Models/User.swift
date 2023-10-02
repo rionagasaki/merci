@@ -22,7 +22,7 @@ class User {
     var isCallingChannelId: String
     
     // プロフィール
-    var activityRegion: String
+    var fixedPost: String
     var birthDate: String
     var hobbies: [String]
     var introduction: String
@@ -32,13 +32,19 @@ class User {
     var friendUids: [String]
     var friendEarliestPostTimestampMapping: [String: Timestamp]
     
-    var likesPosts: [String]
-    var replyPosts: [String]
+    var blockedUids: [String]
+    var blockingUids: [String]
+    
+    var reportUserIDs: [String]
+    
+    var isDisplayOnlyPost: Bool
     
     var notificationMapping: [String: String]
     var chatmateMapping: [String: String]
     var chatLastMessageMapping: [String: String]
     var chatLastTimestampMapping: [String: Timestamp]
+    
+    var hiddenChatRoomUserIDs: [String]
     var unreadMessageCount: [String: Int]
     
     var tab_item_notice: [String]
@@ -56,7 +62,7 @@ class User {
         self.onboarding = userDic["onboarding"] as? Bool ?? false
         self.isCallingChannelId = (userDic["isCallingChannelId"] as? String).orEmpty
         
-        self.activityRegion = (userDic["activityRegion"] as? String).orEmpty
+        self.fixedPost = (userDic["fixedPost"] as? String).orEmpty
         self.birthDate = (userDic["birthDate"] as? String).orEmpty
         self.hobbies = (userDic["hobbies"] as? [String]).orEmptyArray
         self.introduction = (userDic["introduction"] as? String).orEmpty
@@ -66,13 +72,18 @@ class User {
         self.friendUids = (userDic["friendUids"] as? [String]).orEmptyArray
         self.friendEarliestPostTimestampMapping = (userDic["friendEarliestPostTimestampMapping"] as? [String: Timestamp]) ?? [:]
         
-        self.likesPosts = (userDic["likesPosts"] as? [String]).orEmptyArray
-        self.replyPosts = (userDic["replyPosts"] as? [String]).orEmptyArray
+        self.blockedUids = (userDic["blockedUids"] as? [String]).orEmptyArray
+        self.blockingUids = (userDic["blockingUids"] as? [String]).orEmptyArray
         
+        self.reportUserIDs = (userDic["reportUserIDs"] as? [String]).orEmptyArray
+        
+        self.isDisplayOnlyPost = (userDic["isDisplayOnlyPost"] as? Bool) ?? false
+   
         self.notificationMapping = (userDic["notificationMapping"] as? [String: String]) ?? [:]
         self.chatmateMapping = (userDic["chatmateMapping"] as? [String: String]) ?? [:]
         self.chatLastMessageMapping = (userDic["chatLastMessageMapping"] as? [String: String]) ?? [:]
         self.chatLastTimestampMapping = (userDic["chatLastTimestampMapping"] as? [String: Timestamp]) ?? [:]
+        self.hiddenChatRoomUserIDs = (userDic["hiddenChatRoomUserIDs"] as? [String]).orEmptyArray
         self.unreadMessageCount = (userDic["unreadMessageCount"] as? [String: Int] ?? [:])
         
         self.tab_item_notice = (userDic["tab_item_notice"] as? [String]).orEmptyArray
@@ -90,7 +101,7 @@ class User {
         self.onboarding = userDic?["onboarding"] as? Bool ?? false
         self.isCallingChannelId = (userDic?["isCallingChannelId"] as? String).orEmpty
         
-        self.activityRegion = (userDic?["activityRegion"] as? String).orEmpty
+        self.fixedPost = (userDic?["fixedPost"] as? String).orEmpty
         self.birthDate = (userDic?["birthDate"] as? String).orEmpty
         self.gender = (userDic?["gender"] as? String).orEmpty
         self.hobbies = (userDic?["hobbies"] as? [String]).orEmptyArray
@@ -101,13 +112,18 @@ class User {
         self.friendUids = (userDic?["friendUids"] as? [String]).orEmptyArray
         self.friendEarliestPostTimestampMapping = (userDic?["friendEarliestPostTimestampMapping"] as? [String: Timestamp]) ?? [:]
         
-        self.likesPosts = (userDic?["likesPosts"] as? [String]).orEmptyArray
-        self.replyPosts = (userDic?["replyPosts"] as? [String]).orEmptyArray
+        self.blockedUids = (userDic?["blockedUids"] as? [String]).orEmptyArray
+        self.blockingUids = (userDic?["blockingUids"] as? [String]).orEmptyArray
+        
+        self.reportUserIDs = (userDic?["reportUserIDs"] as? [String]).orEmptyArray
+        
+        self.isDisplayOnlyPost = (userDic?["isDisplayOnlyPost"] as? Bool) ?? false
         
         self.notificationMapping = (userDic?["notificationMapping"] as? [String: String]) ?? [:]
         self.chatmateMapping = (userDic?["chatmateMapping"] as? [String: String]) ?? [:]
         self.chatLastMessageMapping = (userDic?["chatLastMessageMapping"] as? [String: String]) ?? [:]
         self.chatLastTimestampMapping = (userDic?["chatLastTimestampMapping"] as? [String: Timestamp]) ?? [:]
+        self.hiddenChatRoomUserIDs = (userDic?["hiddenChatRoomUserIDs"] as? [String]).orEmptyArray
         self.unreadMessageCount = (userDic?["unreadMessageCount"] as? [String: Int] ?? [:])
         
         self.tab_item_notice = (userDic?["tab_item_notice"] as? [String]).orEmptyArray
@@ -125,7 +141,7 @@ class User {
             coins: self.coins,
             onboarding: self.onboarding,
             isCallingChannelId: self.isCallingChannelId,
-            activeRegion: self.activityRegion,
+            fixedPost: self.fixedPost,
             birthDate: self.birthDate,
             hobbies: self.hobbies,
             introduction: self.introduction,
@@ -133,13 +149,16 @@ class User {
             friendRequestedUids: self.friendRequestedUids,
             friendUids: self.friendUids,
             friendEarliestPostTimestampMapping: self.friendEarliestPostTimestampMapping,
-            likesPosts: self.likesPosts,
-            replyPosts: self.replyPosts,
+            blockedUids: self.blockedUids,
+            blockingUids: self.blockingUids,
+            reportUserIDs: self.reportUserIDs,
+            isDisplayOnlyPost: self.isDisplayOnlyPost,
             notificationMapping: self.notificationMapping,
             chatmateMapping: self.chatmateMapping,
             chatLastMessageMapping: self.chatLastMessageMapping,
             chatLastMessageTimestamp: self.chatLastTimestampMapping,
             chatLastMessageTimestampString: ConvertMapping.convertMapping(self.chatLastTimestampMapping),
+            hiddenChatRoomUserIDs: self.hiddenChatRoomUserIDs,
             unreadMessageCount: self.unreadMessageCount,
             tab_item_notice: ConvertMapping.convertMappingToBool(self.unreadMessageCount, notice: self.tab_item_notice)
         )
@@ -157,6 +176,8 @@ struct UserModel {
     var coins: Int = 0
     var onboarding: Bool = false
     var isCallingChannelId: String = ""
+    
+    var fixedPost: String = ""
     var activeRegion: String = ""
     var birthDate: String = ""
     var hobbies: [String] = []
@@ -166,22 +187,56 @@ struct UserModel {
     var friendRequestedUids: [String] = []
     var friendUids: [String] = []
     var friendEarliestPostTimestampMapping: [String: Timestamp] = [:]
-    
-    var likesPosts: [String] = []
-    var replyPosts: [String] = []
-    
+
+    var blockedUids: [String] = []
+    var blockingUids: [String] = []
+    var reportUserIDs: [String] = []
+    var isDisplayOnlyPost: Bool = false
     var notificationMapping: [String: String] = [:]
     var chatmateMapping: [String: String] = [:]
     var chatLastMessageMapping: [String: String] = [:]
     var chatLastMessageTimestamp: [String: Timestamp] = [:]
     var chatLastMessageTimestampString: [String: String] = [:]
+    var hiddenChatRoomUserIDs: [String] = []
     var unreadMessageCount:[String: Int] = [:]
     
     var tab_item_notice: [String] = []
 }
 
 // User情報を管理するObservableObject
-final class UserObservableModel: ObservableObject, Identifiable {
+final class UserObservableModel: ObservableObject, Identifiable, Equatable {
+    static func == (lhs: UserObservableModel, rhs: UserObservableModel) -> Bool {
+        return lhs.user.uid == rhs.user.uid &&
+               lhs.user.fcmToken == rhs.user.fcmToken &&
+               lhs.user.activeCallUid == rhs.user.activeCallUid &&
+               lhs.user.nickname == rhs.user.nickname &&
+               lhs.user.email == rhs.user.email &&
+               lhs.user.gender == rhs.user.gender &&
+               lhs.user.profileImageURLString == rhs.user.profileImageURLString &&
+               lhs.user.coins == rhs.user.coins &&
+               lhs.user.onboarding == rhs.user.onboarding &&
+               lhs.user.isCallingChannelId == rhs.user.isCallingChannelId &&
+               lhs.user.fixedPost == rhs.user.fixedPost &&
+               lhs.user.birthDate == rhs.user.birthDate &&
+               lhs.user.hobbies == rhs.user.hobbies &&
+               lhs.user.introduction == rhs.user.introduction &&
+               lhs.user.friendRequestUids == rhs.user.friendRequestUids &&
+               lhs.user.friendRequestedUids == rhs.user.friendRequestedUids &&
+               lhs.user.friendUids == rhs.user.friendUids &&
+               lhs.user.friendEarliestPostTimestampMapping == rhs.user.friendEarliestPostTimestampMapping &&
+               lhs.user.blockedUids == rhs.user.blockedUids &&
+               lhs.user.blockingUids == rhs.user.blockingUids &&
+               lhs.user.reportUserIDs == rhs.user.reportUserIDs &&
+               lhs.user.isDisplayOnlyPost == rhs.user.isDisplayOnlyPost &&
+               lhs.user.notificationMapping == rhs.user.notificationMapping &&
+               lhs.user.chatmateMapping == rhs.user.chatmateMapping &&
+               lhs.user.chatLastMessageMapping == rhs.user.chatLastMessageMapping &&
+               lhs.user.hiddenChatRoomUserIDs == rhs.user.hiddenChatRoomUserIDs &&
+               lhs.user.unreadMessageCount == rhs.user.unreadMessageCount &&
+               lhs.user.tab_item_notice == rhs.user.tab_item_notice
+    }
+
+    
     @Published var user: UserModel = .init()
     
     init(userModel: UserModel){

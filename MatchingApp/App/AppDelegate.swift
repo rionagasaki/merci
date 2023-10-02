@@ -13,8 +13,6 @@ import FirebaseMessaging
 import UserNotifications
 import GoogleSignIn
 import AVFoundation
-import Amplify
-import AWSS3StoragePlugin
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
@@ -26,16 +24,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         db.settings = settings
         
         UNUserNotificationCenter.current().delegate = self
-        let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
-        UNUserNotificationCenter.current().requestAuthorization(options: authOptions) { authorized, error in
-            if let error = error {
-                print("UNUserNotificationCenter:\(error)")
-            } else {
-                DispatchQueue.main.async {
-                    application.registerForRemoteNotifications()
-                }
-            }
-        }
 
         Messaging.messaging().delegate = self
         Messaging.messaging().subscribe(toTopic: "all-users")
@@ -72,13 +60,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             print("Message ID: \(messageID)")
         }
         
-        // Print full message.
-        print(userInfo)
-        
         completionHandler(UIBackgroundFetchResult.newData)
     }
     
-    // 通話実行状態で、アプリが強制キルされたら適切に削除する
     func applicationWillTerminate(_ application: UIApplication) {
        
     }

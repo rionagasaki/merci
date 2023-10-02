@@ -8,14 +8,16 @@
 import Foundation
 import Combine
 
-class userProfileBottomViewModel: ObservableObject {
+class UserProfileBottomViewModel: ObservableObject {
     enum AlertType {
         case requestFriend
-        case requestNotice
         case deleteFriend
+        case blockUser
     }
+    
     @Published var alertType: AlertType = .requestFriend
     @Published var isAlert: Bool = false
+    @Published var isActionSheet: Bool = false
     private let userService = UserFirestoreService()
     private var cancellabel = Set<AnyCancellable>()
     
@@ -28,9 +30,7 @@ class userProfileBottomViewModel: ObservableObject {
                 case .failure(let error):
                     print(error)
                 }
-            } receiveValue: { _ in
-                print("")
-            }
+            } receiveValue: { _ in }
             .store(in: &self.cancellabel)
     }
     
@@ -43,9 +43,7 @@ class userProfileBottomViewModel: ObservableObject {
                 case .failure(let error):
                     print(error)
                 }
-            } receiveValue: { _ in
-                print("")
-            }
+            } receiveValue: { _ in }
             .store(in: &self.cancellabel)
     }
     
@@ -58,9 +56,7 @@ class userProfileBottomViewModel: ObservableObject {
                 case .failure(let error):
                     print(error)
                 }
-            } receiveValue: { _ in
-                print("")
-            }
+            } receiveValue: { _ in }
             .store(in: &self.cancellabel)
     }
     
@@ -69,13 +65,26 @@ class userProfileBottomViewModel: ObservableObject {
             .sink { completion in
                 switch completion {
                 case .finished:
-                    print("successfully delete")
+                    break
                 case .failure(let error):
                     print(error)
                 }
-            } receiveValue: { _ in
-                print("")
-            }
+            } receiveValue: { _ in }
             .store(in: &self.cancellabel)
+    }
+    
+    func blockedUser(requestingUser: UserObservableModel, requestedUser: UserObservableModel) {
+        self.userService.blockUser(
+            requestingUser: requestingUser,
+            requestedUser: requestedUser
+        ).sink { completion in
+            switch completion {
+            case .finished:
+                break
+            case .failure(let error):
+                print(error)
+            }
+        } receiveValue: { _ in }
+        .store(in: &self.cancellabel)
     }
 }

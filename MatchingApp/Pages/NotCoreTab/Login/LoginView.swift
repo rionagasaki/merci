@@ -15,7 +15,6 @@ struct LoginView: View {
         VStack {
             AppleAuthView()
             GoogleAuthView()
-            EmailAuthButton(isLoginShow: $isShow)
         }
         .navigationBarBackButtonHidden(true)
     }

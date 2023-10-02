@@ -10,19 +10,13 @@ import AmazonChimeSDK
 
 class CallRealTimeObserver: RealtimeObserver {
     func volumeDidChange(volumeUpdates: [VolumeUpdate]) {
-        for currentVolumeUpdate in volumeUpdates {
-            
-        }
+        for _ in volumeUpdates {}
     }
     func signalStrengthDidChange(signalUpdates: [SignalUpdate]) {
-        for currentSignalUpdate in signalUpdates {
-            
-        }
+        for _ in signalUpdates {}
     }
     func attendeesDidJoin(attendeeInfo: [AttendeeInfo]) {
-        for currentAttendeeInfo in attendeeInfo {
-            
-        }
+        for _ in attendeeInfo {}
     }
     func attendeesDidLeave(attendeeInfo: [AttendeeInfo]) {
         for currentAttendeeInfo in attendeeInfo {
@@ -31,16 +25,15 @@ class CallRealTimeObserver: RealtimeObserver {
     }
     func attendeesDidDrop(attendeeInfo: [AttendeeInfo]) {
         for currentAttendeeInfo in attendeeInfo {
-            print("DidDropUser", currentAttendeeInfo.externalUserId)
             RealTimeCallStatus.shared.dropUser.append(currentAttendeeInfo.externalUserId)
         }
     }
     func attendeesDidMute(attendeeInfo: [AttendeeInfo]) {
-        for currentAttendeeInfo in attendeeInfo {
+        for _ in attendeeInfo {
         }
     }
     func attendeesDidUnmute(attendeeInfo: [AttendeeInfo]) {
-        for currentAttendeeInfo in attendeeInfo {
+        for _ in attendeeInfo {
             
         }
     }

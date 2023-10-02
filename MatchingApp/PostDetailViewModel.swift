@@ -41,15 +41,16 @@ class PostDetailViewModel: ObservableObject {
                 guard let selfPost = self.selfPost else { return }
                 self.childPosts = []
                 self.parentPosts = []
-                for post in posts {
-                    if selfPost.childPosts.contains(post.id) {
-                        self.childPosts.append(post.adaptPostObservableModel())
-                    }
-                    
-                    if selfPost.parentPosts.contains(post.id) {
-                        self.parentPosts.append(post.adaptPostObservableModel())
-                    }
-                }
+                
+                self.parentPosts = posts.filter { selfPost.parentPosts.contains($0.id) && !$0.posterUid.isEmpty }.sorted { post1, post2 in
+                    return post1.createdAt.seconds < post2.createdAt.seconds
+                }.map { $0.adaptPostObservableModel() }
+                
+                
+                self.childPosts = posts.filter { selfPost.childPosts.contains($0.id) && !$0.posterUid.isEmpty }.sorted { post1, post2 in
+                    return post1.createdAt.seconds < post2.createdAt.seconds
+                }.map { $0.adaptPostObservableModel() }
+
                 self.isLoading = false
             }
             .store(in: &self.cancellable)

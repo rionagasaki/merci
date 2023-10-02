@@ -11,9 +11,9 @@ struct NickNameView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var userModel: UserObservableModel
     @State var isEnabled: Bool = false
-    @Environment(\.dismiss) var dismiss
     @FocusState var focus: Bool
     @StateObject var viewModel = NickNameViewModel()
+    @Environment(\.presentationMode) var presentationMode
     let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .medium)
     var body: some View {
         ScrollView {
@@ -52,24 +52,12 @@ struct NickNameView: View {
             }
             Spacer()
         }
-        .navigationBarBackButtonHidden(true)
-        .navigationTitle("自己紹介")
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(
-                    action: {
-                        focus = false
-                        DispatchQueue.main.asyncAfter(deadline: .now()+0.5) {
-                            dismiss()
-                        }
-                    }, label: {
-                        Image(systemName: "chevron.left")
-                            .foregroundColor(.black)
-                    }
-                )
+            ToolbarItem(placement: .principal){
+                Text("にっくねーむ")
+                    .foregroundColor(.customBlack)
+                    .font(.system(size: 16, weight: .medium))
             }
-        }
-        .toolbar {
             ToolbarItem(placement: .keyboard) {
                 HStack {
                     Text("\(viewModel.nickname.count)/20")
@@ -92,6 +80,14 @@ struct NickNameView: View {
         }
         .onAppear {
             focus = true
+        }
+        .onReceive(viewModel.$isSuccessStore) {
+            if $0 {
+                focus = false
+                DispatchQueue.main.asyncAfter(deadline: .now()+0.2) {
+                    presentationMode.wrappedValue.dismiss()
+                }
+            }
         }
     }
 }

@@ -62,10 +62,10 @@ struct CallDetailModalView: View {
                         viewModel.errorMessage = "すでに、他の通話に参加中です"
                         viewModel.isErrorAlert = true
                         dismiss()
-                        return
+                    } else {
+                        dismiss()
+                        self.isActive = true
                     }
-                    dismiss()
-                    self.isActive = true
                 } label: {
                     Text("通話に参加する")
                         .foregroundColor(.white)

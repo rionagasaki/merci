@@ -12,15 +12,25 @@ import UIKit
 
 class CallModel {
     private let cloudFunction: CloudFunctions
-    private let musicData = NSDataAsset(name: "CallMusic")!.data
-    private let audioObserver = AudioObserver()
+    let isGroupCall: Bool
+    private var musicData: Data {
+        guard let music = NSDataAsset(name: "Calling") else {
+            return Data.init()
+        }
+        return music.data
+    }
+    
+    private var audioObserver: AudioObserver {
+        AudioObserver(isGroupCall: self.isGroupCall)
+    }
     private let activeSpeakerObserver = AudioActiveSpeakerObserver()
     private let callRealTimeObserver = CallRealTimeObserver()
     var musicPlayer: AVAudioPlayer?
     var session: DefaultMeetingSession?
     
-    init(cloudFunction: CloudFunctions = CloudFunctions()) {
+    init(cloudFunction: CloudFunctions = CloudFunctions(), isGroupCall: Bool) {
         self.cloudFunction = cloudFunction
+        self.isGroupCall = isGroupCall
     }
     
     func startBgm(){
@@ -39,24 +49,26 @@ class CallModel {
     }
 
     func startCall(user: UserObservableModel, completionHandler: (@escaping (Result<String, AppError>) -> Void)){
-        
         let createCallModel = CloudFunctionsModel.CreateCall(userId: user.user.uid)
-        cloudFunction.onCall(createCallModel){ result in
+        cloudFunction.onCall(createCallModel){ [weak self] result in
+            guard let weakSelf = self else { return }
             switch result {
             case .success(let joinMeetingResponse):
                 let meetingResp = CloudFunctions.getCreateMeetingResponse(from: joinMeetingResponse)
                 let attendeeResp = CloudFunctions.getCreateAttendeeResponse(from: joinMeetingResponse)
-                self.session = DefaultMeetingSession(configuration: .init(createMeetingResponse: meetingResp, createAttendeeResponse: attendeeResp), logger: ConsoleLogger(name: ""))
+                weakSelf.session = DefaultMeetingSession(configuration: .init(createMeetingResponse: meetingResp, createAttendeeResponse: attendeeResp), logger: ConsoleLogger(name: ""))
                 let audioSession = AVAudioSession.sharedInstance()
                 do {
-                    if let session = self.session {
-                        self.startBgm()
+                    if let session = weakSelf.session {
+                        weakSelf.startBgm()
                         try audioSession.setCategory(.playAndRecord, mode: .voiceChat, options:  [])
                         try audioSession.setActive(true)
                         try session.audioVideo.start()
-                        session.audioVideo.addAudioVideoObserver(observer: self.audioObserver)
-                        session.audioVideo.addActiveSpeakerObserver(policy: DefaultActiveSpeakerPolicy(), observer: self.activeSpeakerObserver)
-                        session.audioVideo.addRealtimeObserver(observer: self.callRealTimeObserver)
+                        
+                        session.audioVideo.addAudioVideoObserver(observer: weakSelf.audioObserver)
+                        session.audioVideo.addActiveSpeakerObserver(policy: DefaultActiveSpeakerPolicy(), observer: weakSelf.activeSpeakerObserver)
+                        session.audioVideo.addRealtimeObserver(observer: weakSelf.callRealTimeObserver)
+                        
                         completionHandler(.success(joinMeetingResponse.meeting.meetingInfo.meetingId))
                     }
                 } catch {
@@ -68,6 +80,21 @@ class CallModel {
         }
     }
     
+    func initOutputRoute(){
+        if let audioDevices = session?.audioVideo.listAudioDevices() {
+            if let bluetoothDevice = audioDevices.first(where: { $0.type == .audioBluetooth }) {
+                self.session?.audioVideo.chooseAudioDevice(mediaDevice: bluetoothDevice)
+            } else if let audioWiredHeadset = audioDevices.first(where: { $0.type == .audioWiredHeadset }) {
+                self.session?.audioVideo.chooseAudioDevice(mediaDevice: audioWiredHeadset)
+            }
+            else if let builtInSpeakerDevice = audioDevices.first(where: { $0.type == .audioBuiltInSpeaker }) {
+                self.session?.audioVideo.chooseAudioDevice(mediaDevice: builtInSpeakerDevice)
+            } else if let handsetDevice = audioDevices.first(where: { $0.type == .audioHandset }) {
+                self.session?.audioVideo.chooseAudioDevice(mediaDevice: handsetDevice)
+            }
+        }
+    }
+    
     func joinCall(
         user: UserObservableModel,
         channelId: String,
@@ -75,23 +102,24 @@ class CallModel {
     ){
         let joinCall = CloudFunctionsModel.JoinCall(userId: user.user.uid, channelId: channelId)
         
-        self.cloudFunction.onCall(joinCall) { result in
+        self.cloudFunction.onCall(joinCall) { [weak self] result in
+            guard let weakSelf = self else { return }
             switch result {
             case .success(let joinMeetingResponse):
                 let meetingResp = CloudFunctions.getCreateMeetingResponse(from: joinMeetingResponse)
                 let attendeeResp = CloudFunctions.getCreateAttendeeResponse(from: joinMeetingResponse)
-                self.session = DefaultMeetingSession(configuration: .init(
+                weakSelf.session = DefaultMeetingSession(configuration: .init(
                     createMeetingResponse: meetingResp, createAttendeeResponse: attendeeResp), logger: ConsoleLogger(name: ""))
                 let audioSession = AVAudioSession.sharedInstance()
                 
                 do {
-                    if let session = self.session {
+                    if let session = weakSelf.session {
                         try audioSession.setCategory(.playAndRecord, mode: .voiceChat, options: [.duckOthers])
                         try audioSession.setActive(true)
                         try session.audioVideo.start()
-                        session.audioVideo.addAudioVideoObserver(observer: self.audioObserver)
-                        session.audioVideo.addActiveSpeakerObserver(policy: DefaultActiveSpeakerPolicy(), observer: self.activeSpeakerObserver)
-                        session.audioVideo.addRealtimeObserver(observer: self.callRealTimeObserver)
+                        session.audioVideo.addAudioVideoObserver(observer: weakSelf.audioObserver)
+                        session.audioVideo.addActiveSpeakerObserver(policy: DefaultActiveSpeakerPolicy(), observer: weakSelf.activeSpeakerObserver)
+                        session.audioVideo.addRealtimeObserver(observer: weakSelf.callRealTimeObserver)
                         let _ = session.audioVideo.realtimeSetVoiceFocusEnabled(enabled: true)
                         completionHandler(.success(()))
                     }
@@ -136,24 +164,17 @@ class CallModel {
         }
     }
     
-    func initOutputRoute(){
-        if let audioDevices = session?.audioVideo.listAudioDevices() {
-            if let bluetoothDevice = audioDevices.first(where: { $0.type == .audioBluetooth }) {
-                self.session?.audioVideo.chooseAudioDevice(mediaDevice: bluetoothDevice)
-            } else if let builtInSpeakerDevice = audioDevices.first(where: { $0.type == .audioBuiltInSpeaker }) {
-                self.session?.audioVideo.chooseAudioDevice(mediaDevice: builtInSpeakerDevice)
-            } else if let handsetDevice = audioDevices.first(where: { $0.type == .audioHandset }) {
-                self.session?.audioVideo.chooseAudioDevice(mediaDevice: handsetDevice)
-            }
-        }
-    }
-    
     func changeOutputRoute(isSpeaker: Bool, completionHandler: @escaping()->Void){
         let audioDevices = session?.audioVideo.listAudioDevices()
         if let bluetoothDevice = audioDevices?.first(where: { $0.type == .audioBluetooth }) {
                 self.session?.audioVideo.chooseAudioDevice(mediaDevice: bluetoothDevice)
                 return
             }
+        
+        if let audioWiredHeadset = audioDevices?.first(where: { $0.type == .audioWiredHeadset }) {
+            self.session?.audioVideo.chooseAudioDevice(mediaDevice: audioWiredHeadset)
+            return
+        }
         
         if isSpeaker {
             if let handsetDevice = audioDevices?.first(where: { $0.type == .audioHandset }) {

@@ -16,6 +16,7 @@ enum RequestNoticeType: String {
 struct RequestNoticeCellView: View {
     let notice: RequestNoticeObservableModel
     @StateObject var viewModel = RequestNoticeCellViewModel()
+    @EnvironmentObject var userModel: UserObservableModel
     
     var body: some View {
         VStack{
@@ -60,24 +61,24 @@ struct RequestNoticeCellView: View {
                     HStack(alignment: .top, spacing: .zero){
                         switch RequestNoticeType(rawValue: notice.type) {
                         case .request:
-                            Text(notice.triggerUserNickName)
-                                .foregroundColor(.customBlack)
-                                .font(.system(size: 16, weight: .bold))
-                            
-                            + Text("さんから友達申請が来ました")
-                                .foregroundColor(.customBlack)
-                                .font(.system(size: 16))
-                            
-                            Spacer()
-                            Button {
-                                
-                            } label: {
-                                Text("追加する")
-                                    .foregroundColor(.white)
-                                    .font(.system(size: 14))
-                                    .padding(.all, 8)
-                                    .background(Color.purple)
-                                    .cornerRadius(10)
+                                Text(notice.triggerUserNickName)
+                                    .foregroundColor(.customBlack)
+                                    .font(.system(size: 16, weight: .bold))
+                                + Text("さんから友達申請が来ました")
+                                    .foregroundColor(.customBlack)
+                                    .font(.system(size: 16))
+                                Spacer()
+                            if !userModel.user.friendUids.contains(notice.triggerUserUid) {
+                                Button {
+                                    viewModel.approveFriend(requestUser: userModel, requestedUserID: notice.triggerUserUid)
+                                } label: {
+                                    Text("追加する")
+                                        .foregroundColor(.white)
+                                        .font(.system(size: 14, weight: .medium))
+                                        .padding(.all, 8)
+                                        .background(Color.purple)
+                                        .cornerRadius(10)
+                                }
                             }
                         case .approve:
                             Text(notice.triggerUserNickName)

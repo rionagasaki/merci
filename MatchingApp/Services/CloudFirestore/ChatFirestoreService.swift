@@ -20,7 +20,7 @@ class ChatFirestoreService {
     let messagePath: String = "Message"
     let callPath: String = "Call"
     
-    func getChatRoomData(chatroomID: String) -> AnyPublisher<ChatRoomData, AppError> {
+    func getUpdateChatRoomData(chatroomID: String) -> AnyPublisher<ChatRoomData, AppError> {
         let subject = PassthroughSubject<ChatRoomData, AppError>()
         FirestoreListener.shared.chatListener?.remove()
         FirestoreListener.shared.chatRoomListener = db
@@ -41,7 +41,7 @@ class ChatFirestoreService {
         return subject.eraseToAnyPublisher()
     }
     
-    func getUpdateChat(chatroomID:String) -> AnyPublisher<Chat, AppError> {
+    func getUpdateMessageData(chatroomID:String) -> AnyPublisher<Chat, AppError> {
         let subject = PassthroughSubject<Chat, AppError>()
         FirestoreListener.shared.chatListener?.remove()
         FirestoreListener.shared.chatListener = db
@@ -101,7 +101,7 @@ class ChatFirestoreService {
                 promise(.failure(.other(.noMessageSendError)))
                 return
             }
-            
+        
             batch.setData([
                 "chatmateMapping": [toUser.user.uid: chatDocumentID]
             ], forDocument: fromUserDoc, merge: true)
@@ -179,11 +179,20 @@ class ChatFirestoreService {
                 "chatLastTimestampMapping": [chatRoomId: timestamp]
             ], forDocument: fromUserDoc, merge: true)
             
-            batch.setData([
-                "chatLastMessageMapping": [chatRoomId: message],
-                "chatLastTimestampMapping": [chatRoomId: timestamp],
-                "unreadMessageCount": [chatRoomId: FieldValue.increment(Int64(1))]
-            ],forDocument: toUserDoc, merge: true)
+            if toUser.user.hiddenChatRoomUserIDs.contains(fromUser.user.uid) {
+                batch.setData([
+                    "chatLastMessageMapping": [chatRoomId: message],
+                    "chatLastTimestampMapping": [chatRoomId: timestamp],
+                    "unreadMessageCount": [chatRoomId: FieldValue.increment(Int64(1))],
+                    "hiddenChatRoomUserIDs": FieldValue.arrayRemove([fromUser.user.uid])
+                ],forDocument: toUserDoc, merge: true)
+            } else {
+                batch.setData([
+                    "chatLastMessageMapping": [chatRoomId: message],
+                    "chatLastTimestampMapping": [chatRoomId: timestamp],
+                    "unreadMessageCount": [chatRoomId: FieldValue.increment(Int64(1))]
+                ],forDocument: toUserDoc, merge: true)
+            }
             
             batch.commit { error in
                 if let error = error {
@@ -224,6 +233,14 @@ class ChatFirestoreService {
         let messageDoc = db.collection(self.chatPath).document(chatRoomId).collection(self.messagePath).document(messageDocId)
         
         return Future { promise in
+            
+            batch.setData([
+                "chatLastMessageMapping": [chatRoomId: "\(fromUser.user.nickname)さんが通話を始めました"],
+                "chatLastTimestampMapping": [chatRoomId: Date.init()],
+                "unreadMessageCount": [chatRoomId: FieldValue.increment(Int64(1))],
+                "isCallingChannelId": channelId
+            ],forDocument: fromUserDoc, merge: true)
+            
             batch.setData([
                 "channelId": channelId,
                 "callingMate": FieldValue.arrayUnion([fromUser.user.uid])
@@ -245,12 +262,6 @@ class ChatFirestoreService {
                 "unreadMessageCount": [chatRoomId: FieldValue.increment(Int64(1))]
             ],forDocument: toUserDoc, merge: true)
             
-            batch.setData([
-                "chatLastMessageMapping": [chatRoomId: "\(fromUser.user.nickname)さんが通話を始めました"],
-                "chatLastTimestampMapping": [chatRoomId: Date.init()],
-                "unreadMessageCount": [chatRoomId: FieldValue.increment(Int64(1))]
-            ],forDocument: fromUserDoc, merge: true)
-            
             batch.commit { error in
                 if let error = error {
                     promise(.failure(.firestore(error)))
@@ -261,10 +272,20 @@ class ChatFirestoreService {
         }.eraseToAnyPublisher()
     }
     
-    func joinOneToOneCall(chatRoomId: String, user: UserObservableModel, completionHandler: @escaping (Result<Void, AppError>) -> Void) {
-        db.collection(self.chatPath).document(chatRoomId).setData([
-            "callingMate": FieldValue.arrayUnion([chatRoomId])
-        ], merge: true){ error in
+    func joinOneToOneCall(chatRoomId: String, channelId: String ,user: UserObservableModel, completionHandler: @escaping (Result<Void, AppError>) -> Void) {
+        let batch = db.batch()
+        let chatDocRef = db.collection(self.chatPath).document(chatRoomId)
+        let userDocRef = db.collection(self.userPath).document(user.user.uid)
+        
+        batch.updateData([
+            "isCallingChannelId": channelId
+        ], forDocument: userDocRef)
+        
+        batch.updateData([
+            "callingMate": FieldValue.arrayUnion([user.user.uid])
+        ], forDocument: chatDocRef)
+        
+        batch.commit { error in
             if let error = error {
                 completionHandler(.failure(.firestore(error)))
             } else {
@@ -273,20 +294,31 @@ class ChatFirestoreService {
         }
     }
     
-    func stopOneToOneCall(chatRoomId: String, completionHandler: @escaping(Result<Void, AppError>)->Void) {
-        db.collection(self.chatPath)
-            .document(chatRoomId)
-            .updateData([
-                "channelId": "",
-                "callingMate": [] as [String],
-            ]){ error in
-                if let error = error {
-                    completionHandler(.failure(.firestore(error)))
-                } else {
-                    completionHandler(.success(()))
-                }
+    func stopOneToOneCall(chatRoomId: String, fromUserID: String, toUserID: String, completionHandler: @escaping(Result<Void, AppError>)->Void) {
+        let batch = db.batch()
+        let chatDocRef = db.collection(self.chatPath).document(chatRoomId)
+        let fromUserDocRef = db.collection(self.userPath).document(fromUserID)
+        let toUserDocRef = db.collection(self.userPath).document(toUserID)
+        
+        batch .updateData([
+            "channelId": "",
+            "callingMate": [] as [String]
+        ], forDocument: chatDocRef)
+        
+        batch.updateData([
+            "isCallingChannelId": ""
+        ], forDocument: fromUserDocRef)
+        
+        batch.updateData([
+            "isCallingChannelId": ""
+        ], forDocument: toUserDocRef)
+        
+        batch.commit { error in
+            if let error = error {
+                completionHandler(.failure(.firestore(error)))
+            } else {
+                completionHandler(.success(()))
             }
+        }
     }
-    
-    
 }

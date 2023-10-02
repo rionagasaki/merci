@@ -8,68 +8,54 @@
 import SwiftUI
 
 struct ChatView: View {
-    let user: UserObservableModel
-    private let requestMicrophone = RequestMicrophone()
-    @EnvironmentObject var userModel: UserObservableModel
-    @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = ChatViewModel()
+    @ObservedObject var realTimeCall = RealTimeCallStatus.shared
+    
+    @EnvironmentObject var fromUser: UserObservableModel
+    let toUser: UserObservableModel
+    
+    private let requestMicrophone = RequestMicrophone()
+    @EnvironmentObject var appState: AppState
     @FocusState var focus: Bool
-    @Environment(\.dismiss) var dismiss
     
     var body: some View {
-        NavigationStack {
             VStack {
-                if !viewModel.channelId.isEmpty {
-                    HStack(alignment: .top){
-                        ZStack(alignment: .bottomTrailing){
-                            Image(user.user.profileImageURLString)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 64, height: 64)
-                                .background(Color.gray.opacity(0.1))
-                                .clipShape(Circle())
-                            
-                            Image(systemName: "phone.circle.fill")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width:24, height:24)
-                                .foregroundColor(.green)
-                                .background(Color.white)
-                                .clipShape(Circle())
-                        }
-                        Spacer()
-                        VStack(alignment: .trailing){
-                            Text("\(user.user.nickname)さんはもうそこにいます！")
-                                .foregroundColor(.customBlack)
-                                .font(.system(size: 14, weight: .medium))
-                            
-                            Button {
-                                viewModel.isJoinCall = true
-                            } label: {
-                                Text("通話に参加する")
-                                    .foregroundColor(.white)
-                                    .font(.system(size: 12, weight: .medium))
-                                    .padding(.all, 8)
-                                    .background(Color.green)
-                                    .cornerRadius(10)
-                            }
-                        }
-                    }
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 24)
-                    .background(Color.customBlue.opacity(0.5))
+                switch viewModel.callingStatus {
+                case .calling:
+                    CallingTopBarView(
+                        toUser: toUser,
+                        chatRoomID: viewModel.chatRoomId,
+                        viewModel: viewModel
+                    )
+                case .createCallRoom:
+                    CreateCallRoomView(user: toUser)
+                case .noCall:
+                    EmptyView()
+                case .waitingUser:
+                    CallWaitingView(fromUser: fromUser, toUser: toUser, viewModel: viewModel)
+                case .waitedUser:
+                    CallWaitedView(
+                        viewModel: viewModel,
+                        fromUser: fromUser,
+                        toUser: toUser,
+                        channelID: viewModel.channelId,
+                        chatRoomID: viewModel.chatRoomId
+                    )
+                case .deadCall:
+                    DeadCallView(fromUser: fromUser, toUser: toUser, viewModel: viewModel)
                 }
+                
                 ScrollViewReader { reader in
                     VStack {
                         VStack {
                             ScrollView {
                                 VStack {
                                     ForEach(viewModel.allMessages){ message in
-                                        if message.fromUserUid == userModel.user.uid {
+                                        if message.fromUserUid == fromUser.user.uid {
                                             MyMessageBubbleView(message: message)
                                                 .id(UUID.init(uuidString: message.chatId))
                                         } else {
-                                            OtherUserMessageBubbleView(message: message, user: user)
+                                            OtherUserMessageBubbleView(message: message, user: toUser)
                                                 .id(UUID.init(uuidString: message.chatId))
                                         }
                                     }
@@ -77,14 +63,14 @@ struct ChatView: View {
                                 .padding(.top, 16)
                             }
                             
-                            .onChange(of: viewModel.scrollId) { id in
+                            .onChange(of: viewModel.scrollID) { id in
                                 withAnimation {
-                                    reader.scrollTo(viewModel.scrollId)
+                                    reader.scrollTo(viewModel.scrollID)
                                 }
                             }
                             .onAppear {
                                 withAnimation {
-                                    reader.scrollTo(viewModel.scrollId)
+                                    reader.scrollTo(viewModel.scrollID)
                                 }
                                 DispatchQueue.main.asyncAfter(deadline: .now()+0.5) {
                                     withAnimation {
@@ -95,52 +81,39 @@ struct ChatView: View {
                             Group {
                                 Divider()
                                 HStack(alignment: .bottom){
-                                    TextEditor(text: $viewModel.messageText)
-                                        .scrollContentBackground(Visibility.hidden)
-                                        .frame(height: viewModel.textFieldHeight)
-                                        .background{
-                                            RoundedRectangle(cornerRadius: 5)
-                                                .frame(height: viewModel.textFieldHeight)
-                                                .foregroundColor(.gray.opacity(0.1))
-                                        }
-                                        .onChange(of: viewModel.messageText) { newValue in
-                                            if newValue.filter({ $0 == "\n" }).count > viewModel.newlineCount {
-                                                if viewModel.textFieldHeight < 40 + 16*4 {
-                                                    viewModel.textFieldHeight += 16
-                                                }
-                                            } else if newValue.filter({ $0 == "\n" }).count < viewModel.newlineCount  {
-                                                if viewModel.textFieldHeight > 40 {
-                                                    viewModel.textFieldHeight -= 16
-                                                }
-                                            } else {}
-                                            viewModel.newlineCount = newValue.filter { $0 == "\n" }.count
-                                        }
-                                        .onTapGesture {
-                                            DispatchQueue.main.asyncAfter(deadline: .now()+0.3) {
-                                                withAnimation {
-                                                    reader.scrollTo(viewModel.scrollId)
-                                                }
+                                    TextField(text: $viewModel.messageText, axis: .vertical) {
+                                        Text("Aa")
+                                    }
+                                    .onTapGesture {
+                                        DispatchQueue.main.asyncAfter(deadline: .now()+0.1) {
+                                            withAnimation {
+                                                reader.scrollTo(viewModel.scrollID)
                                             }
                                         }
-                                        .focused(self.$focus)
+                                    }
+                                    .lineLimit(5)
+                                    .focused(self.$focus)
+                                    .padding(.bottom, 8)
+                                    
                                     
                                     Button {
                                         if viewModel.chatRoomId.isEmpty {
                                             viewModel.createChatRoomAndSendMessage(
-                                                fromUser: userModel,
-                                                toUser: user,
+                                                fromUser: fromUser,
+                                                toUser: toUser,
                                                 appState: appState
                                             )
                                         } else {
                                             viewModel.sendMessage(
-                                                fromUser: userModel,
-                                                toUser: user,
+                                                fromUser: fromUser,
+                                                toUser: toUser,
                                                 appState: appState
                                             )
                                         }
                                     } label: {
                                         Text("送信")
                                             .foregroundColor(.white)
+                                            .font(.system(size: 16, weight: .medium))
                                             .padding(.horizontal, 16)
                                             .frame(height: 40)
                                             .background(Color.customBlue)
@@ -156,59 +129,72 @@ struct ChatView: View {
                 .padding(.top, 16)
             }
             .ignoresSafeArea(.keyboard, edges: .bottom)
-            .navigationBarBackButtonHidden()
-            .navigationTitle("\(user.user.nickname)")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("\(toUser.user.nickname)")
+                        .foregroundColor(.customBlack)
+                        .font(.system(size: 16, weight: .medium))
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
-                        if !userModel.user.friendUids.contains(user.user.uid) {
-                            self.viewModel.isRequiredAddFriend = true
+                        if !fromUser.user.friendUids.contains(toUser.user.uid) {
+                            self.viewModel.errorMessage = "通話をするには、\(toUser.user.nickname)さんと友達になる必要があります。"
+                            self.viewModel.isErrorAlert = true
                         } else {
-                            self.viewModel.isCreateCallActionSheet = true
+                            Task {
+                                let hasAudioPermissions = await self.requestMicrophone.checkForPermissions()
+                                if hasAudioPermissions {
+                                    self.viewModel.isCreateCallActionSheet = true
+                                } else {
+                                    requestMicrophone.requestMicrophonePermission { result in
+                                        if result {
+                                            self.viewModel.isCreateCallActionSheet = true
+                                        } else {
+                                            viewModel.errorMessage = "マイクの許可をしてね。"
+                                            self.viewModel.isErrorAlert = true
+                                        }
+                                    }
+                                }
+                            }
+                            
                         }
                     } label: {
                         VStack {
-                            Image(systemName: "phone")
-                            Text("通話")
-                                .font(.system(size: 10,weight: .light))
+                            Image(systemName: "phone.circle.fill")
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 32, height: 32)
+                                .foregroundColor(.purple)
+                           
                         }
                         .foregroundColor(.customBlack)
                     }
                     
                 }
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        self.focus = false
-                        viewModel.updateMessageUnReadCountZero(user: userModel)
-                        DispatchQueue.main.asyncAfter(deadline: .now()+0.4) {
-                            dismiss()
-                        }
-                        
-                    } label: {
-                        HStack {
-                            Image(systemName: "chevron.left")
-                            Text("メッセージ")
-                        }
-                        .foregroundColor(.black)
-                    }
-                }
             }
             .actionSheet(isPresented: $viewModel.isCreateCallActionSheet){
                 ActionSheet(
                     title: Text("📞発信"),
-                    message: Text("\(user.user.nickname)さんへ発信します。"),
+                    message: Text("\(toUser.user.nickname)さんへ発信するよ。"),
                     buttons: [
                         .default(Text("発信"), action: {
-                            if !userModel.user.isCallingChannelId.isEmpty {
-                                viewModel.errorMessage = "現在、他の通話に参加中です。"
+                            if !fromUser.user.isCallingChannelId.isEmpty {
+                                viewModel.errorMessage = "現在、他の通話に参加中だよ。"
                                 viewModel.isErrorAlert = true
                             }
-                            else if !user.user.isCallingChannelId.isEmpty {
-                                viewModel.errorMessage = "相手のユーザーが通話中です。"
+                            else if !viewModel.toUserCallingChannelId.isEmpty {
+                                viewModel.errorMessage = "相手のユーザーが通話中だよ。"
                                 viewModel.isErrorAlert = true
                             } else {
-                                viewModel.isCreateCall = true
+                                if !viewModel.chatRoomId.isEmpty {
+                                    viewModel.createOneToOneChannel(
+                                        chatRoomId: viewModel.chatRoomId,
+                                        fromUser: fromUser,
+                                        toUser: toUser)
+                                } else {
+                                    viewModel.errorMessage = "一言以上チャットしてみよう。"
+                                    viewModel.isErrorAlert = true
+                                }
                             }
                         }),
                         .cancel()
@@ -218,38 +204,318 @@ struct ChatView: View {
             .alert(isPresented: $viewModel.isErrorAlert){
                 Alert(title: Text("エラー"), message: Text(viewModel.errorMessage))
             }
-            .alert(isPresented: $viewModel.isRequiredAddFriend, content: {
-                Alert(title: Text("友達になろう"), message: Text("通話をするには、\(user.user.nickname)さんと友達になる必要があります。"))
-            })
             .onTapGesture {
                 self.focus = false
             }
-            .navigationDestination(isPresented: $viewModel.isCreateCall) {
-                IndividualHostCallView(
-                    chatRoomId: viewModel.chatRoomId,
-                    messageId: viewModel.messageId,
-                    fromUser: userModel,
-                    toUser: user
-                )
-            }
-            .navigationDestination(isPresented: $viewModel.isJoinCall){
-                IndividualAttendeeCallView(
-                    channelId: viewModel.channelId,
-                    chatRoomId: viewModel.chatRoomId,
-                    messageId: viewModel.messageId
-                )
+            .onReceive(realTimeCall.$dropUser){ dropUsers in
+                if dropUsers.count > 0 {
+                    viewModel.stopChannel(fromUserID: fromUser.user.uid, toUserID: toUser.user.uid)
+                }
             }
             .onAppear {
                 viewModel.allMessages = []
-                if let chatRoomId = userModel.user.chatmateMapping[user.user.uid] {
+                if let chatRoomId = fromUser.user.chatmateMapping[toUser.user.uid] {
                     self.viewModel.chatRoomId = chatRoomId
-                    viewModel.initial(user: userModel, chatRoomId: chatRoomId)
-                    viewModel.initialChatRoom(chatRoomId: chatRoomId)
+                    self.viewModel.toUserCallingChannelId = toUser.user.isCallingChannelId
+                    viewModel.monitorChatRoomData(
+                        chatRoomId: chatRoomId,
+                        fromUser: fromUser,
+                        toUserID: toUser.user.uid
+                    )
+                    viewModel.monitorMessageData(
+                        user: fromUser,
+                        chatRoomId: chatRoomId
+                    )
                 }
             }
             .onDisappear {
-                viewModel.updateMessageUnReadCountZero(user: userModel)
+                viewModel.updateMessageUnReadCountZero(user: fromUser)
+            }
+    }
+}
+
+struct CallingTopBarView: View {
+    @EnvironmentObject var fromUser: UserObservableModel
+    let toUser: UserObservableModel
+    let chatRoomID: String
+    @StateObject var viewModel: ChatViewModel
+    var body: some View {
+        VStack(alignment: .leading){
+            HStack(alignment: .top){
+                Image(toUser.user.profileImageURLString)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 40, height: 40)
+                    .padding(.all, 12)
+                    .background(Color.customLightGray)
+                    .clipShape(Circle())
+                
+                VStack(alignment: .leading){
+                    Text("\(toUser.user.nickname)さんと通話中です。")
+                        .foregroundColor(.white)
+                        .font(.system(size: 16, weight: .medium))
+                    
+                    HStack {
+                        Button {
+                            viewModel.muteAudio()
+                        } label: {
+                            Image(systemName: viewModel.isMuted ? "mic.slash.fill": "mic.fill")
+                                .resizable()
+                                .scaledToFill()
+                                .foregroundColor(viewModel.isMuted ? .customRed: .customBlack)
+                                .frame(width: 14, height: 14)
+                                .padding(.all, 9)
+                                .background(Color.white)
+                                .clipShape(Circle())
+                        }
+
+                        Button {
+                            viewModel.changeOutputRouter()
+                        } label: {
+                            Image(systemName: viewModel.isSpeaker ? "speaker.wave.3.fill": "speaker.fill")
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 14, height: 14)
+                                .padding(.all, 9)
+                                .background(Color.white)
+                                .clipShape(Circle())
+                        }
+
+                        Spacer()
+                        
+                        Button {
+                            viewModel.stopChannel (
+                                fromUserID: fromUser.user.uid,
+                                toUserID: toUser.user.uid
+                            )
+                        } label: {
+                            Text(viewModel.isLoading ? "切断中...": "退出する")
+                                .foregroundColor(viewModel.isLoading ? .customBlack: .white)
+                                .font(.system(size: 12, weight: .medium))
+                                .padding(.all, 8)
+                                .background(viewModel.isLoading ? Color.customLightGray: Color.customRed)
+                                .cornerRadius(10)
+                        }
+                        .disabled(viewModel.isLoading)
+                    }
+                }
+                .padding(.leading, 8)
             }
         }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 24)
+        .background(Color.purple)
+        .cornerRadius(16)
+        .padding(.top, 8)
+        .padding(.horizontal, 8)
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now()+0.2) {
+                viewModel.deadCallBar(fromUser: fromUser)
+            }
+        }
+    }
+}
+
+struct CallWaitingView: View {
+    let fromUser: UserObservableModel
+    let toUser: UserObservableModel
+    @StateObject var viewModel: ChatViewModel
+    var body: some View {
+        HStack(alignment: .top) {
+            ZStack(alignment: .bottomTrailing){
+                Image(toUser.user.profileImageURLString)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 40, height: 40)
+                    .padding(.all, 12)
+                    .background(Color.customLightGray)
+                    .clipShape(Circle())
+                
+                Image(systemName: "phone.circle.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width:24, height:24)
+                    .foregroundColor(.green)
+                    .background(Color.white)
+                    .clipShape(Circle())
+            }
+            Spacer()
+            VStack(alignment: .trailing){
+                Text("\(toUser.user.nickname)さんを呼び出しています")
+                    .foregroundColor(.white)
+                    .font(.system(size: 16, weight: .medium))
+                
+                Button {
+                    viewModel.stopChannel (
+                        fromUserID: fromUser.user.uid,
+                        toUserID: toUser.user.uid
+                    )
+                } label: {
+                    Text(viewModel.isLoading ? "切断中...": "退出する")
+                        .foregroundColor(viewModel.isLoading ? .customBlack: .white)
+                        .font(.system(size: 12, weight: .medium))
+                        .padding(.all, 8)
+                        .background(viewModel.isLoading ? Color.customLightGray: Color.customRed)
+                        .cornerRadius(10)
+                }
+                .disabled(viewModel.isLoading)
+            }
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 24)
+        .background(Color.purple)
+        .cornerRadius(16)
+        .padding(.top, 8)
+        .padding(.horizontal, 8)
+    }
+}
+
+struct CallWaitedView: View {
+    @StateObject var viewModel: ChatViewModel
+    let fromUser: UserObservableModel
+    let toUser: UserObservableModel
+    let channelID: String
+    let chatRoomID: String
+    
+    var body: some View {
+        HStack(alignment: .top) {
+            ZStack(alignment: .bottomTrailing){
+                Image(toUser.user.profileImageURLString)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 40, height: 40)
+                    .padding(.all, 12)
+                    .background(Color.customLightGray)
+                    .clipShape(Circle())
+                
+                Image(systemName: "phone.circle.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width:24, height:24)
+                    .foregroundColor(.green)
+                    .background(Color.white)
+                    .clipShape(Circle())
+            }
+            Spacer()
+            VStack(alignment: .trailing){
+                Text("\(toUser.user.nickname)さんはもうそこにいます！")
+                    .foregroundColor(.white)
+                    .font(.system(size: 16, weight: .medium))
+                
+                Button {
+                    viewModel.joinCall(
+                        channelID: channelID,
+                        chatRoomID: chatRoomID,
+                        userModel: fromUser
+                    )
+                } label: {
+                    Text(viewModel.isLoading ? "参加中...": "通話に参加する")
+                        .foregroundColor(viewModel.isLoading ? .customBlack: .white)
+                        .font(.system(size: 12, weight: .medium))
+                        .padding(.all, 8)
+                        .background(viewModel.isLoading ? Color.customLightGray: Color.green)
+                        .cornerRadius(10)
+                }
+                .disabled(viewModel.isLoading)
+            }
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 24)
+        .background(Color.purple)
+        .cornerRadius(16)
+        .padding(.top, 8)
+        .padding(.horizontal, 8)
+    }
+}
+
+struct DeadCallView: View {
+    let fromUser: UserObservableModel
+    let toUser: UserObservableModel
+    @StateObject var viewModel: ChatViewModel
+    var body: some View {
+        HStack(alignment: .top) {
+            ZStack(alignment: .bottomTrailing){
+                Image(toUser.user.profileImageURLString)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 40, height: 40)
+                    .padding(.all, 12)
+                    .background(Color.customLightGray)
+                    .clipShape(Circle())
+                
+                Image(systemName: "phone.circle.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width:24, height:24)
+                    .foregroundColor(.green)
+                    .background(Color.white)
+                    .clipShape(Circle())
+            }
+            Spacer()
+            VStack(alignment: .trailing){
+                Text("前回の通話が予期せぬ形で終了しました。")
+                    .foregroundColor(.white)
+                    .font(.system(size: 16, weight: .medium))
+                
+                Button {
+                    self.viewModel.stopChannelInfoFromFirestore(fromUserID: fromUser.user.uid, toUserID: toUser.user.uid)
+                } label: {
+                    Text("OK")
+                        .foregroundColor(.white)
+                        .font(.system(size: 12, weight: .medium))
+                        .padding(.all, 8)
+                        .background(Color.green)
+                        .cornerRadius(10)
+                }
+            }
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 24)
+        .background(Color.purple)
+        .cornerRadius(16)
+        .padding(.top, 8)
+        .padding(.horizontal, 8)
+    }
+    
+}
+
+struct CreateCallRoomView: View {
+    let user: UserObservableModel
+    var body: some View {
+        HStack(alignment: .top) {
+            ZStack(alignment: .bottomTrailing){
+                Image(user.user.profileImageURLString)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 40, height: 40)
+                    .padding(.all, 12)
+                    .background(Color.customLightGray)
+                    .clipShape(Circle())
+                
+                Image(systemName: "phone.circle.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width:24, height:24)
+                    .foregroundColor(.green)
+                    .background(Color.white)
+                    .clipShape(Circle())
+            }
+            Spacer()
+            VStack(alignment: .trailing){
+                Text("通話ルームを作成しているよ。少し待ってね。")
+                    .foregroundColor(.white)
+                    .font(.system(size: 16, weight: .medium))
+                
+                LottieView(animationResourceName: "loading", loopMode: .loop, isActive: true)
+                    .scaledToFill()
+                    .frame(width: 120, height: 20)
+            }
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 24)
+        .background(Color.purple)
+        .cornerRadius(16)
+        .padding(.top, 8)
+        .padding(.horizontal, 8)
     }
 }

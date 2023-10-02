@@ -16,60 +16,53 @@ struct PostDetailView: View {
     let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .heavy)
     
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false){
-            VStack(alignment: .leading, spacing: .zero){
-                if viewModel.parentPosts.count != 0 {
-                    ForEach(viewModel.parentPosts) { post in
-                        PostView(post: post)
+        VStack {
+            if viewModel.isLoading {
+                ProgressView()
+            } else {
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: .zero){
+                        if viewModel.parentPosts.count != 0 {
+                            ForEach(viewModel.parentPosts) { post in
+                                PostView(post: post)
+                            }
+                            .padding(.top, 8)
+                        }
+                        
+                        if let selfPost = viewModel.selfPost {
+                            PostView(post: selfPost)
+                                .padding(.top, 8)
+                                .background(Color.gray.opacity(0.1))
+                                .cornerRadius(20)
+                        }
+                        
+                        ForEach(viewModel.childPosts) { post in
+                            PostView(post: post)
+                                .padding(.top, 8)
+                        }
+                        .padding(.top, 8)
                     }
-                    .padding(.top, 8)
                 }
-                
-                if let selfPost = viewModel.selfPost {
-                    PostView(post: selfPost)
-                        .padding(.top, 8)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(20)
+                .refreshable {
+                    UIIFGeneratorMedium.impactOccurred()
+                    self.viewModel.initial(postId: postId)
                 }
-                
-                ForEach(viewModel.childPosts) { post in
-                    PostView(post: post)
-                        .padding(.top, 8)
-                }
-                .padding(.top, 8)
             }
         }
-        .navigationBarBackButtonHidden()
-        .refreshable {
-            UIIFGeneratorMedium.impactOccurred()
-            self.viewModel.initial(postId: postId)
-        }
         .onAppear {
-            print("POSTID",postId)
             self.viewModel.initial(
                 postId: postId
             )
         }
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    DispatchQueue.main.asyncAfter(deadline: .now()+0.3){
-                        self.savedScrollDocumentID = postId
-                    }
-                    dismiss()
-                } label: {
-                    HStack {
-                        Image(systemName: "chevron.left")
-                        Text("戻る")
-                    }
-                    .foregroundColor(.customBlack)
-                }
-            }
             ToolbarItem(placement: .principal){
                 Text("関連つぶやき")
                     .foregroundColor(.customBlack)
                     .font(.system(size: 16, weight: .bold))
             }
+        }
+        .onDisappear {
+            self.savedScrollDocumentID = postId
         }
     }
 }

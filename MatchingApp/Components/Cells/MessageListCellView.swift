@@ -14,13 +14,25 @@ struct MessageListCellView: View {
     var body: some View {
         
         HStack(alignment: .top){
-            Image(chatmate.user.profileImageURLString)
-                .resizable()
-                .scaledToFill()
-                .frame(width: 40, height: 40)
-                .padding(.all, 8)
-                .background(Color.gray.opacity(0.1))
-                .clipShape(Circle())
+            ZStack(alignment: .bottomTrailing){
+                Image(chatmate.user.profileImageURLString)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 40, height: 40)
+                    .padding(.all, 8)
+                    .background(Color.gray.opacity(0.1))
+                    .clipShape(Circle())
+                
+                if (userModel.user.isCallingChannelId == chatmate.user.isCallingChannelId && !userModel.user.isCallingChannelId.isEmpty) {
+                    Image(systemName: "phone.circle.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width:24, height:24)
+                        .foregroundColor(.green)
+                        .background(Color.white)
+                        .clipShape(Circle())
+                }
+            }
             
             VStack(alignment: .leading){
                 Text(chatmate.user.nickname)

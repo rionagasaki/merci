@@ -11,14 +11,11 @@ import FirebaseAuth
 
 class ContentViewModel: ObservableObject {
     @Published var isLoginModal: Bool = false
-    @Published var isRequiredOnboarding: Bool = false
     @Published var isUserInfoSetupRequired: Bool = false
+    @Published var isRequiredOnboarding: Bool = false
 
-    @Published var searchWord = ""
     @Published var isErrorAlert = false
     @Published var errorMessage: String = ""
-    @Published var isPairSetUpRequired = false
-    @AppStorage("isFirstLaunch") var isFirstLaunch: Bool = true
     
     private let userService = UserFirestoreService()
     private let postService = PostFirestoreService()
@@ -26,50 +23,45 @@ class ContentViewModel: ObservableObject {
     private var cancellable = Set<AnyCancellable>()
     private let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .heavy)
     
-    func resetUserInfo(userModel: UserObservableModel, appState: AppState){
-        AuthenticationService.shared.signOut()
-            .sink(receiveCompletion: { completion in
-                switch completion {
-                case .finished:
-                    print("successfully logout")
-                    userModel.initial()
-                    self.isFirstLaunch = false
-                case let .failure(error):
-                    print("Error",error)
-                }
-            }, receiveValue: { _ in
-                print("Recieve Value!")
-            })
-            .store(in: &cancellable)
-    }
-    
     func initialUserInfo(user: FirebaseAuth.User, userModel: UserObservableModel, appState: AppState) {
-        self.userService.getUpdateUser(uid: user.uid) { result in
+        self.userService.getUpdateUser(uid: user.uid) { [weak self] result in
+            guard let weakSelf = self else { return }
             switch result {
             case .success(let user):
                 userModel.user = user
                 if user.email.isEmpty || user.uid.isEmpty { return }
                 
                 if user.nickname.isEmpty {
-                    self.isUserInfoSetupRequired = true
+                    weakSelf.isUserInfoSetupRequired = true
                     return
                 }
                 // オンボーディングを最後まで完了していない場合
                 if !user.onboarding {
-                    self.isRequiredOnboarding = true
+                    weakSelf.isRequiredOnboarding = true
                     return
                 }
+    
                 // 未既読なチャットがある場合
-                let allUnreadMessageCount =  user.unreadMessageCount.values.reduce(0) { partialResult, next in
+                let unreadExceptHiddenUserIDs = Array<String>(user.chatmateMapping.keys).filter { !user.hiddenChatRoomUserIDs.contains($0) }
+                let unreadChatRoomIDs = unreadExceptHiddenUserIDs.compactMap { userID in if let chatRoomID = user.chatmateMapping[userID] { return chatRoomID } else { return nil } }
+                
+                let allUnreadMessageCount =  unreadChatRoomIDs.compactMap { chatRoomID in
+                    if let unreadCount = user.unreadMessageCount[chatRoomID] {
+                        return unreadCount
+                    } else {
+                        return nil
+                    }
+                }.reduce(0) { partialResult, next in
                     return partialResult + next
                 }
-                if user.unreadMessageCount.values.contains(where: { $0 > 0 }) {
+                
+                if allUnreadMessageCount > 0 {
                     if !appState.tabWithNotice.contains(.message) {
-                        self.UIIFGeneratorMedium.impactOccurred()
+                        weakSelf.UIIFGeneratorMedium.impactOccurred()
                         appState.tabWithNotice.append(.message)
                     } else {
                         if appState.unreadMessageAllCount < allUnreadMessageCount {
-                            self.UIIFGeneratorMedium.impactOccurred()
+                            weakSelf.UIIFGeneratorMedium.impactOccurred()
                             appState.tabWithNotice = appState.tabWithNotice.filter { $0 != .message }
                             appState.tabWithNotice.append(.message)
                         }
@@ -85,29 +77,44 @@ class ContentViewModel: ObservableObject {
                         }
                     }
                 }
+                
                 appState.unreadMessageAllCount = allUnreadMessageCount
                 
-                self.noticeService.getAllNotices(userID: user.uid)
+                weakSelf.noticeService.getAllNotices(userID: user.uid)
                     .sink { completion in
                         switch completion {
                         case .finished:
                             print("successfully initialize")
                         case .failure(let error):
-                            self.errorMessage = error.errorMessage
-                            self.isErrorAlert = true
+                            weakSelf.errorMessage = error.errorMessage
+                            weakSelf.isErrorAlert = true
                         }
-                    } receiveValue: { (_, commentNotices, requestNotice) in
-                        self.confirmNotice(
+                    } receiveValue: { [weak self] (_, commentNotices, requestNotice) in
+                        guard let weakSelf = self else { return }
+                        weakSelf.confirmNotice(
                             appState: appState,
                             commentNotices: commentNotices,
                             followNotices: requestNotice
                         )
                     }
-                    .store(in: &self.cancellable)
+                    .store(in: &weakSelf.cancellable)
 
             case .failure(let error):
-                self.errorMessage = error.errorMessage
-                self.isErrorAlert = true
+                weakSelf.errorMessage = error.errorMessage
+                weakSelf.isErrorAlert = true
+            }
+        }
+    }
+    
+    func resetChannelID(userID: String){
+        self.userService.updateUserCallingStatus(userID: userID) { [weak self] result in
+            guard let weakSelf = self else { return }
+            switch result {
+            case .success(_):
+                break
+            case .failure(let error):
+                weakSelf.errorMessage = error.errorMessage
+                weakSelf.isErrorAlert = true
             }
         }
     }
@@ -139,17 +146,16 @@ class ContentViewModel: ObservableObject {
         guard let user = AuthenticationManager.shared.user else { return }
         userService.updateUserInfo(currentUid: user.uid, key: "fcmToken", value: token)
             .receive(on: DispatchQueue.main)
-            .sink { completion in
+            .sink { [weak self] completion in
+                guard let weakSelf = self else { return }
                 switch completion {
                 case .finished:
-                    print("token successfully update")
+                    break
                 case .failure(let error):
-                    self.isErrorAlert = true
-                    self.errorMessage = error.errorMessage
+                    weakSelf.isErrorAlert = true
+                    weakSelf.errorMessage = error.errorMessage
                 }
-            } receiveValue: { _ in
-                print("recieve value")
-            }
+            } receiveValue: { _ in }
             .store(in: &self.cancellable)
     }
 }

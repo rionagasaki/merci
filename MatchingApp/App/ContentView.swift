@@ -10,6 +10,7 @@ import Combine
 
 
 struct ContentView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject var viewModel = ContentViewModel()
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var userModel: UserObservableModel
@@ -17,6 +18,7 @@ struct ContentView: View {
     @ObservedObject var selectedTab = SelectedTab.shared
     @ObservedObject var authManager = AuthenticationManager.shared
     @State var homePath = [String]()
+    private let realtimeDatabase = RealTimeDatabaseManager()
     var body: some View {
         VStack {
             TabView(selection: $selectedTab.selectedTab){
@@ -25,6 +27,7 @@ struct ContentView: View {
                         HomeView()
                             .navigationBarTitleDisplayMode(.inline)
                     }
+                    .tint(.customBlack)
                     .ignoresSafeArea()
                     CustomTabView(selectedTab: $selectedTab.selectedTab)
                 }
@@ -36,26 +39,31 @@ struct ContentView: View {
                             .navigationBarTitleDisplayMode(.inline)
                     }
                     .ignoresSafeArea()
+                    .tint(.customBlack)
                     CustomTabView(selectedTab: $selectedTab.selectedTab)
                 }
                 .tag(Tab.message)
                 
                 VStack(spacing: .zero){
-                    NavigationView {
+                    NavigationStack {
                         NotificationListView()
                             .navigationBarTitleDisplayMode(.inline)
                     }
                     .ignoresSafeArea()
+                    .tint(.customBlack)
                     
                     CustomTabView(selectedTab: $selectedTab.selectedTab)
                 }
                 .tag(Tab.notification)
                 
-                NavigationView {
-                    VStack(spacing: .zero){
+                VStack(spacing: .zero){
+                    NavigationStack {
                         ProfileView()
-                        CustomTabView(selectedTab: $selectedTab.selectedTab)
+                            .navigationBarTitleDisplayMode(.inline)
                     }
+                    .ignoresSafeArea()
+                    .tint(.customBlack)
+                    CustomTabView(selectedTab: $selectedTab.selectedTab)
                 }
                 .tag(Tab.profile)
             }
@@ -67,14 +75,9 @@ struct ContentView: View {
             viewModel.updateUserTokenAndInitialUserInfo(token: token)
         }
         .onReceive(authManager.$user.compactMap { $0 }){ user in
-            if viewModel.isFirstLaunch {
-                viewModel.resetUserInfo(
-                    userModel: userModel,
-                    appState: appState
-                )
-            } else {
-                viewModel.initialUserInfo(user: user, userModel: userModel, appState: appState)
-            }
+            viewModel.initialUserInfo(user: user, userModel: userModel, appState: appState)
+            viewModel.resetChannelID(userID: user.uid)
+            self.realtimeDatabase.managedUsersConnection()
         }
         .fullScreenCover(isPresented: Binding(get: { authManager.user == nil }, set: { _ in })) {
             EntranceView()

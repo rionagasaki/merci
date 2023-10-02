@@ -10,21 +10,37 @@ import SDWebImageSwiftUI
 
 
 struct JoinCallButton: View {
-    @StateObject var viewModel = JoinCallViewModel()
-    @EnvironmentObject var userModel: UserObservableModel
-    @State var isAlert: Bool = false
+    private let requestMicriphone = RequestMicrophone()
     let call: CallObservableModel
+    @State var isCallDetailModal: Bool = false
+    @State var isActive: Bool = false
+    @State var isErrorAlert: Bool = false
+    @State var errorTitle: String = ""
+    @State var errorMessage: String = ""
+    @EnvironmentObject var userModel: UserObservableModel
     
     var body: some View {
         VStack {
             Button {
-                if userModel.user.isCallingChannelId.isEmpty {
-                    viewModel.isCallDetailModal = true
-                } else {
-                    viewModel.errorMessage = "現在、すで"
-                    viewModel.isErrorAlert = true
+                Task {
+                    let hasAudioPermissions = await self.requestMicriphone.checkForPermissions()
+                    if hasAudioPermissions {
+                        
+                    } else {
+                        requestMicriphone.requestMicrophonePermission { result in
+                            if result {
+                                self.isCallDetailModal = true
+                            } else {
+                                self.isErrorAlert = true
+                            }
+                        }
+                    }
+                    if userModel.user.isCallingChannelId.isEmpty {
+                        self.isCallDetailModal = true
+                    } else {
+                        self.isErrorAlert = true
+                    }
                 }
-                
             } label: {
                 VStack {
                     ZStack(alignment: .bottomTrailing){
@@ -50,15 +66,18 @@ struct JoinCallButton: View {
                 }
             }
         }
-        .navigationDestination(isPresented: $viewModel.isActive){
+        .navigationDestination(isPresented: $isActive){
             AttendeeCallView(user: userModel, channelId: call.call.channelId)
         }
-        .alert(isPresented: $isAlert){
-            Alert(title: Text("他の通話ルームに参加しています。"), message: Text("現在通話中のルームから退出してください。"))
+        .alert(isPresented: $isErrorAlert){
+            Alert(
+                title: Text("他の通話ルームに参加しています。"),
+                message: Text("現在通話中のルームから退出してください。")
+            )
         }
-        .halfModal(isPresented: $viewModel.isCallDetailModal) {
+        .halfModal(isPresented: $isCallDetailModal) {
             CallDetailModalView(
-                isActive: $viewModel.isActive,
+                isActive: $isActive,
                 call: call,
                 user: userModel
             )

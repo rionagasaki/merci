@@ -16,7 +16,9 @@ class RealTimeCallStatus: ObservableObject {
     
     @Published var channelId: String = ""
     @Published var scores: [String: Double] = [:]
+    @Published var isHostUid: String = ""
     @Published var isUserMutedStatus: [String: Bool] = [:]
+    @Published var callingUser: [String] = []
     @Published var leaveUser: [String] = []
     @Published var dropUser: [String] = []
     
@@ -24,6 +26,7 @@ class RealTimeCallStatus: ObservableObject {
         self.channelId = ""
         self.scores = [:]
         self.isUserMutedStatus = [:]
+        self.callingUser = []
         self.leaveUser = []
         self.dropUser = []
     }

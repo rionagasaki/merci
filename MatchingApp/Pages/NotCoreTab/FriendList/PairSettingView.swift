@@ -14,14 +14,13 @@ struct PairSettingView: View {
     @State var snsShareHalfModal: Bool = false
     @EnvironmentObject var userModel: UserObservableModel
     @EnvironmentObject var appState: AppState
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.presentationMode) var presentationMode
+    let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .heavy)
     
     var body: some View {
         VStack {
-            SearchBar(viewModel: viewModel, user: userModel)
-            ScrollView(showsIndicators: false){
-                
-                if viewModel.requestedFriendUsers.count != 0 {
+            SearchBar(viewModel: viewModel, userID: userModel.user.uid)
+            ScrollView(showsIndicators: false) {
                     VStack {
                         Label {
                             Text("送っているリクエスト")
@@ -34,17 +33,22 @@ struct PairSettingView: View {
                         }
                         .padding(.top, 24)
                         
-                        ForEach(viewModel.requestFriendUsers) { user in
-                            UserCellView(buttonText: "承認する", buttonColor: .customOrange, user: user) {
-                                viewModel.approveRequest(
-                                    requestUser: userModel,
-                                    requestedUser: user)
+                        if viewModel.requestFriendUsers.count == 0 {
+                            Text("送っているリクエストはありません")
+                                .foregroundColor(.customBlack)
+                                .font(.system(size: 12))
+                                .padding(.top, 12)
+                                .padding(.leading, 8)
+                        } else {
+                            ForEach(viewModel.requestFriendUsers) { user in
+                                UserCellView(buttonText: "キャンセル", buttonColor: .customBlue.opacity(0.8), user: user) {
+                                    viewModel.cancelFriendRequest(requestingUser: userModel, requestedUser: user)
+                                }
                             }
                         }
                     }
-                }
-                
-                VStack(alignment: .leading){
+
+                VStack {
                     Label {
                         Text("受け取ったリクエスト")
                             .foregroundColor(.customBlack)
@@ -57,14 +61,14 @@ struct PairSettingView: View {
                     .padding(.top, 48)
                     
                     if viewModel.requestedFriendUsers.count == 0 {
-                        Text("現在受け取っているリクエストはありません💦")
+                        Text("受け取っているリクエストはありません")
                             .foregroundColor(.customBlack)
                             .font(.system(size: 12))
                             .padding(.top, 12)
                             .padding(.leading, 8)
                     } else {
                         ForEach(viewModel.requestedFriendUsers) { user in
-                            UserCellView(buttonText: "ペアになる", buttonColor: .customOrange, user: user) {
+                            UserCellView(buttonText: "承認する", buttonColor: .customBlue.opacity(0.8), user: user) {
                                 viewModel.approveRequest(
                                     requestUser: userModel,
                                     requestedUser: user)
@@ -92,57 +96,39 @@ struct PairSettingView: View {
                                     }
                                 }
                                 .padding(.trailing, 14)
-                                
-                                NavigationLink {
-                                    EmptyView()
-                                } label: {
-                                    EmptyView()
-                                }
-                                NavigationLink {
-                                    EmptyView()
-                                } label: {
-                                    EmptyView()
-                                }
                             }
                         }
                     }
                 }
                 Spacer()
             }
-            
-            NavigationLink(isActive: $viewModel.submit){
-                if let user = viewModel.searchResultUser {
-                    UserProfileView(userId: userModel.user.uid, isFromHome: false)
-                }
-            } label: {
-                EmptyView()
-            }
-        }
-        .refreshable {
-            viewModel.initialFriendList(userModel: userModel)
         }
         .padding(.horizontal, 16)
+        .refreshable {
+            UIIFGeneratorMedium.impactOccurred()
+            viewModel.initialFriendList(userModel: userModel)
+        }
         .onAppear {
             viewModel.initialFriendList(userModel: userModel)
         }
         .alert(isPresented: $viewModel.isErrorAlert){
-            Alert(title: Text("エラー"), message: Text(viewModel.errorMessage))
+            Alert(
+                title: Text("エラー"),
+                message: Text(viewModel.errorMessage),
+                dismissButton: .default(Text("OK"), action: {
+                    presentationMode.wrappedValue.dismiss()
+                })
+            )
         }
-        .halfModal(isPresented: $snsShareHalfModal){
-            SNSShareView()
-        }
-        .navigationBarBackButtonHidden()
-        .toolbar {
+        .sheet(isPresented: $snsShareHalfModal){
             
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .foregroundColor(.black)
-                }
+        }
+        .navigationDestination(isPresented: $viewModel.submit){
+            if let user = viewModel.searchResultUser {
+                UserProfileView(userId: user.user.uid, isFromHome: false)
             }
-            
+        }
+        .toolbar {
             ToolbarItem(placement: .navigationBarTrailing){
                 Button {
                     self.snsShareHalfModal = true
@@ -155,16 +141,9 @@ struct PairSettingView: View {
     }
 }
 
-struct FriendsListView_Previews: PreviewProvider {
-    static var previews: some View {
-        PairSettingView()
-    }
-}
-
-
 struct SearchBar: View {
     @StateObject var viewModel: PairSettingViewModel
-    let user: UserObservableModel
+    let userID: String
     var body: some View {
         HStack(spacing: .zero){
             Image(systemName: "magnifyingglass")
@@ -181,7 +160,7 @@ struct SearchBar: View {
                     .font(.system(size: 16, weight: .bold))
             }
             .onSubmit {
-                viewModel.searchUserByUid(userModel: user)
+                viewModel.searchUserByUid(userID: userID)
             }
             .frame(height: 40)
             .foregroundColor(.black)
@@ -205,33 +184,30 @@ struct UserCellView: View {
     
     var body: some View {
         HStack {
-            WebImage(url: URL(string: user.user.profileImageURLString))
+            Image(user.user.profileImageURLString)
                 .resizable()
                 .scaledToFill()
-                .frame(width: 120, height: 120)
+                .frame(width: 72, height: 72)
+                .padding(.all, 8)
+                .background(Color.gray.opacity(0.1))
                 .clipShape(
-                    RoundedRectangle(cornerRadius: 10)
+                    Circle()
                 )
             VStack(alignment: .leading){
                 Text(user.user.nickname)
                     .foregroundColor(.customBlack)
                     .font(.system(size: 20, weight: .bold))
-                if let age = CalculateAge.calculateAge(from: user.user.birthDate) {
-                    Text("\(age)歳・\(user.user.activeRegion)")
-                        .foregroundColor(.customBlack)
-                        .font(.system(size: 16))
-                }
-                Spacer()
                 Button {
                     action()
                 } label: {
                     Text(buttonText)
                         .foregroundColor(.white)
                         .font(.system(size: 16, weight: .bold))
-                        .frame(width: 150, height: 42)
-                        .background(buttonColor)
-                        .cornerRadius(20)
+                        .padding(.all, 8)
+                        .background(buttonColor.opacity(0.8))
+                        .cornerRadius(10)
                 }
+                .padding(.top, 8)
             }
             .padding(.leading, 24)
             Spacer()
@@ -246,22 +222,16 @@ struct UserRequestItem: View {
     let action: () -> Void
     var body: some View {
         VStack(spacing: 12){
-            WebImage(url: URL(string: user.user.profileImageURLString))
+            Image(user.user.profileImageURLString)
                 .resizable()
                 .scaledToFill()
-                .frame(width: 120, height: 120)
+                .frame(width: 96, height: 96)
+                .padding(.all, 12)
+                .background(Color.gray.opacity(0.1))
                 .clipShape(Circle())
-            
-//            Button {
-//                action()
-//            } label: {
-//                Text("ペア申請")
-//                    .foregroundColor(.white)
-//                    .font(.system(size: 12, weight: .bold))
-//                    .frame(width: 120, height: 35)
-//                    .background(Color.customOrange)
-//                    .cornerRadius(20)
-//            }
+            Text(user.user.nickname)
+                .foregroundColor(.customBlack)
+                .font(.system(size: 14, weight: .medium))
         }
         .shadow(radius: 2)
         .padding(.all, 4)

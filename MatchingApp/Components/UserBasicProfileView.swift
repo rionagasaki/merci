@@ -16,6 +16,8 @@ struct UserBasicProfileView: View {
     @StateObject var userModel: UserObservableModel
     @Environment(\.presentationMode) var presentationMode
     let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .medium)
+    private let requestNotification = RequestNotificaton()
+    
     var body: some View {
         VStack {
             VStack {
@@ -32,17 +34,10 @@ struct UserBasicProfileView: View {
                 }
                 
                 VStack(alignment: .center){
-                    VStack {
-                        Text(userModel.user.nickname)
-                            .font(.system(size: 16))
-                        
-                            .bold()
-                        if let age = CalculateAge.calculateAge(from: userModel.user.birthDate) {
-                            Text("\(age)歳・\(userModel.user.activeRegion)")
-                                .foregroundColor(.customBlack.opacity(0.8))
-                                .font(.system(size: 13,weight: .bold))
-                        }
-                    }
+                    Text(userModel.user.nickname)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.customBlack)
+                    
                     HStack {
                         HStack {
                             VStack(alignment: .leading,spacing: .zero){
@@ -83,7 +78,7 @@ struct UserBasicProfileView: View {
                         }
                         Divider()
                         VStack(spacing: .zero){
-                            Text("資産")
+                            Text("コイン")
                                 .foregroundColor(.gray.opacity(0.6))
                                 .font(.system(size: 13))
                                 .fontWeight(.light)

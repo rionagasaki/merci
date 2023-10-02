@@ -7,6 +7,8 @@
 
 import SwiftUI
 import SDWebImageSwiftUI
+import PhotosUI
+import AlertToast
 
 struct CreatePostView: View {
     @StateObject var viewModel = CreatePostViewModel()
@@ -14,7 +16,6 @@ struct CreatePostView: View {
     @Environment(\.dismiss) var dismiss
     @ObservedObject var reloadPost = ReloadPost.shared
     let user: UserObservableModel
-    
     @FocusState var focus: Bool
     
     var body: some View {
@@ -49,7 +50,7 @@ struct CreatePostView: View {
                             }
                         }
                         if !viewModel.contentImages.isEmpty {
-                            ScrollView(.horizontal){
+                            ScrollView(.horizontal, showsIndicators: false){
                                 HStack {
                                     ForEach(viewModel.contentImages.indices, id: \.self) { index in
                                         ZStack(alignment: .topTrailing){
@@ -57,15 +58,14 @@ struct CreatePostView: View {
                                                 .resizable()
                                                 .scaledToFill()
                                                 .frame(width: 100, height: 100)
-                                                .cornerRadius(20)
+                                                .cornerRadius(10)
                                                 .onTapGesture {
                                                     
                                                 }
-                                            
                                             Image(systemName: "xmark.circle.fill")
                                                 .resizable()
                                                 .scaledToFit()
-                                                .frame(width: 30, height: 30)
+                                                .frame(width: 24, height: 24)
                                                 .background(Color.white)
                                                 .clipShape(Circle())
                                                 .onTapGesture {
@@ -82,17 +82,48 @@ struct CreatePostView: View {
                     .frame(width: UIScreen.main.bounds.width/1.3)
                 }
                 Spacer()
+                HStack {
+                    Spacer()
+                    PhotosPicker(
+                        selection: $viewModel.photoPickerItem,
+                        maxSelectionCount: 2,
+                        selectionBehavior: .ordered,
+                        matching: .images,
+                        preferredItemEncoding: .current,
+                        photoLibrary: .shared()) {
+                            Image(systemName: "photo")
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 24, height: 24)
+                                .padding(.all, 16)
+                                .background(Color.customBlue.opacity(0.5))
+                                .foregroundColor(.white)
+                                .clipShape(Circle())
+                        }
+                        .padding(.bottom, 16)
+                        .padding(.trailing, 16)
+                        .onChange(of: viewModel.photoPickerItem) { photoPickerItems in
+                            Task {
+                                do {
+                                    try await viewModel.photoPickerChanged(photoPickerItems: photoPickerItems)
+                                } catch {
+                                    viewModel.errorMessage = error.localizedDescription
+                                    viewModel.isErrorAlert = true
+                                }
+                            }
+                        }
+                }
             }
             .padding(.leading, 8)
             .padding(.top, 8)
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden()
             .onAppear {
                 self.focus = true
             }
             .onReceive(viewModel.$isPostSuccess){
                 if $0 { dismiss() }
             }
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden()
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing){
                     Button {
@@ -117,7 +148,7 @@ struct CreatePostView: View {
                     .disabled(viewModel.isLoading || viewModel.text.isEmpty)
                 }
                 
-                ToolbarItem(placement: .navigationBarLeading){
+                ToolbarItem(placement: .navigationBarLeading) {
                     Button {
                         self.focus = false
                         DispatchQueue.main.asyncAfter(deadline: .now()+0.4) {
@@ -129,56 +160,12 @@ struct CreatePostView: View {
                             .font(.system(size: 16, weight: .medium))
                     }
                 }
-                
-                ToolbarItem(placement: .keyboard){
-                    HStack {
-                        Button {
-                            UIIFGeneratorMedium.impactOccurred()
-                            self.viewModel.isImagePickerModal = true
-                        } label: {
-                            Image(systemName: "photo")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 20, height: 20)
-                                .foregroundColor(.customBlack)
-                        }
-                        
-                        Button {
-                            self.viewModel.isCameraModal = true
-                        } label: {
-                            Image(systemName: "camera.circle.fill")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 20, height: 20)
-                                .foregroundColor(.customBlack)
-                        }
-                        
-                        Button {
-                            
-                        } label: {
-                            Image(systemName: "textformat")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 20, height: 20)
-                                .foregroundColor(.customBlack)
-                        }
-                        
-                        Button {
-                            
-                        } label: {
-                            Image(systemName: "pencil.tip")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 20, height: 20)
-                                .foregroundColor(.customBlack)
-                        }
-                    }
-                }
             }
-            .sheet(isPresented: $viewModel.isImagePickerModal){
-                PostImagePicker(image: $viewModel.contentImages)
+            .alert(isPresented: $viewModel.isErrorAlert) {
+                Alert(title: Text("エラー"), message: Text(viewModel.errorMessage))
             }
         }
     }
 }
+
 

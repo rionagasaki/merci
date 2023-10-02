@@ -8,6 +8,7 @@
 import SwiftUI
 import SDWebImageSwiftUI
 import AmazonChimeSDK
+import AlertToast
 
 // ホストの通話画面
 struct HostCallView: View {
@@ -22,18 +23,16 @@ struct HostCallView: View {
     var body: some View {
         VStack {
             if viewModel.isLoading {
-                ZStack {
-                    VStack {
-                        Text(channelTitle)
-                            .foregroundColor(.customBlack)
-                            .font(.system(size: 16, weight: .medium))
-                        LottieView(animationResourceName: "calling", loopMode: .loop, isActive: true)
-                            .frame(width: 120, height: 120)
-                        Text("通話ルームを作成しています。少々お待ちください。")
-                            .foregroundColor(.customBlack)
-                            .font(.system(size: 14))
-                            .padding(.top, 24)
-                    }
+                VStack {
+                    Text(channelTitle)
+                        .foregroundColor(.customBlack)
+                        .font(.system(size: 16, weight: .medium))
+                    LottieView(animationResourceName: "calling", loopMode: .loop, isActive: true)
+                        .frame(width: 120, height: 120)
+                    Text("通話ルームを作成しているよ。少し待ってね。")
+                        .foregroundColor(.customBlack)
+                        .font(.system(size: 14, weight: .medium))
+                        .padding(.top, 24)
                 }
             } else {
                 VStack(spacing: .zero){
@@ -55,7 +54,7 @@ struct HostCallView: View {
                                                     .clipShape(Circle())
                                                     .overlay {
                                                         Circle()
-                                                            .stroke(Color.customRed.opacity((realTimeCall.scores[userId] ?? 0)*2), lineWidth: 3)
+                                                            .stroke(call.call.userIdToUserIconImageUrlString.keys.count > 1 ? Color.customRed.opacity((realTimeCall.scores[userId] ?? 0)*2): Color.clear, lineWidth: 3)
                                                     }
                                             }
                                             
@@ -65,8 +64,6 @@ struct HostCallView: View {
                                         }
                                     }
                                 }
-                                .navigationTitle(Array<String>(
-                                    call.call.userIdToUserName.keys).count == 1 ? "他の参加者を待っています...": "通話中")
                                 .padding(.top, 16)
                             }
                             Spacer()
@@ -99,21 +96,24 @@ struct HostCallView: View {
                 appState.isHostCallReload = false
             }
         }
-        .navigationBarBackButtonHidden()
         .onReceive(viewModel.$isSuccessDeleteCall){
             if $0 { dismiss() }
         }
         .onReceive(realTimeCall.$dropUser){ dropUsers in
             guard let call = viewModel.call else { return }
-            if dropUsers.contains(call.call.hostUserId) {
-                viewModel.finishChannel(
-                    callInfo: call,
-                    appState: appState
+            for dropUser in dropUsers {
+                viewModel.updateAttendeeCallStatus(
+                    userId: dropUser,
+                    channelId: viewModel.channelId
                 )
-            } else {
-                if let dropUser = dropUsers.last {
-                    viewModel.updateAttendeeCallStatus(userId: dropUser, channelId: viewModel.channelId)
-                }
+            }
+        }
+        .navigationBarBackButtonHidden()
+        .toolbar {
+            ToolbarItem(placement: .principal){
+                Text("通話ルーム")
+                    .foregroundColor(.customBlack)
+                    .font(.system(size: 16, weight: .medium))
             }
         }
         .alert(isPresented: $viewModel.isAlertDeleteCall) {
@@ -126,6 +126,9 @@ struct HostCallView: View {
                         }
                     }),
                   secondaryButton: .default(Text("キャンセル")))
+        }
+        .toast(isPresenting: $viewModel.isStopLoading) {
+            return AlertToast(type: .loading)
         }
     }
 }

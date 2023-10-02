@@ -28,9 +28,7 @@ class UserHobbiesEditorViewModel: ObservableObject {
                 case .failure(_):
                     self.isFailedStoreData = true
                 }
-            } receiveValue: { _ in
-                print("Recieve Value")
-            }
+            } receiveValue: { _ in }
             .store(in: &self.cancellable)
     }
 }

@@ -6,33 +6,155 @@
 //
 
 import SwiftUI
+import MusicKit
 
 struct UserHobbiesEditorView: View {
     @StateObject var viewModel = UserHobbiesEditorViewModel()
     @EnvironmentObject var userModel: UserObservableModel
-    @Environment(\.dismiss) var dismiss
-    
+    @Environment(\.presentationMode) var presentationMode
+    private let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .heavy)
     var body: some View {
         VStack {
-            ScrollView {
-                GeometryReader { geometry in
-                    tagGenerater(geometry)
+            ScrollView(.vertical, showsIndicators: false){
+                Text("😁ベース")
+                    .foregroundColor(.customBlack)
+                    .font(.system(size: 24, weight: .medium))
+                    .frame(maxWidth: UIScreen.main.bounds.width, alignment: .leading)
+                FlowLayout(alignment: .center, spacing: 7) {
+                    ForEach(PickerItems.base, id: \.self) { tag in
+                        OneHobbyView(hobby: tag, selected: viewModel.selectedHobbies.contains(tag))
+                            .onTapGesture {
+                                if viewModel.selectedHobbies.contains(tag){
+                                    withAnimation {
+                                        self.viewModel.selectedHobbies = self.viewModel.selectedHobbies.filter { $0 != tag }
+                                        UIIFGeneratorMedium.impactOccurred()
+                                    }
+                                } else {
+                                    withAnimation {
+                                        self.viewModel.selectedHobbies.append(tag)
+                                        UIIFGeneratorMedium.impactOccurred()
+                                    }
+                                }
+                            }
+                    }
                 }
-                .padding()
+                .padding(.vertical, 16)
+                
+                Text("💩絵文字")
+                    .foregroundColor(.customBlack)
+                    .font(.system(size: 24, weight: .medium))
+                    .frame(maxWidth: UIScreen.main.bounds.width, alignment: .leading)
+                FlowLayout(alignment: .center, spacing: 7) {
+                    ForEach(PickerItems.emoji, id: \.self) { tag in
+                        OneHobbyView(hobby: tag, selected: viewModel.selectedHobbies.contains(tag))
+                            .onTapGesture {
+                                if viewModel.selectedHobbies.contains(tag){
+                                    withAnimation {
+                                        self.viewModel.selectedHobbies = self.viewModel.selectedHobbies.filter { $0 != tag }
+                                        UIIFGeneratorMedium.impactOccurred()
+                                    }
+                                } else {
+                                    withAnimation {
+                                        self.viewModel.selectedHobbies.append(tag)
+                                        UIIFGeneratorMedium.impactOccurred()
+                                    }
+                                }
+                            }
+                    }
+                }
+                .padding(.vertical, 16)
+                
+                Text("🎵なう")
+                    .foregroundColor(.customBlack)
+                    .font(.system(size: 24, weight: .medium))
+                    .frame(maxWidth: UIScreen.main.bounds.width, alignment: .leading)
+                FlowLayout(alignment: .center, spacing: 7) {
+                    ForEach(PickerItems.status, id: \.self) { tag in
+                        OneHobbyView(hobby: tag, selected: viewModel.selectedHobbies.contains(tag))
+                            .onTapGesture {
+                                if viewModel.selectedHobbies.contains(tag){
+                                    withAnimation {
+                                        self.viewModel.selectedHobbies = self.viewModel.selectedHobbies.filter { $0 != tag }
+                                        UIIFGeneratorMedium.impactOccurred()
+                                    }
+                                } else {
+                                    withAnimation {
+                                        self.viewModel.selectedHobbies.append(tag)
+                                        UIIFGeneratorMedium.impactOccurred()
+                                    }
+                                }
+                            }
+                    }
+                }
+                .padding(.vertical, 16)
+                
+                Text("🎡遊び")
+                    .foregroundColor(.customBlack)
+                    .font(.system(size: 24, weight: .medium))
+                    .frame(maxWidth: UIScreen.main.bounds.width, alignment: .leading)
+                FlowLayout(alignment: .center, spacing: 7) {
+                    ForEach(PickerItems.playing, id: \.self) { tag in
+                        OneHobbyView(hobby: tag, selected: viewModel.selectedHobbies.contains(tag))
+                            .onTapGesture {
+                                if viewModel.selectedHobbies.contains(tag){
+                                    withAnimation {
+                                        self.viewModel.selectedHobbies = self.viewModel.selectedHobbies.filter { $0 != tag }
+                                        UIIFGeneratorMedium.impactOccurred()
+                                    }
+                                } else {
+                                    withAnimation {
+                                        self.viewModel.selectedHobbies.append(tag)
+                                        UIIFGeneratorMedium.impactOccurred()
+                                    }
+                                }
+                            }
+                    }
+                }
+                .padding(.vertical, 16)
+                
+                Text("📖勉強")
+                    .foregroundColor(.customBlack)
+                    .font(.system(size: 24, weight: .medium))
+                    .frame(maxWidth: UIScreen.main.bounds.width, alignment: .leading)
+                FlowLayout(alignment: .center, spacing: 7) {
+                    ForEach(PickerItems.study, id: \.self) { tag in
+                        OneHobbyView(hobby: tag, selected: viewModel.selectedHobbies.contains(tag))
+                            .onTapGesture {
+                                if viewModel.selectedHobbies.contains(tag){
+                                    withAnimation {
+                                        self.viewModel.selectedHobbies = self.viewModel.selectedHobbies.filter { $0 != tag }
+                                        UIIFGeneratorMedium.impactOccurred()
+                                    }
+                                } else {
+                                    withAnimation {
+                                        self.viewModel.selectedHobbies.append(tag)
+                                        UIIFGeneratorMedium.impactOccurred()
+                                    }
+                                }
+                            }
+                    }
+                }
+                .padding(.vertical, 16)
             }
             VStack(alignment: .leading, spacing: .zero){
                 Text("設定中のタグ  \(viewModel.selectedHobbies.count)")
                     .font(.system(size: 14, weight: .bold))
                     .foregroundColor(.gray.opacity(0.8))
                     .padding(.leading, 16)
-                    
+                
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack{
                         ForEach(viewModel.selectedHobbies, id:\.self) { hobby in
                             OneHobbyView(hobby: hobby, selected: true)
+                                .onTapGesture {
+                                    withAnimation {
+                                        self.viewModel.selectedHobbies = self.viewModel.selectedHobbies.filter { $0 != hobby }
+                                    }
+                                }
                         }
                     }
-                    .padding(.vertical, 8)
+                    .padding(.bottom, 32)
+                    .padding(.top, 8)
                     .padding(.leading, 16)
                 }
             }
@@ -43,86 +165,26 @@ struct UserHobbiesEditorView: View {
                     .foregroundColor(.white)
                     .bold()
                     .frame(width: UIScreen.main.bounds.width-32, height: 50)
-                    .background(Color.pink.opacity(0.8))
+                    .background(Color.customBlue.opacity(0.8))
                     .cornerRadius(10)
             }
-            .offset(y:
-                (userModel.user.hobbies == viewModel.selectedHobbies) ? 120 : 0
-            )
+            .offset(y: (
+                !(viewModel.selectedHobbies.filter { !userModel.user.hobbies.contains($0) }.count != 0 || viewModel.selectedHobbies.count != userModel.user.hobbies.count) ) ? 160 : -16)
         }
-        .navigationTitle("興味")
-        .navigationBarBackButtonHidden()
-        .onReceive(viewModel.$isSuccess){ if $0 { dismiss() } }
+        .padding(.horizontal, 16)
+        .onReceive(viewModel.$isSuccess){ if $0 { presentationMode.wrappedValue.dismiss() } }
         .onAppear {
             viewModel.selectedHobbies = userModel.user.hobbies
         }
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(
-                    action: {
-                        dismiss()
-                    }, label: {
-                        Image(systemName: "chevron.left")
-                            .foregroundColor(.black)
-                    }
-                )
+            ToolbarItem(placement: .principal){
+                Text("タグ")
+                    .foregroundColor(.customBlack)
+                    .font(.system(size: 16, weight: .medium))
             }
         }
         .alert(isPresented: $viewModel.isFailedStoreData) {
             Alert(title: Text("エラー"), message: Text("データの更新に失敗しました。ネットワーク等の接続をご確認の上、再度お試しください。"))
-        }
-    }
-    
-    func tagGenerater(_ geometry: GeometryProxy) -> some View {
-        var leading = CGFloat.zero
-        var top = CGFloat.zero
-        
-        return ZStack(alignment: .topLeading) {
-            
-            ForEach(PickerItems.hobbies, id: \.self) { tag in
-                Button {
-                    withAnimation {
-                        if viewModel.selectedHobbies.contains(tag){
-                            viewModel.selectedHobbies = viewModel.selectedHobbies.filter({ result in
-                                result != tag
-                            })
-                        } else {
-                            viewModel.selectedHobbies.append(tag)
-                        }
-                    }
-                } label: {
-                    OneHobbyView(hobby: tag, selected: viewModel.selectedHobbies.contains(tag))
-                }
-                .padding([.horizontal, .vertical], 4)
-                .alignmentGuide(.leading, computeValue: { context in
-                    if abs(leading - context.width) > geometry.size.width {
-                        // 改行の場合はleadingをリセットする
-                        leading = 0
-                        // topも積算する
-                        top -= context.height
-                    }
-                    
-                    // 改行判定後に返却値を代入
-                    let result = leading
-                    
-                    if tag == PickerItems.hobbies.last {
-                        // 複数回計算されるためリセットする
-                        leading = 0
-                    } else {
-                        // leadingを積算する (次の基準とするため返却値に積算させない)
-                        leading -= context.width
-                    }
-                    return result
-                })
-                .alignmentGuide(.top, computeValue: { _ in
-                    let result = top
-                    if tag == PickerItems.hobbies.last {
-                        // 複数回計算されるためリセットする
-                        top = 0
-                    }
-                    return result
-                })
-            }
         }
     }
 }

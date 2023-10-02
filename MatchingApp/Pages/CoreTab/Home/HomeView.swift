@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import AlertToast
 
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
@@ -17,7 +18,7 @@ struct HomeView: View {
     var body: some View {
         VStack(spacing: .zero) {
             CustomScrollView(
-                menus: ["友達投稿","投稿","悩み","自分"],
+                menus: ["友達投稿","投稿","自分"],
                 postFilter: $viewModel.postFilter,
                 selection: $viewModel.selection
             )
@@ -50,6 +51,12 @@ struct HomeView: View {
         .alert(isPresented: $viewModel.isErrorAlert) {
             Alert(title: Text("エラー"), message: Text(viewModel.errorMessage))
         }
+        .toast(isPresenting: $viewModel.isCompleteToast) {
+            AlertToast(type: .complete(Color.green), title: "プロフに固定しました！")
+        }
+        .toast(isPresenting: $viewModel.isDeleteToast) {
+            AlertToast(type: .error(Color.customRed), title: "つぶやきを消したよ！")
+        }
     }
 }
 
@@ -66,26 +73,13 @@ struct AllPostView: View {
                 ScrollView {
                     VStack {
                         VStack {
-                            VStack {
-                                ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack {
-                                        StartCallButton()
-                                            .zIndex(1)
-                                        ForEach(viewModel.callsToAllUsers) { call in
-                                            JoinCallButton(call: call)
-                                                .padding(.trailing, 12)
-                                        }
-                                    }
-                                }
-                                .frame(height: 100)
-                            }
-                            
                             LazyVStack {
                                 if viewModel.isLoading {
                                     ProgressView()
                                 } else {
-                                    ForEach(viewModel.postFilter == .allPosts ? viewModel.allPosts.indices: viewModel.filterlingParentPost.indices, id: \.self) { index in
-                                        let post = viewModel.postFilter == .allPosts ? viewModel.allPosts[index]: viewModel.filterlingParentPost[index]
+                                    ForEach(viewModel.postFilter == .allPostsAndReplys ? viewModel.allPosts.indices: viewModel.filterlingParentPost.indices, id: \.self) { index in
+                                        let post = viewModel.postFilter == .allPostsAndReplys ? viewModel.allPosts[index]: viewModel.filterlingParentPost[index]
+                                        let count = viewModel.postFilter == .allPostsAndReplys ? viewModel.allPosts.count: viewModel.filterlingParentPost.count
                                         ZStack(alignment: .topTrailing) {
                                             NavigationLink {
                                                 PostDetailView(
@@ -100,36 +94,19 @@ struct AllPostView: View {
                                                     .background(Color.white)
                                                     .cornerRadius(20)
                                                     .onAppear {
-                                                        if index == viewModel.allPosts.count - 1 {
+                                                        if index == count - 1 {
                                                             if !viewModel.isLastDocumentLoaded {
                                                                 viewModel.getNextPage(userModel: userModel)
                                                             }
                                                         }
                                                     }
                                             }
-                                            
                                             if post.posterUid == userModel.user.uid {
-                                                Menu {
-                                                    Button {
-                                                        
-                                                    } label: {
-                                                        Label("投稿を固定する", systemImage: "pin.fill")
-                                                    }
-                                                    
-                                                    Button(role: .destructive) {
-                                                        viewModel.deletePost(postID: post.id, userModel: userModel)
-                                                    } label: {
-                                                        Label("投稿を削除する", systemImage: "minus.circle.fill")
-                                                    }
-                                                } label: {
-                                                    Image(systemName: "ellipsis")
-                                                        .resizable()
-                                                        .scaledToFit()
-                                                        .frame(width: 20, height: 20)
-                                                        .foregroundColor(.customBlack)
+                                                PostMenu(text1: "投稿を固定する", text2: "投稿を削除する"){
+                                                    viewModel.pinnedPost(postID: post.id, userID: post.posterUid)
+                                                } deleteAction: {
+                                                    viewModel.deletePost(postID: post.id, userModel: userModel)
                                                 }
-                                                .padding(.top, 8)
-                                                .padding(.trailing, 16)
                                             }
                                         }
                                         .id(UUID(uuidString: post.id))
@@ -185,29 +162,42 @@ struct FriendPostView: View {
                         .frame(width: UIScreen.main.bounds.width-32, alignment: .leading)
                         .padding(.bottom, 8)
                     ScrollView(.horizontal, showsIndicators: false) {
-                        HStack {
-                            ForEach(viewModel.friendUsers) { user in
-                                VStack {
-                                    Image(user.user.profileImageURLString)
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 48, height: 48)
-                                        .padding(.all, 6)
-                                        .background(Color.gray.opacity(0.1))
-                                        .clipShape(Circle())
-                                    
-                                    Text(user.user.nickname)
-                                        .foregroundColor(.customBlack)
-                                        .font(.system(size: 12, weight: .medium))
+                        if viewModel.friendUsers.count == 0 {
+                            Text("まだ友達がいないよ😢")
+                                .foregroundColor(.customBlack)
+                                .font(.system(size: 20, weight: .medium))
+                                .padding(.horizontal, 16)
+                        } else {
+                            HStack {
+                                ForEach(viewModel.friendUsers) { user in
+                                    NavigationLink {
+                                        UserProfileView(userId: user.user.uid, isFromHome: false)
+                                    } label: {
+                                        VStack {
+                                            Image(user.user.profileImageURLString)
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: 48, height: 48)
+                                                .padding(.all, 6)
+                                                .background(Color.gray.opacity(0.1))
+                                                .clipShape(Circle())
+                                            
+                                            Text(user.user.nickname)
+                                                .foregroundColor(.customBlack)
+                                                .font(.system(size: 12, weight: .medium))
+                                                .lineLimit(1)
+                                                .frame(width: 70)
+                                        }
+                                        .padding(.trailing, 8)
+                                    }
                                 }
-                                .padding(.trailing, 8)
                             }
+                            .padding(.horizontal, 16)
                         }
-                        .padding(.horizontal, 16)
                     }
-                    .frame(height: 100)
+                    .padding(.vertical, 16)
                     .background(Color.white)
-                    .cornerRadius(24)
+                    .cornerRadius(20)
                     .padding(.horizontal, 16)
                 }
                 
@@ -216,8 +206,9 @@ struct FriendPostView: View {
                             if viewModel.isLoading {
                                 ProgressView()
                             } else {
-                                ForEach(viewModel.friendPosts.indices, id: \.self) { index in
-                                    let post = viewModel.friendPosts[index]
+                                ForEach(viewModel.postFilter == .allPostsAndReplys ? viewModel.friendPosts.indices: viewModel.friendFilterlingParentPost.indices, id: \.self) { index in
+                                    let post = viewModel.postFilter == .allPostsAndReplys ? viewModel.friendPosts[index]: viewModel.friendFilterlingParentPost[index]
+                                    let count = viewModel.postFilter == .allPostsAndReplys ? viewModel.friendPosts.count: viewModel.friendFilterlingParentPost.count
                                     ZStack(alignment: .topTrailing){
                                         NavigationLink {
                                             PostDetailView(
@@ -229,8 +220,7 @@ struct FriendPostView: View {
                                                 .background(Color.white)
                                                 .cornerRadius(20)
                                                 .onAppear {
-                                                    print("allIndex", index)
-                                                    if index == viewModel.friendPosts.count - 1 {
+                                                    if index == count - 1 {
                                                         if !viewModel.isFriendDocumentLoaded {
                                                             viewModel.getFriendNextPage(userModel: userModel)
                                                         }
@@ -238,33 +228,17 @@ struct FriendPostView: View {
                                                 }
                                         }
                                         if post.posterUid == userModel.user.uid {
-                                            Menu {
-                                                Button {
-                                                    
-                                                } label: {
-                                                    Label("投稿を固定する", systemImage: "pin.fill")
-                                                }
-                                                
-                                                Button(role: .destructive) {
-                                                    viewModel.deletePost(postID: post.id, userModel: userModel)
-                                                } label: {
-                                                    Label("投稿を削除する", systemImage: "minus.circle.fill")
-                                                }
-                                            } label: {
-                                                Image(systemName: "ellipsis")
-                                                    .resizable()
-                                                    .scaledToFit()
-                                                    .frame(width: 20, height: 20)
-                                                    .foregroundColor(.customBlack)
+                                            PostMenu(text1: "投稿を固定する", text2: "投稿を削除する"){
+                                                viewModel.pinnedPost(postID: post.id, userID: post.posterUid)
+                                            } deleteAction: {
+                                                viewModel.deletePost(postID: post.id, userModel: userModel)
                                             }
-                                            .padding(.top, 8)
-                                            .padding(.trailing, 16)
                                         }
                                     }
                                 }
                             }
                         }
-                        if !viewModel.isFriendDocumentLoaded {
+                    if !viewModel.isFriendDocumentLoaded && userModel.user.friendUids.count != 0 {
                             ProgressView()
                                 .frame(width: 30, height: 30)
                                 .padding(.bottom, 8)
@@ -282,6 +256,7 @@ struct FriendPostView: View {
         .refreshable {
             UIIFGeneratorMedium.impactOccurred()
             viewModel.getLatestFriendPost(userModel: userModel)
+            viewModel.getConcurrentUserInfo(userIDs: userModel.user.friendUids)
         }
         .background(Color.gray.opacity(0.1))
     }

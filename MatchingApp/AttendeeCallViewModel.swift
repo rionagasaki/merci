@@ -21,7 +21,8 @@ class AttendeeCallViewModel: ObservableObject {
     private var cancellable = Set<AnyCancellable>()
     private let callService = CallFirestoreService()
     private let userService = UserFirestoreService()
-    private let callModel = CallModel()
+    private let callModel = CallModel(isGroupCall: true)
+    private let realTimeCallStatus = RealTimeCallStatus.shared
     
     @Published var isLoading: Bool = false
     @Published var channelId: String = ""
@@ -40,23 +41,30 @@ class AttendeeCallViewModel: ObservableObject {
         userModel: UserObservableModel
     ) {
         self.isLoading = true
-        self.callModel.joinCall(user: userModel, channelId: channelId) { result in
+        self.callModel.joinCall(user: userModel, channelId: channelId) { [weak self] result in
+            guard let weakSelf = self else { return }
             switch result {
             case .success(_):
-                self.callService.joinCall(channelId: channelId, user: userModel) { result in
-                    switch result {
-                    case .success(_):
-                        self.callModel.initOutputRoute()
-                        self.channelId = channelId
-                        self.initialCallInfo(channelId: channelId, userId: userModel.user.uid)
-                    case .failure(let error):
-                        self.errorMessage = error.errorMessage
-                        self.isErrorAlert = true
-                    }
-                }
+                weakSelf.joinCallToFirestore(channelId: channelId, userModel: userModel)
             case .failure(let error):
-                self.errorMessage = error.errorMessage
-                self.isErrorAlert = true
+                weakSelf.errorMessage = error.errorMessage
+                weakSelf.isErrorAlert = true
+            }
+        }
+    }
+
+    func joinCallToFirestore(channelId: String, userModel: UserObservableModel){
+        self.callService.joinCall(channelId: channelId, user: userModel) { [weak self] result in
+            guard let weakSelf = self else { return }
+            switch result {
+            case .success(_):
+                weakSelf.callModel.initOutputRoute()
+                weakSelf.channelId = channelId
+                weakSelf.realTimeCallStatus.channelId = channelId
+                weakSelf.initialCallInfo(channelId: channelId, userId: userModel.user.uid)
+            case .failure(let error):
+                weakSelf.errorMessage = error.errorMessage
+                weakSelf.isErrorAlert = true
             }
         }
     }
@@ -64,57 +72,25 @@ class AttendeeCallViewModel: ObservableObject {
     func initialCallInfo(channelId:String, userId: String){
         self.callService
             .getUpdateCallById(channelId: channelId)
-            .sink { completion in
+            .sink { [weak self] completion in
+                guard let weakSelf = self else { return }
                 switch completion {
                 case .finished:
                     print("successfully fetch call data")
                 case .failure(_):
-                    self.alertType = .connectionFatalWarning
-                    self.isAlert = true
+                    weakSelf.alertType = .connectionFatalWarning
+                    weakSelf.isAlert = true
                 }
-            } receiveValue: { call in
-                self.call = call
-                self.isLoading = false
-                
+            } receiveValue: { [weak self] call in
+                guard let weakSelf = self else { return }
+                weakSelf.call = call
+                weakSelf.isLoading = false
+                weakSelf.realTimeCallStatus.callingUser = Array<String>(call.call.userIdToUserIconImageUrlString.keys)
                 if !call.call.callingNow {
-                    self.userService.updateUserCallingStatus(userId: userId) { result in
-                        switch result {
-                        case .success(_):
-                            self.isFinishedCall = true
-                        case .failure(let error):
-                            self.errorMessage = error.errorMessage
-                            self.isErrorAlert = true
-                        }
-                    }
+                    weakSelf.isFinishedCall = true
                 }
             }
             .store(in: &self.cancellable)
-    }
-    
-    func finishChannel(
-        callInfo:CallObservableModel,
-        appState: AppState
-    ){
-        self.callModel.stopCall(
-            userId: callInfo.call.hostUserId,
-            channelId: self.channelId
-        ) { result in
-            switch result {
-            case .success(_):
-                self.callService.stopCall(channelId: self.channelId) { result in
-                    switch result {
-                    case .success(_):
-                        appState.isHostCallReload = true
-                    case .failure(let error):
-                        self.errorMessage = error.errorMessage
-                        self.isErrorAlert = true
-                    }
-                }
-            case .failure(let error):
-                self.errorMessage = error.errorMessage
-                self.isErrorAlert = true
-            }
-        }
     }
     
     func muteAudio(){
@@ -129,27 +105,34 @@ class AttendeeCallViewModel: ObservableObject {
         }
     }
     
-    func leaveChannelAndUpdateAttendeeCallStatus(userId: String, channelId: String) {
+    func leaveChannelAndUpdateAttendeeCallStatus(userID: String, channelID: String) {
         self.callModel.leaveCall()
-        self.userService.updateUserCallingStatus(userId: userId) { result in
+        self.callService.leaveChannel(channelId: channelID, userId: userID)
+            .sink { [weak self] completion in
+                guard let weakSelf = self else { return }
+                switch completion {
+                case .finished:
+                    break
+                case .failure(let error):
+                    weakSelf.errorMessage = error.errorMessage
+                    weakSelf.isErrorAlert = true
+                }
+            } receiveValue: { _ in }
+            .store(in: &self.cancellable)
+    }
+    
+    func finishChannel(callInfo: CallObservableModel){
+        self.callModel.stopCall(
+            userId: callInfo.call.hostUserId,
+            channelId: self.channelId
+        ) { [weak self] result in
+            guard let weakSelf = self else { return }
             switch result {
             case .success(_):
-                self.callService.leaveChannel(channelId: channelId, userId: userId)
-                    .sink { completion in
-                        switch completion {
-                        case .finished:
-                            print("successfully handle drop or leaveUser")
-                            RealTimeCallStatus.shared.initial()
-                        case .failure(let error):
-                            self.errorMessage = error.errorMessage
-                            self.isErrorAlert = true
-                        }
-                    } receiveValue: { _ in }
-                    .store(in: &self.cancellable)
-                
+                break
             case .failure(let error):
-                self.errorMessage = error.errorMessage
-                self.isErrorAlert = true
+                weakSelf.errorMessage = error.errorMessage
+                weakSelf.isErrorAlert = true
             }
         }
     }

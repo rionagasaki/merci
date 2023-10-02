@@ -17,14 +17,26 @@ class NoticeFirestoreService {
     let requestNoticePath = "RequestNotice"
     
     
-    func createReport(reportUserID: String, reportedUserID: [String], reportText: String) -> AnyPublisher<Void, AppError>{
+    func createReport(reportUserID: String, reportedUserID: String, reportText: String) -> AnyPublisher<Void, AppError>{
         let db = Firestore.firestore()
+        let batch = db.batch()
+        let reportID = UUID().uuidString
+        let reportDocRef = db.collection(self.userPath).document(reportedUserID).collection(self.reportPath).document(reportID)
+        let reportUserDocRef = db.collection(self.userPath).document(reportUserID)
         return Future { promise in
-            db.collection(self.reportPath).document(UUID().uuidString).setData([
+            
+            batch.updateData([
+                "reportUserIDs": FieldValue.arrayUnion([reportedUserID])
+            ], forDocument: reportUserDocRef)
+            
+            batch.setData([
                 "reportUserID": reportUserID,
                 "reportedUserID": reportedUserID,
-                "reportText": reportText
-            ]){ error in
+                "reportText": reportText,
+                "createdAt": Date.init()
+            ], forDocument: reportDocRef)
+            
+            batch.commit { error in
                 if let error = error {
                     promise(.failure(.firestore(error)))
                 } else {

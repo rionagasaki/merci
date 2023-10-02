@@ -10,6 +10,7 @@ import Combine
 
 class AccountDeleteViewModel: ObservableObject {
     @Published var errorMessage: String = ""
+    @Published var isRequiredReAuthentication: Bool = false
     @Published var isDeleteAccountAlert: Bool = false
     @Published var isSuccessDeleteAccount: Bool = false
     @Published var isErrorAlert: Bool = false
@@ -20,8 +21,9 @@ class AccountDeleteViewModel: ObservableObject {
             .sink { completion in
                 switch completion {
                 case .finished:
-                    print("successfully delete account")
+                    break
                 case .failure(let error):
+                    self.isRequiredReAuthentication = true
                     self.errorMessage = error.errorMessage
                     self.isErrorAlert = true
                 }

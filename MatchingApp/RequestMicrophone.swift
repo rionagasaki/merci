@@ -10,11 +10,13 @@ import AVFoundation
 
 class RequestMicrophone {
     
-    func requestMicrophonePermission() {
+    func requestMicrophonePermission(completionHandler: @escaping (Bool) -> Void) {
         AVAudioSession.sharedInstance().requestRecordPermission { (granted) in
             if granted {
+                completionHandler(true)
                 print("マイクへのアクセス許可が与えられました")
             } else {
+                completionHandler(false)
                 print("マイクへのアクセス許可が拒否されました")
             }
         }

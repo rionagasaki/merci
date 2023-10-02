@@ -49,8 +49,8 @@ class PairSettingViewModel: ObservableObject {
             .store(in: &self.cancellable)
     }
     
-    func searchUserByUid(userModel: UserObservableModel){
-        if userModel.user.uid == searchQuery {
+    func searchUserByUid(userID: String){
+        if userID == searchQuery {
             self.isErrorAlert = true
             self.errorMessage = "自分のIDでの検索はできません。"
             return
@@ -65,23 +65,24 @@ class PairSettingViewModel: ObservableObject {
                     self.isErrorAlert = true
                     self.errorMessage = error.errorMessage
                 }
-            } receiveValue: { user in
+            } receiveValue: { [weak self] user in
+                guard let weakSelf = self else { return }
                 if let user = user {
-                    if user.friendRequestUids.contains(userModel.user.uid){
-                        self.isErrorAlert = true
-                        self.errorMessage = "\(user.nickname)さんからは既にペアリクエストを受けています。"
-                    }  else if user.friendRequestedUids.contains(userModel.user.uid) {
-                        self.isErrorAlert = true
-                        self.errorMessage = "\(user.nickname)さんには既にペアリクエストを送っています。"
-                    } else if user.friendUids.contains(userModel.user.uid) {
-                        self.isErrorAlert = true
-                        self.errorMessage = "\(user.nickname)さんとは既に友達になっています。"
+                    if user.friendRequestUids.contains(userID){
+                        weakSelf.isErrorAlert = true
+                        weakSelf.errorMessage = "\(user.nickname)さんからは既にペアリクエストを受けています。"
+                    }  else if user.friendRequestedUids.contains(userID) {
+                        weakSelf.isErrorAlert = true
+                        weakSelf.errorMessage = "\(user.nickname)さんには既にペアリクエストを送っています。"
+                    } else if user.friendUids.contains(userID) {
+                        weakSelf.isErrorAlert = true
+                        weakSelf.errorMessage = "\(user.nickname)さんとは既に友達になっています。"
                     } else {
-                        self.searchResultUser = .init(userModel: user.adaptUserObservableModel())
+                        weakSelf.searchResultUser = .init(userModel: user.adaptUserObservableModel())
                     }
                 } else {
-                    self.isErrorAlert = true
-                    self.errorMessage = "指定されたIDを持つユーザーが存在しません。ご確認の上、再度お試しください。"
+                    weakSelf.isErrorAlert = true
+                    weakSelf.errorMessage = "指定されたIDを持つユーザーが存在しません。ご確認の上、再度お試しください。"
                 }
             }
             .store(in: &self.cancellable)
@@ -92,14 +93,12 @@ class PairSettingViewModel: ObservableObject {
             .sink { completion in
                 switch completion {
                 case .finished:
-                    print("finished")
+                    break
                 case .failure(let error):
                     self.isErrorAlert = true
                     self.errorMessage = error.errorMessage
                 }
-            } receiveValue: { _ in
-                print("recieve value")
-            }
+            } receiveValue: { _ in }
             .store(in: &self.cancellable)
     }
     
@@ -109,30 +108,26 @@ class PairSettingViewModel: ObservableObject {
             .sink { completion in
                 switch completion {
                 case .finished:
-                    print("finished")
+                    break
                 case .failure(let error):
                     self.isErrorAlert = true
                     self.errorMessage = error.errorMessage
                 }
-            } receiveValue: { _ in
-                print("recieve value")
-            }
+            } receiveValue: { _ in }
             .store(in: &self.cancellable)
     }
     
-    func cancelPair(requestingUser: UserObservableModel, requestedUser:UserObservableModel){
+    func cancelFriendRequest(requestingUser: UserObservableModel, requestedUser:UserObservableModel){
         self.userService.cancelFriendRequest(requestingUser: requestingUser, requestedUser: requestedUser)
             .sink { completion in
                 switch completion {
                 case .finished:
-                    print("succesfully pair request cancel")
+                    break
                 case .failure(let error):
                     self.isErrorAlert = true
                     self.errorMessage = error.errorMessage
                 }
-            } receiveValue: { _ in
-                print("recieve value")
-            }
+            } receiveValue: { _ in }
             .store(in: &self.cancellable)
     }
 }

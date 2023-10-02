@@ -11,24 +11,32 @@ import SDWebImageSwiftUI
 struct ReportAbuseView: View {
     @EnvironmentObject var userModel: UserObservableModel
     @StateObject var viewModel = ReportAbuseViewModel()
+    @Environment(\.presentationMode) var presentationMode
+    private let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .heavy)
     let user: UserObservableModel
     var body: some View {
         NavigationView {
             VStack {
-                WebImage(url: URL(string: user.user.profileImageURLString))
+                Image(user.user.profileImageURLString)
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 100, height: 100)
+                    .frame(width: 72, height: 72)
+                    .padding(.all, 14)
+                    .background(Color.gray.opacity(0.1))
                     .clipShape(Circle())
+                
+                Text(user.user.nickname)
+                    .foregroundColor(.customBlack)
+                    .font(.system(size: 16, weight: .medium))
                 
                 Text("報告内容の詳細を教えてください")
                     .foregroundColor(.customBlack)
                     .font(.system(size: 18, weight: .bold))
-                    .padding(.top, 32)
+                    .padding(.top, 16)
                 Text("「やり取りしているときに○○と言われた。」「自己紹介に○○と書いてあった。」などできるだけ具体的にご記入ください。")
                     .foregroundColor(.customBlack)
                     .font(.system(size: 14))
-                Text("※この記入欄にお客様の個人情報を記入しないでください")
+                Text("※通報をされたユーザーにはプロフィールにペナルティが追加されます。適切でない通報な場合、通報者にもペナルティがつく可能性があります。ご了承ください。")
                     .foregroundColor(.pink)
                     .font(.system(size: 14))
                 NavigationLink {
@@ -54,7 +62,6 @@ struct ReportAbuseView: View {
                                     .font(.system(size: 14, weight: .medium))
                             }
                         }
-                        
                     } else {
                         ZStack(alignment: .topLeading){
                             RoundedRectangle(cornerRadius: 10)
@@ -73,19 +80,44 @@ struct ReportAbuseView: View {
                 }
                 Spacer()
                 Button {
-                    viewModel.report(reportUserID: userModel.user.uid)
+                    viewModel.report(reportUserID: userModel.user.uid, reportedUserID: user.user.uid)
                 } label: {
-                    Text("回答する")
+                    Text("報告する")
                         .foregroundColor(.white)
                         .bold()
-                        .frame(width: UIScreen.main.bounds.width-32, height: 50)
-                        .background(Color.pink)
-                        .cornerRadius(5)
+                        .frame(width: UIScreen.main.bounds.width-32, height: 56)
+                        .background(viewModel.reportText.isEmpty ? Color.gray.opacity(0.4): Color.customBlue.opacity(0.8))
+                        .cornerRadius(10)
                 }
+                .disabled(viewModel.reportText.isEmpty)
+                
+                Button {
+                    presentationMode.wrappedValue.dismiss()
+                } label: {
+                    Text("キャンセル")
+                        .foregroundColor(.customBlue.opacity(0.8))
+                        .bold()
+                        .frame(width: UIScreen.main.bounds.width-32, height: 56)
+                        .background(Color.white)
+                }
+
             }
             .padding(.horizontal, 16)
-            .navigationTitle("問題を報告する")
+            .padding(.top, 24)
             .navigationBarTitleDisplayMode(.inline)
+            .onReceive(viewModel.$isReportSuccess){
+                if $0 {
+                    UIIFGeneratorMedium.impactOccurred()
+                    presentationMode.wrappedValue.dismiss()
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .principal){
+                    Text("問題を報告する")
+                        .foregroundColor(.customBlack)
+                        .bold()
+                }
+            }
         }
     }
 }

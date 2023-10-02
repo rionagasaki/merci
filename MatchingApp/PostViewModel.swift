@@ -18,6 +18,8 @@ class PostViewModel: ObservableObject {
     @Published var isNeededReload: Bool = false
     @Published var isReplyModal: Bool = false
     @Published var isParticle: Bool = false
+    @Published var selectedPhoto: String = ""
+    @Published var isPhotoPreview: Bool = false
     private let postService = PostFirestoreService()
     private var cancellable = Set<AnyCancellable>()
     
@@ -45,26 +47,5 @@ class PostViewModel: ObservableObject {
                 }
             } receiveValue: { _ in }
             .store(in: &self.cancellable)
-    }
-    
-    func deletePost(postID: String) {
-        self.postService
-            .deletePost(postID: postID)
-            .sink { completion in
-                switch completion {
-                case .finished:
-                    self.isLiked.toggle()
-                case .failure(let error):
-                    self.isErrorAlert = true
-                    self.errorMessage = error.errorMessage
-                }
-            } receiveValue: { _ in
-                print("recieve value")
-            }
-            .store(in: &self.cancellable)
-    }
-    
-    func pinnedPost() {
-        
     }
 }

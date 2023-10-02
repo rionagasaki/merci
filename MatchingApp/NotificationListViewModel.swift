@@ -22,6 +22,7 @@ class NotificationListViewModel: ObservableObject {
     private var cancellable = Set<AnyCancellable>()
     @Published var isLoading: Bool = false
     @Published var activeNoticeType: [NoticeType] = []
+    @Published var allNotices:[Notice] = []
     @Published var likeNotices: [LikeNoticeObservableModel] = []
     @Published var commentNotices: [CommentNoticeObservableModel] = []
     @Published var followNotices: [RequestNoticeObservableModel] = []

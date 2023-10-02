@@ -55,9 +55,7 @@ class GoogleAuthViewModel: ObservableObject {
                             self.isErrorAlert = true
                             self.errorMessage = error.errorMessage
                         }
-                    } receiveValue: { _ in
-                        print("Recieve Value")
-                    }
+                    } receiveValue: { _ in }
                     .store(in: &self.cancellable)
             }
         }

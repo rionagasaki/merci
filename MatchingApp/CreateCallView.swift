@@ -59,28 +59,6 @@ struct CreateCallView: View {
             }
             .frame(width: UIScreen.main.bounds.width-32)
             
-            VStack {
-                HStack {
-                    Text("会話タグ")
-                        .foregroundColor(.customBlack)
-                        .font(.system(size: 24, weight: .bold))
-                        .lineLimit(nil)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, 32)
-                    Spacer()
-                }
-                
-                ScrollView {
-                    VStack {
-                        GeometryReader { geometry in
-                            TagViewGenerator.generateEditTags(allTags: TagNames.callTags, selectedTags: $viewModel.channelTags, geometry)
-                        }
-                        .padding()
-                    }
-                }
-            }
-            .frame(maxWidth: UIScreen.main.bounds.width)
-            
             Spacer()
             Button {
                 if !userModel.user.isCallingChannelId.isEmpty {

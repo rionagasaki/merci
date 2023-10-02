@@ -180,7 +180,8 @@ class PostFirestoreService {
             let batch = db.batch()
             let replyPostDocRef = db.collection(self.postPath).document(postId)
             let parentPostDocRef = db.collection(self.postPath).document(parentPost.id)
-            let noticeDoc = db.collection(self.userPath).document(toUser.user.uid).collection(self.commentNoticePath).document(parentPost.id)
+            let noticeID: String = UUID().uuidString
+            let noticeDoc = db.collection(self.userPath).document(toUser.user.uid).collection(self.commentNoticePath).document(noticeID)
             let allParentPost = parentPost.parentPosts + [parentPost.id]
             batch.setData([
                 "createdAt": Date.init(),
@@ -275,9 +276,20 @@ class PostFirestoreService {
         }
     }
     
-    func deletePost(postID: String) -> AnyPublisher<Void, AppError> {
+    func deletePost(postID: String, userID: String, fixedPostID: String) -> AnyPublisher<Void, AppError> {
+        let batch = db.batch()
+        let postDocRef = db.collection(self.postPath).document(postID)
+        let userDocRef = db.collection(self.userPath).document(userID)
         return Future { promise in
-            db.collection(self.postPath).document(postID).delete { error in
+            batch.deleteDocument(postDocRef)
+            
+            if fixedPostID == postID {
+                batch.updateData([
+                    "fixedPost": ""
+                ], forDocument: userDocRef)
+            }
+            
+            batch.commit { error in
                 if let error = error {
                     promise(.failure(.firestore(error)))
                 } else {

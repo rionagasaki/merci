@@ -10,12 +10,20 @@ import SwiftUI
 struct ProfileImageInitView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var userModel: UserObservableModel
+    @StateObject var viewModel = ProfileImageInitViewModel()
     @Binding var presentationMode: PresentationMode
     @Environment(\.dismiss) var dismiss
     let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .medium)
     
     var body: some View {
         VStack(alignment: .leading) {
+            Text("🦜 アイコンを\n 選択してください")
+                .font(.system(size: 25))
+                .fontWeight(.bold)
+                .foregroundColor(Color.customBlack)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, 16)
+                .padding(.leading, 16)
             VStack {
                 Image(userModel.user.profileImageURLString)
                     .resizable()
@@ -46,15 +54,17 @@ struct ProfileImageInitView: View {
                 }
                 .padding(.top, 24)
                 
-                NavigationLink {
-                    HobbiesInitView(
-                        presentationMode: $presentationMode
-                    )
+                Button {
+                    viewModel.completeRegister(
+                        userModel: userModel,
+                        appState: appState) {
+                            presentationMode.dismiss()
+                        }
                 } label: {
-                    Text("次へ")
-                        .foregroundColor(.white)
+                    Text("アカウントを作成する")
+                        .foregroundColor(!userModel.user.profileImageURLString.isEmpty ? .white: .customBlack)
                         .frame(width: UIScreen.main.bounds.width-32, height: 56)
-                        .background(!userModel.user.profileImageURLString.isEmpty ? Color.customBlue: .gray.opacity(0.4))
+                        .background(!userModel.user.profileImageURLString.isEmpty ? Color.customBlue: Color.customLightGray)
                         .font(.system(size: 16,weight: .bold))
                         .cornerRadius(10)
                         .padding(.top, 56)
@@ -62,18 +72,13 @@ struct ProfileImageInitView: View {
                 .disabled(userModel.user.profileImageURLString.isEmpty)
             }
         }
-        .navigationBarBackButtonHidden()
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading){
+            ToolbarItem(placement: .principal){
                 VStack(spacing: 4){
-                    Text("プロフィール画像の選択")
-                        .font(.system(size: 25))
+                    Text("アイコン選択")
+                        .font(.system(size: 16))
                         .fontWeight(.bold)
                         .foregroundColor(Color.customBlack)
-                        .padding(.top, 16)
-                    RoundedRectangle(cornerRadius: 20)
-                        .foregroundColor(.customBlue.opacity(0.5))
-                        .frame(height: 3)
                 }
             }
         }

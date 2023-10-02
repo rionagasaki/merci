@@ -15,15 +15,13 @@ class ImageStorageManager {
     let storage = Storage.storage()
     var cancellable = Set<AnyCancellable>()
     
-    func uploadImageToStorage(userId: String, folderName: String, profileImage: UIImage) -> AnyPublisher<String, AppError> {
+    func uploadImageToStorage(folderName: String, profileImage: UIImage) -> AnyPublisher<String, AppError> {
         Future { promise in
             guard let updateImage = profileImage.jpegData(compressionQuality: 0.3) else {
                 return promise(.failure(.other(.changeJpegError)))
             }
 
-            // userIDをファイル名として使用
-            let userProfileRef = self.storage.reference().child(folderName).child(userId)
-            print(userProfileRef.fullPath)
+            let userProfileRef = self.storage.reference().child("post").child(UUID().uuidString)
             userProfileRef.putData(updateImage, metadata: nil) { metadata, error in
                 if let error = error as? NSError {
                     return promise(.failure(.storage(error)))
@@ -42,7 +40,7 @@ class ImageStorageManager {
     }
 
     func uploadMultipleImageToStorage(folderName: String, images:[UIImage]) -> AnyPublisher<[String], AppError> {
-        let uploadFutures = images.map { uploadImageToStorage(userId: "",folderName: folderName, profileImage: $0) }
+        let uploadFutures = images.map { uploadImageToStorage(folderName: folderName, profileImage: $0) }
         let mergedFutures = Publishers
             .MergeMany(uploadFutures)
             .eraseToAnyPublisher()

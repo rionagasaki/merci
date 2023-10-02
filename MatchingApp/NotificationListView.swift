@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AlertToast
 
 struct NotificationListView: View {
     @StateObject var viewModel = NotificationListViewModel()
@@ -33,7 +34,7 @@ struct NotificationListView: View {
                                 Text(viewModel.noticeSections[index].rawValue)
                                     .font(.system(size: 16, weight: viewModel.selectedCategory == index ? .bold: .regular))
                                     .foregroundColor(
-                                        viewModel.selectedCategory == index ? .customBlack: .white
+                                        viewModel.selectedCategory == index ? .customBlack: .gray.opacity(0.5)
                                     )
                                     .padding(.top, 16)
                             }
@@ -52,7 +53,6 @@ struct NotificationListView: View {
                         .frame(width: (UIScreen.main.bounds.width/3), height: 2)
                 }
             }
-            .background(Color.customBlue.opacity(0.5))
             
             TabView(selection: $viewModel.selectedCategory) {
                 ScrollView {
@@ -171,7 +171,7 @@ struct NotificationListView: View {
                         .foregroundColor(.customBlack)
                         .font(.system(size: 24, weight: .bold))
                     RoundedRectangle(cornerRadius: 20)
-                        .foregroundColor(.white)
+                        .foregroundColor(.customBlue.opacity(0.5))
                         .frame(height: 3)
                 }
             }
@@ -179,13 +179,10 @@ struct NotificationListView: View {
                 Button {
                     viewModel.isUpdateReadStatus = true
                 } label: {
-                    Image(systemName: "checkmark.circle.fill")
+                    Image("isRead")
                         .resizable()
                         .scaledToFill()
-                        .frame(width: 24, height: 24)
-                        .foregroundColor(.customBlack)
-                        .background(Color.white)
-                        .clipShape(Circle())
+                        .frame(width: 32, height: 32)
                 }
             }
         }
@@ -196,11 +193,14 @@ struct NotificationListView: View {
             Alert(
                     title: Text("一括で既読"),
                     message: Text("未読の通知が一括で既読に設定されます。続行しますか？"),
-                    primaryButton: .destructive(Text("削除")) {
+                    primaryButton: .default(Text("続行")) {
                         viewModel.updateAllNoticeReadStatus(userID: userModel.user.uid, appState: appState)
                     },
                     secondaryButton: .cancel(Text("キャンセル"))
                 )
+        }
+        .toast(isPresenting: $viewModel.isLoading) {
+            AlertToast(type: .loading)
         }
     }
 }

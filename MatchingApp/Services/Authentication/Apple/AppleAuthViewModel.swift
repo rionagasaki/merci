@@ -80,18 +80,16 @@ class AppleAuthViewModel: ObservableObject {
                 .shared
                 .signInWithApple(credential: credential)
                 .flatMap { authResult -> AnyPublisher<Void, AppError> in
-                    if let additionalUserInfo = authResult.additionalUserInfo, additionalUserInfo.isNewUser {
-                        let email = authResult.user.email ?? ""
-                        let uid = authResult.user.uid
-                        return self.userService.registerUserEmailAndUid(email: email, uid: uid)
-                    } else {
-                        return Just(()).setFailureType(to: AppError.self).eraseToAnyPublisher()
-                    }
+                    guard let additionalUserInfo = authResult.additionalUserInfo else { return Just(()).setFailureType(to: AppError.self).eraseToAnyPublisher() }
+                    if !additionalUserInfo.isNewUser { return Just(()).setFailureType(to: AppError.self).eraseToAnyPublisher() }
+                    let email = authResult.user.email ?? ""
+                    let uid = authResult.user.uid
+                    return self.userService.registerUserEmailAndUid(email: email, uid: uid)
                 }
                 .sink { completion in
                     switch completion {
                     case .finished:
-                        print("successfully login")
+                        break
                     case .failure(let error):
                         self.errorMessage = error.errorMessage
                         self.isErrorAlert = true

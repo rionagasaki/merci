@@ -10,7 +10,6 @@ import SwiftUI
 struct ProfileChangeView: View {
     @EnvironmentObject var userModel: UserObservableModel
     @StateObject var viewModel = ProfileChangeViewModel()
-    @Environment(\.dismiss) var dismiss
     let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .medium)
     
     var body: some View {
@@ -55,7 +54,7 @@ struct ProfileChangeView: View {
                     } label: {
                         VStack(alignment: .leading, spacing: .zero) {
                             HStack {
-                                Text("自己紹介")
+                                Text("ひとこと")
                                     .foregroundColor(.customBlack)
                                     .font(.system(size: 20))
                                     .bold()
@@ -84,7 +83,7 @@ struct ProfileChangeView: View {
                         UserHobbiesEditorView()
                     } label: {
                         VStack(spacing: .zero) {
-                            Text("興味")
+                            Text("すきなこと")
                                 .padding(.vertical, 8)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .foregroundColor(.customBlack)
@@ -100,19 +99,6 @@ struct ProfileChangeView: View {
                     }
                 }
             }
-        .navigationBarBackButtonHidden()
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(
-                    action: {
-                        dismiss()
-                    }, label: {
-                        Image(systemName: "chevron.left")
-                            .foregroundColor(.black)
-                    }
-                )
-            }
-        }
         .fullScreenCover(isPresented: $viewModel.isSelectedPicture) {
             ProfileImageChangeView()
         }

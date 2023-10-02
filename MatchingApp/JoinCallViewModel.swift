@@ -13,7 +13,7 @@ class JoinCallViewModel: ObservableObject {
     @Published var isErrorAlert: Bool = false
     @Published var errorMessage: String = ""
     
-    @Published var isActive: Bool = false
+    
     // ここにSessionを持たせておく
-    @Published var meetingSession: DefaultMeetingSession?
+    
 }

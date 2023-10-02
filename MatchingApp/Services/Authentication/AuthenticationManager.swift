@@ -18,8 +18,9 @@ final class AuthenticationManager: ObservableObject {
     private init() {
         authHandle = Auth.auth().addStateDidChangeListener { [weak self] (auth, user) in
             self?.user = auth.currentUser
-            
         }
+        
+        
     }
     
     deinit {
@@ -27,4 +28,6 @@ final class AuthenticationManager: ObservableObject {
             Auth.auth().removeStateDidChangeListener(handle)
         }
     }
+    
+    
 }

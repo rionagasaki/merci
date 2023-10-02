@@ -22,7 +22,7 @@ struct EntranceView: View {
         ZStack {
             VStack {
                 VStack {
-                    Image("Entrance")
+                    Image("owl")
                         .resizable()
                         .scaledToFill()
                         .frame(width: 144, height: 144)

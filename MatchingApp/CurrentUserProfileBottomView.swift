@@ -43,7 +43,7 @@ struct CurrentUserProfileBottomView: View {
         }
         .padding(.vertical, 16)
         .halfModal(isPresented: $isShareModal) {
-            SNSShareView()
+            
         }
     }
 }

@@ -31,7 +31,7 @@ struct ProfileImageChangeView: View {
                     
                     ScrollView {
                         LazyVGrid(columns: Array(repeating: .init(.flexible()), count: 4), spacing: 16) {
-                            ForEach(ProfileImages.profileImages, id: \.self) { image in
+                            ForEach(ProfileImages.profileImages.shuffled(), id: \.self) { image in
                                 Image(image)
                                     .resizable()
                                     .scaledToFit()
@@ -56,7 +56,7 @@ struct ProfileImageChangeView: View {
                         Text("登録する")
                             .foregroundColor(.white)
                             .frame(width: UIScreen.main.bounds.width-32, height: 50)
-                            .background(viewModel.registerButtonEnabled ? .pink: .gray.opacity(0.4))
+                            .background(viewModel.registerButtonEnabled ? Color.customBlue.opacity(0.8): .gray.opacity(0.4))
                             .font(.system(size: 16,weight: .bold))
                             .cornerRadius(10)
                             .padding(.top, 56)
@@ -67,19 +67,14 @@ struct ProfileImageChangeView: View {
                         dismiss()
                     } label: {
                         Text("キャンセル")
-                            .foregroundColor(.pink)
+                            .foregroundColor(.customBlue.opacity(0.8))
                             .frame(width: UIScreen.main.bounds.width-32, height: 50)
                             .background(.white)
-                            .font(.system(size: 16, weight: .bold))
-                            .overlay {
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(.pink, lineWidth: 2)
-                            }
+                            .font(.system(size: 16,weight: .bold))
                             .cornerRadius(10)
                             .padding(.top, 8)
                     }
                 }
-                
             }
             .navigationBarBackButtonHidden()
             .onReceive(viewModel.$isSuccessImageUpdate) { if $0 { dismiss() } }
@@ -89,7 +84,7 @@ struct ProfileImageChangeView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading){
                     VStack(spacing: 4){
-                        Text("プロフィール画像の選択")
+                        Text("アイコン選択")
                             .font(.system(size: 25))
                             .fontWeight(.bold)
                             .foregroundColor(Color.customBlack)

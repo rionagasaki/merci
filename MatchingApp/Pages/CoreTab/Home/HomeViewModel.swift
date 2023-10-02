@@ -12,16 +12,19 @@ class HomeViewModel: ObservableObject {
     @Published var selection: Int = 1
     @Published var isLoading: Bool = false
     @Published var reloadPost: Bool = false
+    @Published var isCompleteToast: Bool = false
+    @Published var isDeleteToast: Bool = false
     
     @Published var postFilter: PostFilter = .allPostsAndReplys
     @Published var callsToAllUsers:[CallObservableModel] = []
-    @Published var callsToFriends:[CallObservableModel] = []
     
     @Published var allPosts: [PostObservableModel] = []
     @Published var friendPosts: [PostObservableModel] = []
     @Published var filterlingParentPost: [PostObservableModel] = []
+    @Published var friendFilterlingParentPost: [PostObservableModel] = []
     
     @Published var friendUsers: [UserObservableModel] = []
+    @Published var onlineUsers: [UserObservableModel] = []
     
     @Published var isLastDocumentLoaded: Bool = false
     @Published var isFriendDocumentLoaded: Bool = false
@@ -35,45 +38,40 @@ class HomeViewModel: ObservableObject {
     private var cancellable = Set<AnyCancellable>()
     
     func initialAllPostAndCall(userModel: UserObservableModel) {
-        self.callService.getCall()
-            .flatMap { calls in
-                self.callsToAllUsers = calls.filter({ call in
-                    call.call.isFriendCalling == false
-                })
-                return self.userService.getConcurrentUserInfo(userIDs: userModel.user.friendUids)
-            }
-            .flatMap { users in
-                self.friendUsers = users.map { .init(userModel: $0.adaptUserObservableModel()) }
-                return self.postService.getAllPost(target: .`init`)
-            }
-            .sink { completion in
+        self.postService.getAllPost(target: .`init`)
+            .sink { [weak self] completion in
+                guard let weakSelf = self else { return }
                 switch completion {
                 case .finished:
-                    print("finish")
+                    break
                 case .failure(let error):
-                    self.errorMessage = error.errorMessage
-                    self.isErrorAlert = true
+                    weakSelf.errorMessage = error.errorMessage
+                    weakSelf.isErrorAlert = true
                 }
             } receiveValue: { [weak self] posts in
                 guard let self = self else { return }
+                self.postFilter = userModel.user.isDisplayOnlyPost ? .allPosts: .allPostsAndReplys
                 self.allPosts = []
                 self.friendPosts = []
                 self.filterlingParentPost = []
+                self.friendFilterlingParentPost = []
                 self.processPosts(posts: posts, userModel: userModel)
                 self.processFriendPost(posts: posts, userModel: userModel)
+                self.getConcurrentUserInfo(userIDs: userModel.user.friendUids)
             }
             .store(in: &self.cancellable)
     }
     
     func getNextPage(userModel: UserObservableModel) {
         postService.getNextPage()
-            .sink { completion in
+            .sink { [weak self] completion in
+                guard let weakSelf = self else { return }
                 switch completion {
                 case .finished:
                     print("finish")
                 case .failure(let error):
-                    self.errorMessage = error.errorMessage
-                    self.isErrorAlert = true
+                    weakSelf.errorMessage = error.errorMessage
+                    weakSelf.isErrorAlert = true
                 }
             } receiveValue: { [weak self] posts in
                 guard let self = self else { return }
@@ -87,13 +85,14 @@ class HomeViewModel: ObservableObject {
     
     func getFriendNextPage(userModel: UserObservableModel) {
         postService.getFriendNextPage()
-            .sink { completion in
+            .sink { [weak self] completion in
+                guard let weakSelf = self else { return }
                 switch completion {
                 case .finished:
-                    print("finish")
+                    break
                 case .failure(let error):
-                    self.errorMessage = error.errorMessage
-                    self.isErrorAlert = true
+                    weakSelf.errorMessage = error.errorMessage
+                    weakSelf.isErrorAlert = true
                 }
             } receiveValue: { [weak self] posts in
                 guard let self = self else { return }
@@ -109,14 +108,15 @@ class HomeViewModel: ObservableObject {
     
     func getLatestPosts(userModel: UserObservableModel) {
         self.isLoading = true
-        postService.getAllPost(target: .all)
-            .sink { completion in
+        self.postService.getAllPost(target: .`init`)
+            .sink { [weak self] completion in
+                guard let weakSelf = self else { return }
                 switch completion {
                 case .finished:
-                    print("finish")
+                    break
                 case .failure(let error):
-                    self.errorMessage = error.errorMessage
-                    self.isErrorAlert = true
+                    weakSelf.errorMessage = error.errorMessage
+                    weakSelf.isErrorAlert = true
                 }
             } receiveValue: { [weak self] posts in
                 guard let self = self else { return }
@@ -131,7 +131,7 @@ class HomeViewModel: ObservableObject {
             .sink { completion in
                 switch completion {
                 case .finished:
-                    print("finish")
+                    break
                 case .failure(let error):
                     self.errorMessage = error.errorMessage
                     self.isErrorAlert = true
@@ -147,11 +147,11 @@ class HomeViewModel: ObservableObject {
         self.filterlingParentPost = []
         for post in posts {
             let postObservableModel = post.adaptPostObservableModel()
-            withAnimation {
+            if !userModel.user.blockingUids.contains(postObservableModel.posterUid) && !userModel.user.blockedUids.contains(postObservableModel.posterUid) {
                 self.allPosts.append(postObservableModel)
-            }
-            if postObservableModel.parentPosts == [] {
-                self.filterlingParentPost.append(postObservableModel)
+                if postObservableModel.parentPosts == [] {
+                    self.filterlingParentPost.append(postObservableModel)
+                }
             }
         }
         self.isLastDocumentLoaded = false
@@ -161,11 +161,20 @@ class HomeViewModel: ObservableObject {
     func refreshFriendPost(posts:[Post], userModel: UserObservableModel) {
         let friendUids = userModel.user.friendUids
         let uid = userModel.user.uid
+        if friendUids.count == 0 {
+            self.isLoading = false
+            return
+            
+        }
         self.friendPosts = []
+        self.friendFilterlingParentPost = []
         for post in posts {
             let postObservableModel = post.adaptPostObservableModel()
             if friendUids.contains(post.posterUid) || uid == post.posterUid {
                 self.friendPosts.append(postObservableModel)
+                if postObservableModel.parentPosts == [] {
+                    self.friendFilterlingParentPost.append(postObservableModel)
+                }
             }
         }
         self.isFriendDocumentLoaded = false
@@ -175,10 +184,11 @@ class HomeViewModel: ObservableObject {
     func processPosts(posts: [Post], userModel: UserObservableModel) {
         for post in posts {
             let postObservableModel = post.adaptPostObservableModel()
-            self.allPosts.append(postObservableModel)
-            
-            if postObservableModel.parentPosts == [] {
-                self.filterlingParentPost.append(postObservableModel)
+            if !userModel.user.blockingUids.contains(postObservableModel.posterUid) && !userModel.user.blockedUids.contains(postObservableModel.posterUid) {
+                self.allPosts.append(postObservableModel)
+                if postObservableModel.parentPosts == [] {
+                    self.filterlingParentPost.append(postObservableModel)
+                }
             }
         }
     }
@@ -186,6 +196,7 @@ class HomeViewModel: ObservableObject {
     func processFriendPost(posts: [Post], userModel: UserObservableModel) {
         let friendUids = userModel.user.friendUids
         let uid = userModel.user.uid
+        if friendUids.count == 0 { return }
         if posts.filter({ post in friendUids.contains(post.posterUid) || uid == post.posterUid }).count == 0 {
             self.getFriendNextPage(userModel: userModel)
         } else {
@@ -193,6 +204,9 @@ class HomeViewModel: ObservableObject {
                 if friendUids.contains(post.posterUid) || uid == post.posterUid {
                     let postObservableModel = post.adaptPostObservableModel()
                     self.friendPosts.append(postObservableModel)
+                    if postObservableModel.parentPosts == [] {
+                        self.friendFilterlingParentPost.append(postObservableModel)
+                    }
                 }
             }
         }
@@ -200,18 +214,54 @@ class HomeViewModel: ObservableObject {
     
     func deletePost(postID: String, userModel: UserObservableModel) {
         self.postService
-            .deletePost(postID: postID)
-            .sink { completion in
+            .deletePost(postID: postID, userID: userModel.user.uid, fixedPostID: userModel.user.fixedPost)
+            .sink { [weak self] completion in
+                guard let weakSelf = self else { return }
                 switch completion {
                 case .finished:
-                    self.getLatestPosts(userModel: userModel)
+                    weakSelf.isDeleteToast = true
+                    weakSelf.getLatestPosts(userModel: userModel)
                 case .failure(let error):
-                    self.isErrorAlert = true
-                    self.errorMessage = error.errorMessage
+                    weakSelf.isErrorAlert = true
+                    weakSelf.errorMessage = error.errorMessage
                 }
             } receiveValue: { _ in
                 print("recieve value")
             }
             .store(in: &self.cancellable)
+    }
+    
+    func pinnedPost(postID: String, userID: String) {
+        self.userService.fixedPostToProfile(postID: postID, userID: userID)
+            .sink { [weak self] completion in
+                guard let weakSelf = self else { return }
+                switch completion {
+                case .finished:
+                    weakSelf.isCompleteToast = true
+                    break
+                case .failure(let error):
+                    weakSelf.errorMessage = error.errorMessage
+                    weakSelf.isErrorAlert = true
+                }
+            } receiveValue: { _ in }.store(in: &self.cancellable)
+    }
+    
+    func getConcurrentUserInfo(userIDs: [String]) {
+        let usersPublisher = userIDs.map { self.userService.searchUser(uid: $0) }
+        let publisher = Publishers.MergeMany(usersPublisher).collect().map { $0.compactMap { $0 } }.eraseToAnyPublisher()
+        publisher.sink { [weak self] completion in
+            guard let weakSelf = self else { return }
+            switch completion {
+            case .finished:
+                break
+            case .failure(let error):
+                weakSelf.isErrorAlert = true
+                weakSelf.errorMessage = error.errorMessage
+            }
+        } receiveValue: { [weak self] users in
+            guard let weakSelf = self else { return }
+            weakSelf.friendUsers = users.map { .init(userModel: $0.adaptUserObservableModel()) }
+        }
+        .store(in: &self.cancellable)
     }
 }

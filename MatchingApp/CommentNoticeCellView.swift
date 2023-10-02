@@ -65,7 +65,7 @@ struct CommentNoticeCellView: View {
                         .foregroundColor(.gray.opacity(0.7))
                         .font(.system(size: 12, weight: .light))
                     
-                    Text(notice.lastTriggerCommentText)
+                    Text(notice.recieverPostText)
                         .foregroundColor(.gray.opacity(0.8))
                         .font(.system(size: 16))
                         .padding(.top, 8)

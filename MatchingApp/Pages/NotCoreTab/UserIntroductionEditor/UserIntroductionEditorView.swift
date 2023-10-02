@@ -9,7 +9,7 @@ import SwiftUI
 import Combine
 
 struct UserIntroductionEditorView: View {
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.presentationMode) var presentationMode
     @StateObject var viewModel = UserIntroductionEditorViewModel()
     @EnvironmentObject var userModel: UserObservableModel
     @FocusState var focus: Bool
@@ -33,28 +33,17 @@ struct UserIntroductionEditorView: View {
             if $0 {
                 self.focus = false
                 DispatchQueue.main.asyncAfter(deadline: .now()+0.5) {
-                    dismiss()
+                    presentationMode.wrappedValue.dismiss()
                 }
             }
         }
-        .navigationBarBackButtonHidden(true)
-        .navigationTitle("自己紹介")
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(
-                    action: {
-                        focus = false
-                        DispatchQueue.main.asyncAfter(deadline: .now()+0.5) {
-                            dismiss()
-                        }
-                    }, label: {
-                        Image(systemName: "chevron.left")
-                            .foregroundColor(.black)
-                    }
-                )
+            ToolbarItem(placement: .principal){
+                Text("ひとこと")
+                    .foregroundColor(.customBlack)
+                    .font(.system(size: 16, weight: .medium))
             }
-        }
-        .toolbar {
+            
             ToolbarItem(placement: .keyboard) {
                 HStack {
                     Text("\(viewModel.userIntroduction.count)/1000")

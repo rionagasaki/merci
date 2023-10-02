@@ -46,12 +46,15 @@ struct AccountDeleteView: View {
             Alert(
                 title: Text("アカウント削除"),
                 message: Text("アカウントを削除しますか？"),
-                primaryButton: .default(
+                primaryButton: .destructive(
                   Text("削除"), action: {
                       viewModel.deleteAccount()
                   }),
                 secondaryButton: .default(Text("キャンセル"))
             )
+        }
+        .sheet(isPresented: $viewModel.isRequiredReAuthentication){
+            ReAuthenticationView()
         }
         .background(Color.gray.opacity(0.1))
     }

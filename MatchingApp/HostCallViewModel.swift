@@ -15,14 +15,21 @@ class HostCallViewModel: ObservableObject {
     private var cancellable = Set<AnyCancellable>()
     private let callService = CallFirestoreService()
     private let userService = UserFirestoreService()
-    private let musicData = NSDataAsset(name: "CallMusic")!.data
-    private let callModel = CallModel()
+    private var musicData: Data {
+        guard let music = NSDataAsset(name: "Calling") else {
+            return Data.init()
+        }
+        return music.data
+    }
+    private let callModel = CallModel(isGroupCall: true)
+    private let realTimeCallStatus = RealTimeCallStatus.shared
     // 通話ホストの場合、最初はCallObservableObjectは存在しないので、channelIdが必要。
     var musicPlayer:AVAudioPlayer?
     @Published var channelId: String = ""
     @Published var isFirstFetchCallInfo: Bool = true
     @Published var call: CallObservableModel?
     @Published var isLoading: Bool = false
+    @Published var isStopLoading: Bool = false
     @Published var isBgm: Bool = false
     @Published var isMuted: Bool = false
     @Published var isSpeaker: Bool = false
@@ -33,50 +40,63 @@ class HostCallViewModel: ObservableObject {
     
     func startCalling(user: UserObservableModel, channelTitle: String) {
         self.isLoading = true
-        callModel.startCall(user: user) { result in
+        callModel.startCall(user: user) { [weak self] result in
+            guard let weakSelf = self else { return }
             switch result {
             case .success(let channelId):
-                self.callService.createCall(
+                weakSelf.createCallToFirestore(
                     channelId: channelId,
                     channelTitle: channelTitle,
-                    user: user) { result in
-                        switch result {
-                        case .success(_):
-                            self.channelId = channelId
-                            self.callModel.initOutputRoute()
-                            self.initialCallInfo(
-                                channelId: self.channelId
-                            )
-                        case .failure(let error):
-                            self.errorMessage = error.errorMessage
-                            self.isErrorAlert = true
-                        }
-                    }
+                    user: user
+                )
             case .failure(let error):
-                self.errorMessage = error.errorMessage
-                self.isErrorAlert = true
+                weakSelf.errorMessage = error.errorMessage
+                weakSelf.isErrorAlert = true
             }
         }
+    }
+    
+    func createCallToFirestore(channelId: String, channelTitle: String, user: UserObservableModel) {
+        self.callService.createCall(
+            channelId: channelId,
+            channelTitle: channelTitle,
+            user: user) { [weak self] result in
+                guard let weakSelf = self else { return }
+                switch result {
+                case .success(_):
+                    weakSelf.channelId = channelId
+                    weakSelf.callModel.initOutputRoute()
+                    weakSelf.realTimeCallStatus.channelId = channelId
+                    weakSelf.realTimeCallStatus.isHostUid = user.user.uid
+                    weakSelf.initialCallInfo(channelId: weakSelf.channelId)
+                case .failure(let error):
+                    weakSelf.errorMessage = error.errorMessage
+                    weakSelf.isErrorAlert = true
+                }
+            }
     }
     
     func initialCallInfo(channelId:String){
         self.callService
             .getUpdateCallById(channelId: channelId)
-            .sink { completion in
+            .sink { [weak self] completion in
+                guard let weakSelf = self else { return }
                 switch completion {
                 case .finished:
                     print("successfully fetch call data")
                 case .failure(let error):
-                    self.isErrorAlert = true
-                    self.errorMessage = error.errorMessage
+                    weakSelf.isErrorAlert = true
+                    weakSelf.errorMessage = error.errorMessage
                 }
-            } receiveValue: { call in
-                self.call = call
-                if self.isFirstFetchCallInfo {
-                    self.isLoading = false
-                    self.isFirstFetchCallInfo = false
+            } receiveValue: { [weak self] call in
+                guard let weakSelf = self else { return }
+                weakSelf.call = call
+                weakSelf.realTimeCallStatus.callingUser = Array<String>(call.call.userIdToUserIconImageUrlString.keys)
+                if weakSelf.isFirstFetchCallInfo {
+                    weakSelf.isLoading = false
+                    weakSelf.isFirstFetchCallInfo = false
                 } else {
-                    self.callModel.stopBgm()
+                    weakSelf.callModel.stopBgm()
                 }
             }
             .store(in: &self.cancellable)
@@ -86,32 +106,26 @@ class HostCallViewModel: ObservableObject {
     func finishChannel(
         callInfo:CallObservableModel,
         appState: AppState
-    ){
+    ) {
+        self.isStopLoading = true
         self.callModel.stopCall(
             userId: callInfo.call.hostUserId,
             channelId: self.channelId
-        ) { result in
+        ) { [weak self] result in
+            guard let weakSelf = self else { return }
             switch result {
             case .success(_):
-                self.callService.stopCall(channelId: self.channelId) { result in
-                    switch result {
-                    case .success(_):
-                        self.isSuccessDeleteCall = true
-                        RealTimeCallStatus.shared.initial()
-                        appState.isHostCallReload = true
-                    case .failure(let error):
-                        self.errorMessage = error.errorMessage
-                        self.isErrorAlert = true
-                    }
-                }
+                weakSelf.isSuccessDeleteCall = true
+                appState.isHostCallReload = true
+                weakSelf.realTimeCallStatus.isHostUid = ""
+                weakSelf.isStopLoading = false
             case .failure(let error):
-                self.errorMessage = error.errorMessage
-                self.isErrorAlert = true
+                weakSelf.errorMessage = error.errorMessage
+                weakSelf.isErrorAlert = true
             }
         }
     }
     
-    // ミュートする
     func muteAudio(){
         self.callModel.muteAudio(isMuted: self.isMuted) {
             self.isMuted.toggle()
@@ -119,31 +133,34 @@ class HostCallViewModel: ObservableObject {
     }
     
     func changeOutputRoute() {
-        self.callModel.changeOutputRoute(isSpeaker: self.isSpeaker) {
-            self.isSpeaker.toggle()
+        self.callModel.changeOutputRoute(isSpeaker: self.isSpeaker) { [weak self] in
+            guard let weakSelf = self else { return }
+            weakSelf.isSpeaker.toggle()
         }
     }
     
     func updateAttendeeCallStatus(userId: String, channelId: String) {
-        self.userService.updateUserCallingStatus(userId: userId) { result in
+        self.userService.updateUserCallingStatus(userID: userId){ [weak self] result in
+            guard let weakSelf = self else { return }
             switch result {
             case .success(_):
-                self.callService
+                weakSelf.callService
                     .leaveChannel(channelId: channelId, userId: userId)
-                    .sink { completion in
+                    .sink { [weak self] completion in
+                        guard let weakSelf = self else { return }
                         switch completion {
                         case .finished:
-                            print("successfully handle drop or leaveUser")
+                            weakSelf.realTimeCallStatus.callingUser = weakSelf.realTimeCallStatus.callingUser.filter { $0 != userId }
                         case .failure(let error):
-                            self.errorMessage = error.errorMessage
-                            self.isErrorAlert = true
+                            weakSelf.errorMessage = error.errorMessage
+                            weakSelf.isErrorAlert = true
                         }
                     } receiveValue: { _ in }
-                    .store(in: &self.cancellable)
+                    .store(in: &weakSelf.cancellable)
                 
             case .failure(let error):
-                self.errorMessage = error.errorMessage
-                self.isErrorAlert = true
+                weakSelf.errorMessage = error.errorMessage
+                weakSelf.isErrorAlert = true
             }
         }
     }

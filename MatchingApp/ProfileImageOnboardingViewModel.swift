@@ -8,7 +8,7 @@ import Foundation
 import Combine
 import SwiftUI
 
-class HobbiesInitViewModel: ObservableObject {
+class ProfileImageInitViewModel: ObservableObject {
     
     private var cancellable = Set<AnyCancellable>()
     private let imageStorageManager = ImageStorageManager()

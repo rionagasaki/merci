@@ -15,6 +15,8 @@ class UserProfileViewModel: ObservableObject {
     @Published var isReportAbuseModal: Bool = false
     @Published var isAlert: Bool = false
     @Published var isLastDocumentLoaded: Bool = false
+    @Published var isCompleteToast: Bool = false
+    @Published var fixedPost: PostObservableModel?
     @Published var usersPost: [PostObservableModel] = []
     @Published var isDeleteAccount: Bool = false
     @Published var isLoading: Bool = false
@@ -46,6 +48,12 @@ class UserProfileViewModel: ObservableObject {
                 }
             } receiveValue: { posts in
                 self.usersPost = []
+                if let user = self.user {
+                    let fixedPostArr = posts.filter({ $0.id == user.user.fixedPost })
+                    if fixedPostArr.count != 0 {
+                        self.fixedPost = fixedPostArr[0].adaptPostObservableModel()
+                    }
+                }
                 if posts.count < 20 {
                     self.isLastDocumentLoaded = true
                 } else {
@@ -102,6 +110,7 @@ class UserProfileViewModel: ObservableObject {
     func processPosts(posts: [Post]) {
         for post in posts {
             let postObservableModel = post.adaptPostObservableModel()
+            
             self.usersPost.append(postObservableModel)
         }
         self.isLoading = false
@@ -131,5 +140,56 @@ class UserProfileViewModel: ObservableObject {
                 print("revieve value")
             }
             .store(in: &self.cancellable)
+    }
+    
+    func deletePost(postID: String, userModel: UserObservableModel) {
+        self.postService
+            .deletePost(postID: postID, userID: userModel.user.uid, fixedPostID: userModel.user.fixedPost)
+            .sink { completion in
+                switch completion {
+                case .finished:
+                    if postID == self.fixedPost?.id {
+                        self.fixedPost = nil
+                    }
+                    self.getLatestPosts()
+                case .failure(let error):
+                    self.isErrorAlert = true
+                    self.errorMessage = error.errorMessage
+                }
+            } receiveValue: { _ in
+                print("recieve value")
+            }
+            .store(in: &self.cancellable)
+    }
+    
+    func pinnedPost(postID: String, userID: String) {
+        self.userService.fixedPostToProfile(postID: postID, userID: userID)
+            .sink { completion in
+                switch completion {
+                case .finished:
+                    if postID.isEmpty {
+                        self.fixedPost = nil
+                    } else {
+                        self.getPost(postID: postID)
+                    }
+                    break
+                case .failure(let error):
+                    self.errorMessage = error.errorMessage
+                    self.isErrorAlert = true
+                }
+            } receiveValue: { _ in }.store(in: &self.cancellable)
+    }
+    
+    func getPost(postID: String){
+        self.postService.getOnePost(postId: postID)
+            .sink { completion in
+                switch completion {
+                case .finished:
+                    break
+                case .failure(let error):
+                    self.errorMessage = error.errorMessage
+                    self.isErrorAlert = true
+                }
+            } receiveValue: { post in self.fixedPost = post.adaptPostObservableModel() }.store(in: &self.cancellable)
     }
 }

@@ -13,6 +13,18 @@ class AuthenticationService {
     static let shared = AuthenticationService()
     private init(){}
     
+    func reAuthentication(credential: AuthCredential) -> AnyPublisher<Void, AppError>{
+        return Future { promise in
+            Auth.auth().currentUser?.reauthenticate(with: credential){ result, error in
+                if let error = error {
+                    promise(.failure(.firestore(error)))
+                } else {
+                    promise(.success(()))
+                }
+            }
+        }.eraseToAnyPublisher()
+    }
+    
     func signInWithEmail(email: String, password: String) -> AnyPublisher<AuthDataResult, AppError> {
         return Future<AuthDataResult, AppError> { promise in
             Auth.auth().signIn(withEmail: email, password: password) { authResult, error in
@@ -42,7 +54,7 @@ class AuthenticationService {
         return Future<AuthDataResult, AppError> { promise in
             Auth.auth().signIn(with: credential){ authResult, error in
                 if let error = error as? NSError {
-                    promise(.failure(.auth(AuthErrorCode(_nsError: error))))
+                    promise(.failure(.auth(.init(_nsError: error))))
                 } else if let authResult = authResult {
                     promise(.success(authResult))
                 }
@@ -54,8 +66,8 @@ class AuthenticationService {
     <AuthDataResult, AppError>{
         return Future<AuthDataResult, AppError> { promise in
             Auth.auth().signIn(with: credential){ authResult, error in
-                if let error = error as NSError? {
-                    promise(.failure(.auth(AuthErrorCode(_nsError: error))))
+                if let error = error as? NSError {
+                    promise(.failure(.auth(.init(_nsError: error))))
                 } else if let authResult = authResult {
                     promise(.success(authResult))
                 }
@@ -78,9 +90,13 @@ class AuthenticationService {
     func deleteAccount() -> AnyPublisher<Void, AppError> {
         return Future<Void, AppError> { promise in
             let currentUser = Auth.auth().currentUser
+            
              currentUser?.delete { error in
-                if let error = error {
-                    promise(.failure(.other(.unexpectedError)))
+                 if let error = error as? AuthErrorCode {
+                     if  error.code == .requiresRecentLogin {
+                         promise(.failure(.firestore(error)))
+                         
+                    }
                 } else {
                     promise(.success(()))
                 }

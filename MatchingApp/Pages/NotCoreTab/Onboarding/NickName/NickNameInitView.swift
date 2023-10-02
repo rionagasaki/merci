@@ -18,10 +18,10 @@ struct NickNameInitView: View {
         NavigationView {
             VStack {
                 VStack(alignment: .leading){
-                    Text("ニックネームを\n入力してください")
+                    Text("🐧 ニックネームを\n 入力してください")
                         .foregroundColor(.customBlack)
                         .fontWeight(.bold)
-                        .font(.system(size: 25))
+                        .font(.system(size: 24))
                         .padding(.horizontal, 16)
                         .padding(.top, 16)
                     
@@ -54,13 +54,7 @@ struct NickNameInitView: View {
                             .padding(.horizontal, 16)
                             .padding(.top, -8)
                     }
-                    VStack(alignment: .leading){
-                        Text("※本名などあなたを特定できる情報の使用は控えてください。")
-                        Text("※ニックネームはあとから変更できます。")
-                    }
-                    .foregroundColor(.gray)
-                    .padding(.horizontal, 16)
-                    .font(.system(size: 13))
+
                 }
                 Spacer()
             }
@@ -91,15 +85,16 @@ struct NickNameInitView: View {
                         }
                     } else {
                         Text("次へ")
-                            .foregroundColor(.white)
+                            .foregroundColor(.customBlack)
                             .font(.system(size: 22, weight: .bold))
                             .frame(width: UIScreen.main.bounds.width, height: 60)
-                            .background(Color.gray.opacity(0.7))
+                            .background(Color.customLightGray)
                             .padding(.bottom, 16)
                     }
                 }
             }
         }
+        .tint(.customBlack)
     }
 }
 

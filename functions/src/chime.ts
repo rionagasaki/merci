@@ -2,7 +2,6 @@
 import * as aws from "aws-sdk";
 import { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
-import { updateUserCallingStatus } from "./index";
 
 aws.config.update({
   credentials: new aws.Credentials(
@@ -45,12 +44,6 @@ export const createOrJoinMeeting = async (req: Request, res: Response) => {
           ExternalUserId: req.body.data.userId,
         })
         .promise();
-
-      await updateUserCallingStatus(
-        req.body.data.userId,
-        meeting.Meeting?.MeetingId as string
-      );
-
       res.status(200).json({
         data: {
           meeting: meeting,
@@ -76,10 +69,6 @@ export const createOrJoinMeeting = async (req: Request, res: Response) => {
         })
         .promise();
       // eslint-disable-next-line max-len
-      await updateUserCallingStatus(
-        req.body.data.userId,
-        req.body.data.channelId
-      );
 
       res.status(200).json({
         data: {
@@ -115,7 +104,6 @@ export const deleteMeeting = async (req: Request, res: Response) => {
         MeetingId: req.body.data.channelId,
       })
       .promise();
-    await updateUserCallingStatus(req.body.data.userId, undefined);
     res.status(200).json({
       data: {
         message: "successfully end meeting",

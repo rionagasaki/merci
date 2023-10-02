@@ -10,7 +10,7 @@ struct GenderView: View {
     }
     var body: some View {
         VStack {
-            Text("性別を\n選択してください")
+            Text("🐶 性別を\n 選択してください")
                 .font(.system(size: 25))
                 .fontWeight(.bold)
                 .foregroundColor(Color.customBlack)
@@ -49,28 +49,15 @@ struct GenderView: View {
                 }
             } else {
                 Text("次へ")
-                    .foregroundColor(.white)
+                    .foregroundColor(.customBlack)
                     .bold()
                     .frame(width: UIScreen.main.bounds.width-32, height: 60)
-                    .background(Color.gray.opacity(0.8))
+                    .background(Color.customLightGray)
                     .cornerRadius(10)
             }
         }
         .navigationTitle("性別")
         .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden()
         .background(Color.white)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(
-                    action: {
-                        dismiss()
-                    }, label: {
-                        Image(systemName: "chevron.left")
-                            .foregroundColor(.black)
-                    }
-                )
-            }
-        }
     }
 }

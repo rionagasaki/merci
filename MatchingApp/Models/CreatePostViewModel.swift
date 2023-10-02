@@ -7,9 +7,12 @@
 
 import Foundation
 import SwiftUI
+import UIKit
 import Combine
+import PhotosUI
 
-class CreatePostViewModel: ObservableObject {
+@MainActor
+final class CreatePostViewModel: ObservableObject {
     @Published var text: String = ""
     @Published var isLoading: Bool = false
     @Published var isImagePickerModal: Bool = false
@@ -18,6 +21,9 @@ class CreatePostViewModel: ObservableObject {
     @Published var errorMessage: String = ""
     @Published var isErrorAlert: Bool = false
     @Published var isPostSuccess: Bool = false
+    @Published var isAuthorization: Bool = false
+    @Published var photoPickerItem: [PhotosPickerItem] = []
+    @Published var isPhotoAutorization: Bool = false
     
     private let postService = PostFirestoreService()
     private var cancellable = Set<AnyCancellable>()
@@ -39,18 +45,32 @@ class CreatePostViewModel: ObservableObject {
                 contentImageUrlStrings: imageStrings
             )
         }
-        .sink { completion in
+        .sink { [weak self] completion in
+            guard let weakSelf = self else { return }
             switch completion {
             case .finished:
-                self.isPostSuccess = true
-                self.isLoading = false
+                weakSelf.isPostSuccess = true
+                weakSelf.isLoading = false
             case .failure(let error):
-                self.isErrorAlert = true
-                self.errorMessage = error.errorMessage
+                weakSelf.isErrorAlert = true
+                weakSelf.errorMessage = error.errorMessage
             }
-        } receiveValue: { _ in
-            print("recieve value")
-        }
+        } receiveValue: { _ in }
         .store(in: &self.cancellable)
+    }
+    
+func photoPickerChanged(photoPickerItems: [PhotosPickerItem]) async throws {
+        self.contentImages = []
+        for photoPickerItem in photoPickerItems {
+            do {
+                if let data = try await photoPickerItem.loadTransferable(type: Data.self) {
+                    if let uiImage = UIImage(data: data) {
+                        self.contentImages.append(uiImage)
+                    }
+                }
+            } catch {
+                throw error
+            }
+        }
     }
 }

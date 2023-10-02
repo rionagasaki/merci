@@ -11,6 +11,7 @@ struct ReportTextView: View {
     @Binding var reportText: String
     @Environment(\.dismiss) var dismiss
     @FocusState var focus: Bool
+    private let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .heavy)
     var body: some View {
         VStack {
             TextEditor(text: $reportText)
@@ -29,12 +30,13 @@ struct ReportTextView: View {
                         .foregroundColor(.white)
                         .font(.system(size: 22, weight: .bold))
                         .frame(width: UIScreen.main.bounds.width, height: 60)
-                        .background(Color.pink)
+                        .background(Color.customBlue.opacity(0.8))
                         .padding(.bottom, 16)
                 }
             }
             ToolbarItem(placement: .navigationBarLeading){
                 Button {
+                    UIIFGeneratorMedium.impactOccurred()
                     dismiss()
                 } label: {
                     Image(systemName: "chevron.left")

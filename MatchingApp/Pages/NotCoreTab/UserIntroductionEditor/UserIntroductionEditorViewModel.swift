@@ -29,9 +29,7 @@ class UserIntroductionEditorViewModel: ObservableObject {
                     self.isErrorAlert = true
                     self.errorMessage = error.errorMessage
                 }
-            } receiveValue: { _ in
-                print("recieve value")
-            }
+            } receiveValue: { _ in }
             .store(in: &self.cancellable)
     }
 }

@@ -91,7 +91,12 @@ struct CreateReplyPostView: View {
                 }
                 Spacer()
             }
-            .onReceive(viewModel.$isPostSuccess){ if $0 { dismiss() } }
+            .onReceive(viewModel.$isPostSuccess){
+                if $0 {
+                    self.reloadPost.isRequiredReload = true
+                    dismiss()
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing){
                     Button {

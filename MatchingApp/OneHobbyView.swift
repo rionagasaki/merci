@@ -16,7 +16,7 @@ struct OneHobbyView: View {
             .font(.system(size: 14, weight: .bold))
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
-            .background(selected ? .pink: .gray.opacity(0.1))
+            .background(selected ? Color.customBlue.opacity(0.5): .gray.opacity(0.1))
             .cornerRadius(20)
     }
 }

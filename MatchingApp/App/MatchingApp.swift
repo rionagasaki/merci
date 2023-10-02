@@ -1,5 +1,5 @@
 //
-//  MatchingAppApp.swift
+//  MatchingApp.swift
 //  MatchingApp
 //
 //  Created by Rio Nagasaki on 2023/05/01.
@@ -16,6 +16,10 @@ struct MatchingApp: App {
             ContentView()
                 .environmentObject(AppState())
                 .environmentObject(UserObservableModel(userModel: .init()))
+                .onOpenURL { url in
+                    let urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: true)
+                    print("URL_token",urlComponents?.scheme ?? .init())
+                }
         }
     }
 }

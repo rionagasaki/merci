@@ -1,6 +1,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { createOrJoinMeeting, deleteMeeting, checkMeeting } from "./chime";
+import { DataSnapshot } from "firebase-admin/database";
 
 admin.initializeApp({
   projectId: "matchingapp-b77af",
@@ -288,7 +289,7 @@ exports.createMessage = functions.firestore
       try {
         await sendPushNotification(
           "着信",
-          `${sendUserRef["fromUserNickName"]}さんがあなたと通話を始めました。`,
+          `${sendUserRef["fromUserNickname"]}さんがあなたと通話を始めました。`,
           "message",
           sendUserRef["toUserToken"]
         );
@@ -298,7 +299,7 @@ exports.createMessage = functions.firestore
     } else if (type == "Message") {
       try {
         await sendPushNotification(
-          `💬 新しいメッセージ from${sendUserRef["fromUserNickname"]}`,
+          `${sendUserRef["fromUserNickname"]}`,
           `${sendUserRef["message"]}`,
           "message",
           sendUserRef["toUserToken"]
@@ -352,24 +353,6 @@ exports.receiveRequestOrApprove = functions.firestore
     }
   });
 
-export const updateUserCallingStatus = async (
-  userId: string,
-  channelId: string | undefined
-) => {
-  try {
-    const userCallRef = db.collection("User").doc(userId);
-
-    return await userCallRef.set(
-      {
-        isCallingChannelId: channelId === undefined ? "" : channelId,
-      },
-      { merge: true }
-    );
-  } catch (error) {
-    throw new Error("Failed to update to Firestore.");
-  }
-};
-
 const handleCallEnded = async (channelId: string) => {
   const usersRef = admin.firestore().collection("User");
   const relatedUsers = await usersRef
@@ -383,6 +366,31 @@ const handleCallEnded = async (channelId: string) => {
   });
   await batch.commit();
 };
+enum State {
+  online = "online",
+  offline = "offline",
+}
+
+interface StatusForDatabase {
+  readonly state: State;
+  readonly lastChanged: number;
+}
+
+exports.onStatusUpdated = functions.database
+  .ref("/status/{userId}")
+  .onUpdate(async (change, context) => {
+    const eventStatus: StatusForDatabase = change.after.val();
+    const eventStatusRef = change.after.ref;
+    const userId = context.params.userId;
+
+    const newStatusSnapshot: DataSnapshot = await eventStatusRef.once("value");
+    const newStatus: StatusForDatabase = newStatusSnapshot.val();
+    if (newStatus.lastChanged > eventStatus.lastChanged) {
+      return;
+    }
+    const userRef = admin.firestore().collection("User").doc(userId);
+    await userRef.set({ status: newStatus.state }, { merge: true });
+  });
 
 exports.createOrJoinMeeting = functions.https.onRequest(createOrJoinMeeting);
 exports.deleteMeeting = functions.https.onRequest(deleteMeeting);

@@ -15,10 +15,11 @@ struct SettingCellView: View {
             HStack {
                 Image(systemName: systemImageName)
                     .resizable()
-                    .foregroundColor(.black)
-                    .frame(width: 20, height: 20)
+                    .scaledToFill()
+                    .frame(width: 16, height: 16)
+                    .foregroundColor(.customBlack)
                 Text(text)
-                    .foregroundColor(.black)
+                    .foregroundColor(.customBlack)
                 Spacer()
             }
             .padding(.vertical, 8)

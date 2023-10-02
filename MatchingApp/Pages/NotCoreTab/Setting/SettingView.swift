@@ -8,19 +8,26 @@ import SwiftUI
 struct SettingView: View {
     
     @EnvironmentObject var appState: AppState
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.presentationMode) var presentationMode
     @StateObject var viewModel = SettingViewModel()
     
     var body: some View {
         
         List {
             Section(header: Text("アカウント設定")) {
-                Button {
-                    self.viewModel.webUrlString = "https://bow-elm-3dc.notion.site/merci-b6582adddfa346528d17bf0b76c5ec06?pvs=4"
-                    self.viewModel.isWebView = true
+                NavigationLink {
+                    BlockedUserListView()
                 } label: {
-                    SettingCellView(systemImageName: "questionmark", text: "サービス内容")
+                    SettingCellView(systemImageName: "person.fill.xmark", text: "ブロック中のユーザー")
                 }
+
+                NavigationLink {
+                    HiddenChatUserListView()
+                } label: {
+                    SettingCellView(systemImageName: "eye.slash.fill", text: "非表示中のチャットルーム")
+                }
+
+                
                 Button {
                     self.viewModel.webUrlString = "https://bow-elm-3dc.notion.site/87888d609f734e0eb6d836ae091cd973"
                     self.viewModel.isWebView = true
@@ -47,7 +54,6 @@ struct SettingView: View {
             }
         }
         .navigationTitle("設定")
-        .navigationBarBackButtonHidden()
         .fullScreenCover(isPresented: $viewModel.isWebView){
             if let loadUrl = URL(string: viewModel.webUrlString) {
                 WebView(loadUrl: loadUrl)
@@ -55,7 +61,7 @@ struct SettingView: View {
         }
         .onReceive(viewModel.$isSuccess){
             if $0 {
-                dismiss()
+                presentationMode.wrappedValue.dismiss()
             }
         }
         .alert(isPresented: $viewModel.isSignOutAlert){
@@ -65,19 +71,6 @@ struct SettingView: View {
                 primaryButton: .cancel(Text("キャンセル")),
                 secondaryButton: .destructive(Text("ログアウト"), action: { viewModel.signOut() })
             )
-        }
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading){
-                Button {
-                    dismiss()
-                } label: {
-                    HStack {
-                        Image(systemName: "chevron.backward")
-                        Text("戻る")
-                    }
-                    .foregroundColor(.customBlack)
-                }
-            }
         }
     }
 }
