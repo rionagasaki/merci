@@ -16,7 +16,7 @@ struct NotificationListView: View {
     let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .heavy)
     
     var body: some View {
-        VStack {
+        VStack(spacing: .zero){
             VStack {
                 HStack {
                     ForEach(viewModel.noticeSections.indices, id: \.self) { index in
@@ -67,7 +67,10 @@ struct NotificationListView: View {
                                 .foregroundColor(.customBlack)
                                 .font(.system(size: 18, weight: .bold))
                         }
-                        .padding(.top, 128)
+                        .frame(width: UIScreen.main.bounds.width-32, height: 200)
+                        .background(Color.white)
+                        .cornerRadius(20)
+                        .padding(.top, 64)
                         
                     } else {
                         ForEach(viewModel.likeNotices) { notice in
@@ -82,6 +85,9 @@ struct NotificationListView: View {
                         }
                     }
                 }
+                .padding(.vertical, 8)
+                .frame(width: UIScreen.main.bounds.width)
+                .background(Color.customLightGray)
                 .refreshable {
                     UIIFGeneratorMedium.impactOccurred()
                     viewModel.getLikeNotice(userID: userModel.user.uid)
@@ -100,7 +106,10 @@ struct NotificationListView: View {
                                 .foregroundColor(.customBlack)
                                 .font(.system(size: 18, weight: .bold))
                         }
-                        .padding(.top, 128)
+                        .frame(width: UIScreen.main.bounds.width-32, height: 200)
+                        .background(Color.white)
+                        .cornerRadius(20)
+                        .padding(.top, 64)
                     } else {
                         ForEach(viewModel.commentNotices) { notice in
                             NavigationLink {
@@ -119,6 +128,9 @@ struct NotificationListView: View {
                         }
                     }
                 }
+                .padding(.vertical, 8)
+                .frame(width: UIScreen.main.bounds.width)
+                .background(Color.customLightGray)
                 .refreshable {
                     UIIFGeneratorMedium.impactOccurred()
                     viewModel.getCommentNotice(userID: userModel.user.uid, appState: appState)
@@ -136,7 +148,10 @@ struct NotificationListView: View {
                                 .foregroundColor(.customBlack)
                                 .font(.system(size: 18, weight: .bold))
                         }
-                        .padding(.top, 128)
+                        .frame(width: UIScreen.main.bounds.width-32, height: 200)
+                        .background(Color.white)
+                        .cornerRadius(20)
+                        .padding(.top, 64)
                     } else {
                         ForEach(viewModel.followNotices) { notice in
                             NavigationLink {
@@ -155,6 +170,9 @@ struct NotificationListView: View {
                         }
                     }
                 }
+                .padding(.vertical, 8)
+                .frame(width: UIScreen.main.bounds.width)
+                .background(Color.customLightGray)
                 .refreshable {
                     UIIFGeneratorMedium.impactOccurred()
                     self.viewModel.getRequestNotice(userID: userModel.user.uid, appState: appState)
@@ -182,12 +200,15 @@ struct NotificationListView: View {
                     Image("isRead")
                         .resizable()
                         .scaledToFill()
-                        .frame(width: 32, height: 32)
+                        .frame(width: 28, height: 28)
+                        .foregroundColor(.customBlack)
                 }
             }
         }
         .onAppear {
-            viewModel.getNotice(appState: appState, userID: userModel.user.uid)
+            Task {
+                await viewModel.getNotice(appState: appState, userID: userModel.user.uid)
+            }
         }
         .alert(isPresented: $viewModel.isUpdateReadStatus){
             Alert(

@@ -10,6 +10,36 @@ import SDWebImageSwiftUI
 import PhotosUI
 import AlertToast
 
+
+struct ConcernCategory {
+    let name: String
+    let imageName: String
+}
+
+enum ConcernKind: CaseIterable {
+    case study
+    case work
+    case love
+    case health
+    case family
+    
+    var category: ConcernCategory {
+        switch self {
+        case .study:
+            return ConcernCategory(name: "勉強の悩み", imageName: "Study")
+        case .work:
+            return ConcernCategory(name: "仕事の悩み", imageName: "Work")
+        case .love:
+            return ConcernCategory(name: "恋愛の悩み", imageName: "Couple")
+        case .health:
+            return ConcernCategory(name: "健康の悩み", imageName: "Trust")
+        case .family:
+            return ConcernCategory(name: "家族の悩み", imageName: "Family")
+        }
+    }
+}
+
+
 struct CreatePostView: View {
     @StateObject var viewModel = CreatePostViewModel()
     let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .heavy)
@@ -30,7 +60,53 @@ struct CreatePostView: View {
                         .background(Color.gray.opacity(0.1))
                         .clipShape(Circle())
                     
-                    VStack {
+                    if viewModel.isConcern { Divider() }
+                    
+                    VStack(alignment: .leading){
+                        if viewModel.isConcern {
+                            Menu {
+                                ForEach(ConcernKind.allCases, id: \.self) { kind in
+                                    Button {
+                                        self.viewModel.concernKind = kind
+                                    } label: {
+                                        Label {
+                                            Text(kind.category.name)
+                                        } icon: {
+                                            Image(kind.category.imageName)
+                                        }
+
+                                    }
+                                }
+                            } label: {
+                                if let concernKind = viewModel.concernKind {
+                                    HStack {
+                                        Text(concernKind.category.name)
+                                            .foregroundColor(.customBlack)
+                                            .font(.system(size: 16, weight: .medium))
+                                        Image(concernKind.category.imageName)
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 16, height: 16)
+                                            .padding(.all, 8)
+                                            .background(Color.customLightGray)
+                                            .clipShape(Circle())
+                                    }
+                                } else {
+                                    Label {
+                                        Text("相談したいお悩みの種類を選択してね")
+                                            .font(.system(size: 16))
+                                    } icon: {
+                                        Image(systemName: "line.horizontal.3.decrease")
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 10, height: 10)
+                                    }
+                                    .foregroundColor(.customBlack)
+                                }
+                            }
+                            .padding(.leading, 16)
+                        }
+                    
                         ZStack(alignment: .topLeading){
                             TextEditor(text: $viewModel.text)
                                 .frame(width: UIScreen.main.bounds.width/1.3, height: 200)
@@ -41,12 +117,11 @@ struct CreatePostView: View {
                                 .padding(.top, 16)
                                 .padding(.leading, 8)
                             if viewModel.text.isEmpty {
-                                Text("今日の給食は何だろう...")
+                                Text("とめどなくつぶやきたい気分...")
                                     .font(.system(size: 18))
                                     .foregroundColor(.gray)
                                     .padding(.top, 23)
                                     .padding(.leading, 13)
-                                
                             }
                         }
                         if !viewModel.contentImages.isEmpty {
@@ -84,6 +159,23 @@ struct CreatePostView: View {
                 Spacer()
                 HStack {
                     Spacer()
+                    
+                    VStack(spacing: 2){
+                        Text("お悩み投稿\(viewModel.isConcern ? "オン": "オフ")")
+                            .foregroundColor(.customBlack)
+                            .font(.system(size: 12, weight: .medium))
+                        
+                        Toggle("お悩みカテゴリー", isOn: Binding(
+                            get: { viewModel.isConcern },
+                            set: { newValue in
+                                withAnimation {
+                                    viewModel.isConcern = newValue
+                                }
+                            }
+                        ))
+                        .labelsHidden()
+                    }
+                    .padding(.trailing, 16)
                     PhotosPicker(
                         selection: $viewModel.photoPickerItem,
                         maxSelectionCount: 2,
@@ -127,9 +219,16 @@ struct CreatePostView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing){
                     Button {
-                        UIIFGeneratorMedium.impactOccurred()
-                        viewModel.addPost(userModel: user)
-                        self.reloadPost.isRequiredReload = true
+                        Task {
+                            UIIFGeneratorMedium.impactOccurred()
+                            
+                            if viewModel.isConcern {
+                                await viewModel.addConcernPost(user: user)
+                            } else {
+                                await viewModel.addPost(userModel: user)
+                            }
+                            self.reloadPost.isRequiredReload = true
+                        }
                     } label: {
                         HStack {
                             if viewModel.isLoading {
@@ -140,7 +239,6 @@ struct CreatePostView: View {
                                 .font(.system(size: 14, weight: .medium))
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 8)
-                                .disabled(viewModel.text.isEmpty)
                                 .background(viewModel.text.isEmpty || viewModel.isLoading ? Color.gray.opacity(0.3): Color.customRed)
                                 .cornerRadius(25)
                         }
@@ -163,6 +261,9 @@ struct CreatePostView: View {
             }
             .alert(isPresented: $viewModel.isErrorAlert) {
                 Alert(title: Text("エラー"), message: Text(viewModel.errorMessage))
+            }
+            .toast(isPresenting: $viewModel.isCreateConcerAlert) {
+                AlertToast(displayMode: .banner(.pop), type: .complete(Color.green), title: "みんなからのメッセージを待とう🎵", subTitle: "一覧画面には表示されないよ。")
             }
         }
     }

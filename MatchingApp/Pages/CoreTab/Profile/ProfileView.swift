@@ -7,8 +7,6 @@
 
 import SwiftUI
 import SDWebImageSwiftUI
-import PopupView
-import PartialSheet
 import Combine
 
 struct ProfileView: View {

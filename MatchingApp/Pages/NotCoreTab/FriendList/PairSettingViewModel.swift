@@ -9,7 +9,8 @@ import Foundation
 import Combine
 import SwiftUI
 
-class PairSettingViewModel: ObservableObject {
+@MainActor
+final class PairSettingViewModel: ObservableObject {
     @Published var friendUsers: [UserObservableModel] = []
     @Published var requestedFriendUsers: [UserObservableModel] = []
     @Published var requestFriendUsers: [UserObservableModel] = []
@@ -24,68 +25,54 @@ class PairSettingViewModel: ObservableObject {
     let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .medium)
     private var cancellable = Set<AnyCancellable>()
     
-    func initialFriendList(userModel: UserObservableModel){
-        self.userService.getConcurrentUserInfo(userIDs: userModel.user.friendRequestUids)
-            .flatMap { users -> AnyPublisher<[User], AppError> in
-                self.requestFriendUsers = users.map { .init(userModel: $0.adaptUserObservableModel()) }
-                return self.userService.getConcurrentUserInfo(userIDs: userModel.user.friendRequestedUids)
-            }
-            .flatMap { users -> AnyPublisher<[User], AppError> in
-                self.requestedFriendUsers = users.map { .init(userModel: $0.adaptUserObservableModel()) }
-                return self.userService.getConcurrentUserInfo(userIDs: userModel.user.friendUids
-                )
-            }
-            .sink { completion in
-                switch completion {
-                case .finished:
-                    print("finished")
-                case .failure(let error):
-                    self.isErrorAlert = true
-                    self.errorMessage = error.errorMessage
-                }
-            } receiveValue: { users in
-                self.friendUsers = users.map { .init(userModel: $0.adaptUserObservableModel()) }
-            }
-            .store(in: &self.cancellable)
+    func initialFriendList(userModel: UserObservableModel) async {
+        do {
+            async let getRequestUsers = self.userService.getConcurrentUserInfo(userIDs: userModel.user.friendRequestUids)
+            async let getRequestedUsers = self.userService.getConcurrentUserInfo(userIDs: userModel.user.friendRequestedUids)
+            async let getFriendUsers = self.userService.getConcurrentUserInfo(userIDs: userModel.user.friendUids)
+            
+            let (requestUser, requestedUser, friendUsers) = try await (getRequestUsers, getRequestedUsers, getFriendUsers)
+            
+            self.requestFriendUsers = requestUser.map { .init(userModel: $0.adaptUserObservableModel()) }
+            self.requestedFriendUsers = requestedUser.map { .init(userModel: $0.adaptUserObservableModel()) }
+            self.friendUsers = friendUsers.map { .init(userModel: $0.adaptUserObservableModel()) }
+        } catch let error as AppError {
+            self.errorMessage = error.errorMessage
+            self.isErrorAlert = true
+        } catch {
+            self.errorMessage = error.localizedDescription
+            self.isErrorAlert = true
+        }
     }
     
-    func searchUserByUid(userID: String){
+    func searchUserByUid(userID: String) async {
         if userID == searchQuery {
             self.isErrorAlert = true
             self.errorMessage = "自分のIDでの検索はできません。"
             return
         }
         
-        self.userService.searchUser(uid: self.searchQuery)
-            .sink { completion in
-                switch completion {
-                case .finished:
-                    self.submit = true
-                case .failure(let error):
-                    self.isErrorAlert = true
-                    self.errorMessage = error.errorMessage
-                }
-            } receiveValue: { [weak self] user in
-                guard let weakSelf = self else { return }
-                if let user = user {
-                    if user.friendRequestUids.contains(userID){
-                        weakSelf.isErrorAlert = true
-                        weakSelf.errorMessage = "\(user.nickname)さんからは既にペアリクエストを受けています。"
-                    }  else if user.friendRequestedUids.contains(userID) {
-                        weakSelf.isErrorAlert = true
-                        weakSelf.errorMessage = "\(user.nickname)さんには既にペアリクエストを送っています。"
-                    } else if user.friendUids.contains(userID) {
-                        weakSelf.isErrorAlert = true
-                        weakSelf.errorMessage = "\(user.nickname)さんとは既に友達になっています。"
-                    } else {
-                        weakSelf.searchResultUser = .init(userModel: user.adaptUserObservableModel())
-                    }
-                } else {
-                    weakSelf.isErrorAlert = true
-                    weakSelf.errorMessage = "指定されたIDを持つユーザーが存在しません。ご確認の上、再度お試しください。"
-                }
+        do {
+            let user = try await self.userService.getOneUser(uid: self.searchQuery)
+            if user.friendRequestUids.contains(userID){
+                self.isErrorAlert = true
+                self.errorMessage = "\(user.nickname)さんからは既にペアリクエストを受けています。"
+            }  else if user.friendRequestedUids.contains(userID) {
+                self.isErrorAlert = true
+                self.errorMessage = "\(user.nickname)さんには既にペアリクエストを送っています。"
+            } else if user.friendUids.contains(userID) {
+                self.isErrorAlert = true
+                self.errorMessage = "\(user.nickname)さんとは既に友達になっています。"
+            } else {
+                self.searchResultUser = .init(userModel: user.adaptUserObservableModel())
             }
-            .store(in: &self.cancellable)
+        } catch let error as AppError {
+            self.errorMessage = error.errorMessage
+            self.isErrorAlert = true
+        } catch {
+            self.errorMessage = error.localizedDescription
+            self.isErrorAlert = true
+        }
     }
     
     func approveRequest(requestUser: UserObservableModel, requestedUser: UserObservableModel){

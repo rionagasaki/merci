@@ -10,77 +10,74 @@ import GoogleSignIn
 import GoogleSignInSwift
 import Firebase
 
-class GoogleAuthViewModel: ObservableObject {
+@MainActor
+final class GoogleAuthViewModel: ObservableObject {
     private let userService = UserFirestoreService()
     @Published var cancellable = Set<AnyCancellable>()
     @Published var errorMessage: String = ""
     @Published var isErrorAlert: Bool = false
     @ObservedObject var tokenData = TokenData.shared
     
-    func googleAuth(
-        userModel: UserObservableModel,
-        appState: AppState
-    ){
+    func googleAuth(userModel: UserObservableModel, appState: AppState, isNewUser: Bool) async {
         guard let clientID:String = FirebaseApp.app()?.options.clientID else { return }
         let config:GIDConfiguration = GIDConfiguration(clientID: clientID)
-        
-        if let windowScene:UIWindowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene, let rootViewController:UIViewController = windowScene.windows.first?.rootViewController! {
-            GIDSignIn.sharedInstance.configuration = config
-            
-            GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController) { result, error in
-                guard error == nil else {
-                    print("GIDSignInError: \(error!.localizedDescription)")
-                    return
-                }
-                
-                guard let user = result?.user,
-                      let idToken = user.idToken?.tokenString
-                else {
-                    return
-                }
-                
-                guard let profile = user.profile else { return }
 
-                self.userService.checkAccountExists(email: profile.email, isNewUser: false)
-                    .sink { completion in
-                        switch completion {
-                        case .finished:
-                            let credential = GoogleAuthProvider.credential(withIDToken: idToken,accessToken: user.accessToken.tokenString)
-                            self.login(
-                                credential: credential,
-                                userModel: userModel,
-                                appState: appState
-                            )
-                        case .failure(let error):
-                            self.isErrorAlert = true
-                            self.errorMessage = error.errorMessage
-                        }
-                    } receiveValue: { _ in }
-                    .store(in: &self.cancellable)
-            }
+        if let windowScene:UIWindowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene, let firstWindow:UIWindow = windowScene.windows.first, let rootViewController = firstWindow.rootViewController {
+            GIDSignIn.sharedInstance.configuration = config
+                do {
+                    let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController)
+                    let user = result.user
+                    let idToken = user.idToken?.tokenString ?? ""
+                    let accessToken = user.accessToken.tokenString
+                    let profile = user.profile
+                    let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: user.accessToken.tokenString)
+                    
+                    guard let profile = profile else { return }
+                    
+                    try await userService.checkAccountExists(email: profile.email , isNewUser: isNewUser)
+                    
+                    if isNewUser {
+                        await self.login(credential: credential, userModel: userModel, appState: appState)
+                    } else {
+                        await self.register(credential: credential, appState: appState)
+                    }
+                    
+                } catch let error as AppError {
+                    self.errorMessage = error.errorMessage
+                    self.isErrorAlert = true
+                } catch {
+                    self.errorMessage = error.localizedDescription
+                    self.isErrorAlert = true
+                }
         }
     }
     
-    private func login(
-        credential: AuthCredential,
-        userModel:UserObservableModel,
-        appState: AppState
-    ) {
-        
-        AuthenticationService.shared.signInWithGoogle(credential: credential)
-            .flatMap { authResult in
-                userModel.user.uid = authResult.user.uid
-                return self.userService.updateUserInfo(currentUid: authResult.user.uid, key: "fcmToken", value: self.tokenData.token)
-            }
-            .sink { completion in
-                switch completion {
-                case .finished:
-                    print("successfully login")
-                case .failure(let error):
-                    self.isErrorAlert = true
-                    self.errorMessage = error.errorMessage
-                }
-            } receiveValue: { _ in }
-            .store(in: &cancellable)
+    private func login(credential: AuthCredential, userModel:UserObservableModel, appState: AppState) async {
+        do {
+            let authResult = try await AuthenticationService.shared.signInWithGoogle(credential: credential)
+            try await self.userService.updateUserInfo(currentUid: authResult.user.uid, key: "fcmToken", value: self.tokenData.token)
+            userModel.user.uid = authResult.user.uid
+        } catch let error as AppError {
+            self.errorMessage = error.errorMessage
+            self.isErrorAlert = true
+        } catch {
+            self.errorMessage = error.localizedDescription
+            self.isErrorAlert = true
+        }
+    }
+    
+    private func register(credential: AuthCredential, appState: AppState) async {
+        do {
+            let result = try await AuthenticationService.shared.signInWithGoogle(credential: credential)
+            let email = result.user.email ?? ""
+            let uid = result.user.uid
+            try await userService.registerUserEmailAndUid(email: email, uid: uid)
+        } catch let error as AppError {
+            self.errorMessage = error.errorMessage
+            self.isErrorAlert = true
+        } catch {
+            self.errorMessage = error.localizedDescription
+            self.isErrorAlert = true
+        }
     }
 }

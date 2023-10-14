@@ -15,18 +15,26 @@ struct SettingView: View {
         
         List {
             Section(header: Text("アカウント設定")) {
+                Button {
+                    self.viewModel.webUrlString = "https://www.notion.so/merci-b6582adddfa346528d17bf0b76c5ec06"
+                    self.viewModel.isWebView = true
+                } label: {
+                    SettingCellView(systemImageName: "questionmark.circle", text: "サービス内容")
+                }
+
+                
                 NavigationLink {
                     BlockedUserListView()
                 } label: {
                     SettingCellView(systemImageName: "person.fill.xmark", text: "ブロック中のユーザー")
                 }
-
+                
                 NavigationLink {
                     HiddenChatUserListView()
                 } label: {
                     SettingCellView(systemImageName: "eye.slash.fill", text: "非表示中のチャットルーム")
                 }
-
+                
                 
                 Button {
                     self.viewModel.webUrlString = "https://bow-elm-3dc.notion.site/87888d609f734e0eb6d836ae091cd973"
@@ -69,7 +77,7 @@ struct SettingView: View {
                 title: Text("ログアウト"),
                 message: Text("一旦ログアウトしても、また遊びに来てね！続ける？"),
                 primaryButton: .cancel(Text("キャンセル")),
-                secondaryButton: .destructive(Text("ログアウト"), action: { viewModel.signOut() })
+                secondaryButton: .destructive(Text("ログアウト"), action: { Task { await viewModel.signOut() } })
             )
         }
     }

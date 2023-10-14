@@ -65,7 +65,9 @@ struct NickNameView: View {
                         .font(.system(size: 14))
                     Spacer()
                     Button {
-                        viewModel.storeUserNickname(uid: userModel.user.uid)
+                        Task {
+                            await viewModel.storeUserNickname(uid: userModel.user.uid)
+                        }
                     } label: {
                         Text("保存する")
                             .foregroundColor(.white)

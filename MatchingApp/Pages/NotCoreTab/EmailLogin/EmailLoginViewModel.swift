@@ -36,22 +36,17 @@ class EmailLoginViewModel: ObservableObject {
     func signInWithEmail(
         userModel: UserObservableModel,
         appState: AppState
-    ){
-        AuthenticationService.shared.signInWithEmail(email: self.email, password: self.password)
-            .flatMap { result in
-                userModel.user.uid = result.user.uid
-                return self.userService.updateUserInfo(currentUid: userModel.user.uid, key: "fcmToken", value: self.tokenData.token)
-            }
-            .sink { completion in
-                switch completion {
-                case .finished:
-                    print("successufully login")
-                case .failure(let error):
-                    self.isErrorAlert = true
-                    self.errorMessage = error.errorMessage
-                }
-            } receiveValue: { _ in }
-            .store(in: &cancellable)
+    ) async {
+        do {
+            let authResult = try await AuthenticationService.shared.signInWithEmail(email: self.email, password: self.password)
+            try await self.userService.updateUserInfo(currentUid: userModel.user.uid, key: "fcmToken", value: self.tokenData.token)
+        } catch let error as AppError {
+            self.errorMessage = error.errorMessage
+            self.isErrorAlert = true
+        } catch {
+            self.errorMessage = error.localizedDescription
+            self.isErrorAlert = true
+        }
     }
 }
 

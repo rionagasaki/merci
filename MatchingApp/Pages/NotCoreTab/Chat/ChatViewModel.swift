@@ -8,7 +8,8 @@
 import SwiftUI
 import Combine
 
-class ChatViewModel: ObservableObject {
+@MainActor
+final class ChatViewModel: ObservableObject {
     
     enum AlertType {
         case isRequiredAddFriend
@@ -26,9 +27,11 @@ class ChatViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var callingStatus: CallingStats = .noCall
     @Published var messageText: String = ""
-    
+    @Published var isInitChat: Bool = true
     @Published var chatRoomId: String = ""
     @Published var channelId: String = ""
+    
+    @Published var isLastDocumentLoaded: Bool = false
     
     @Published var isErrorAlert: Bool = false
     @Published var errorMessage: String = ""
@@ -53,6 +56,16 @@ class ChatViewModel: ObservableObject {
         self.functions = functions
     }
     
+    // handle error
+    private func handleError(error: Error) {
+        if let error = error as? AppError {
+            self.errorMessage = error.errorMessage
+        } else {
+            self.errorMessage = error.localizedDescription
+        }
+        self.isErrorAlert = true
+    }
+    
     // 通話記録をリアルタイム監視する
     func monitorChatRoomData(chatRoomId: String, fromUser: UserObservableModel, toUserID: String){
         self.chatService
@@ -60,16 +73,16 @@ class ChatViewModel: ObservableObject {
             .sink { completion in
                 switch completion {
                 case .finished:
-                    print("ここは呼ばれない")
+                    break
                 case .failure(let error):
                     self.isErrorAlert = true
                     self.errorMessage = error.errorMessage
                 }
             } receiveValue: { [weak self] chatRoomData in
                 guard let weakSelf = self else { return }
+                
                 withAnimation {
                     weakSelf.channelId = chatRoomData.channelId
-
                     // 通話中のchannelIDが存在するかつ、そこに自分が存在していない
                     if !weakSelf.channelId.isEmpty && !chatRoomData.callingMate.contains(fromUser.user.uid) {
                         weakSelf.callingStatus = .waitedUser
@@ -101,41 +114,57 @@ class ChatViewModel: ObservableObject {
         }
     }
     
-    // メッセージをリアルタイム監視する
-    func monitorMessageData(user: UserObservableModel, chatRoomId: String) {
-        self.chatService
-            .updateMessageCountZero(readUser: user, chatRoomId: chatRoomId)
-            .flatMap { [weak self] _ in
-                guard let weakSelf = self else {
-                    return Empty<Chat, AppError>().eraseToAnyPublisher()
-                    
-                }
-                return weakSelf.chatService.getUpdateMessageData(
-                    chatroomID: weakSelf.chatRoomId
-                )
-            }
-            .sink { completion in
+    // here is message listener
+    func monitorLatestMessage(chatRoomID: String) {
+        self.chatService.getUpdateLatestMessageData(chatRoomID: chatRoomID)
+            .sink { [weak self] completion in
+                guard let self = self else { return }
                 switch completion {
                 case .finished:
-                    print("ここは呼ばれない")
+                    break
                 case .failure(let error):
-                    self.isErrorAlert = true
-                    self.errorMessage = error.errorMessage
+                    self.handleError(error: error)
                 }
             } receiveValue: { [weak self] chat in
-                guard let weakSelf = self else { return }
-                weakSelf.scrollID = UUID(uuidString: chat.chatId) ?? .init()
-                weakSelf.allMessages.append(.init(
-                    chatId: chat.chatId,
-                    message: chat.message,
-                    createdAt: DateFormat.timeFormat(date: chat.createdAt.dateValue()),
-                    fromUserUid: chat.fromUserUid,
-                    fromUserNickname: chat.fromUserNickname,
-                    fromUserProfileImageUrl: chat.fromUserProfileImageUrl,
-                    toUserToken: chat.toUserToken
-                ))
+                guard let self = self else { return }
+                self.allMessages.append(chat.adaptionChatData())
+                withAnimation {
+                    self.scrollID = UUID(uuidString: self.allMessages.last?.chatId ?? .init()) ?? .init()
+                    self.messageText = ""
+                }
+                self.isInitChat = false
+            }.store(in: &self.cancellable)
+    }
+    
+    func getMessageData(user: UserObservableModel, chatRoomId: String) async {
+        do {
+            self.allMessages = []
+            async let _ = chatService.updateMessageCountZero(readUser: user, chatRoomId: chatRoomId)
+            async let getChats = self.chatService.getMessageData(chatroomID: chatRoomId)
+            let chats = try await getChats
+            
+            self.allMessages = chats.map { $0.adaptionChatData() }.reversed()
+            self.allMessages.removeLast()
+            self.monitorLatestMessage(chatRoomID: chatRoomId)
+        } catch {
+            self.handleError(error: error)
+        }
+    }
+    
+    func getPreviousMessages(chatRoomID: String) async {
+        do {
+            self.isLoading = true
+            let chats = try await self.chatService.getNextMessageData(chatroomID: chatRoomID)
+            if chats.count < 20 {
+                self.isLastDocumentLoaded = true
             }
-            .store(in: &self.cancellable)
+            withAnimation {
+                self.allMessages = chats.map { $0.adaptionChatData() } + self.allMessages
+            }
+            self.isLoading = false
+        } catch {
+            handleError(error: error)
+        }
     }
     
     // 初回メッセージ時(メッセージルームを作成して、メッセージを送信する)
@@ -143,45 +172,22 @@ class ChatViewModel: ObservableObject {
         fromUser: UserObservableModel,
         toUser:UserObservableModel,
         appState: AppState
-    ){
-        self.chatService.createChatRoomAndSendMessage(
-            message: self.messageText,
-            fromUser: fromUser,
-            toUser: toUser,
-            createdAt: Date.init())
-        .flatMap { [weak self] chatRoomId -> AnyPublisher<Chat, AppError> in
-            guard let weakSelf = self else {
-                return Empty<Chat, AppError>().eraseToAnyPublisher()
-            }
-            weakSelf.chatRoomId = chatRoomId
-            return weakSelf.chatService.getUpdateMessageData(chatroomID: chatRoomId)
-        }
-        .sink { [weak self] completion in
-            guard let weakSelf = self else { return }
-            switch completion {
-            case .finished:
-                print("success make chatroom and send message!")
-            case .failure(let error):
-                weakSelf.messageText = ""
-                weakSelf.isErrorAlert = true
-                weakSelf.errorMessage = error.errorMessage
-            }
-        } receiveValue: { [weak self] chat in
-            guard let weakSelf = self else { return }
-            weakSelf.allMessages.append(.init(
-                chatId: chat.chatId,
-                message: chat.message,
-                createdAt: DateFormat.timeFormat(date: chat.createdAt.dateValue()),
-                fromUserUid: chat.fromUserUid,
-                fromUserNickname: chat.fromUserNickname,
-                fromUserProfileImageUrl: chat.fromUserProfileImageUrl,
-                toUserToken: chat.toUserToken
-            ))
+    ) async {
+        do {
+            let chatRoomID = try await self.chatService.createChatRoomAndSendMessage(
+                message: self.messageText,
+                fromUser: fromUser,
+                toUser: toUser,
+                createdAt: Date.init())
+            self.chatRoomId = chatRoomID
             withAnimation {
-                weakSelf.messageText = ""
+                self.messageText = ""
             }
+            self.monitorLatestMessage(chatRoomID: chatRoomID)
+            
+        } catch {
+            self.handleError(error: error)
         }
-        .store(in: &self.cancellable)
     }
     
     // メッセージを送る
@@ -189,42 +195,29 @@ class ChatViewModel: ObservableObject {
         fromUser: UserObservableModel,
         toUser: UserObservableModel,
         appState: AppState
-    ) {
-        chatService.sendMessage(
-            chatRoomId: self.chatRoomId,
-            fromUser: fromUser,
-            toUser: toUser,
-            createdAt: Date.init(),
-            message: self.messageText
-        )
-        .sink { [weak self] completion in
-            guard let weakSelf = self else { return }
-            switch completion {
-            case .finished:
-                withAnimation {
-                    weakSelf.messageText = ""
-                }
-            case .failure(let error):
-                weakSelf.messageText = ""
-                weakSelf.isErrorAlert = true
-                weakSelf.errorMessage = error.errorMessage
-            }
-        } receiveValue: { _ in }
-        .store(in: &self.cancellable)
+    ) async {
+        do {
+            try await self.chatService.sendMessage(
+                chatRoomId: self.chatRoomId,
+                fromUser: fromUser,
+                toUser: toUser,
+                createdAt: Date.init(),
+                message: self.messageText
+            )
+        } catch {
+            self.handleError(error: error)
+        }
     }
     
     // 未読数を0にする
-    func updateMessageUnReadCountZero(user:UserObservableModel){
+    func updateMessageUnReadCountZero(user:UserObservableModel) async {
         if self.chatRoomId.isEmpty { return }
-        self.chatService.updateMessageCountZero(readUser: user, chatRoomId: self.chatRoomId)
-            .sink { completion in
-                switch completion {
-                case .finished:
-                    break
-                case .failure(let error):
-                    print("failure: \(error)")
-                }
-            } receiveValue: { _ in }.store(in: &self.cancellable)
+        
+        do {
+            try await  self.chatService.updateMessageCountZero(readUser: user, chatRoomId: self.chatRoomId)
+        } catch {
+            self.handleError(error: error)
+        }
     }
     
     // 発信する

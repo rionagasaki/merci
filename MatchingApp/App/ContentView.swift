@@ -71,8 +71,10 @@ struct ContentView: View {
         .onAppear {
             UITabBar.appearance().isHidden = true
         }
-        .onReceive(tokenData.$token){ token in
-            viewModel.updateUserTokenAndInitialUserInfo(token: token)
+        .onReceive(tokenData.$token) { token in
+            Task {
+                await viewModel.updateUserTokenAndInitialUserInfo(token: token)
+            }
         }
         .onReceive(authManager.$user.compactMap { $0 }){ user in
             viewModel.initialUserInfo(user: user, userModel: userModel, appState: appState)

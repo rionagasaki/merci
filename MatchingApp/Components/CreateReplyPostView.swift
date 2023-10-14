@@ -100,9 +100,11 @@ struct CreateReplyPostView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing){
                     Button {
-                        UIIFGeneratorMedium.impactOccurred()
-                        viewModel.addPost(post: post, fromUser: fromUser)
-                        self.reloadPost.isRequiredReload = true
+                        Task {
+                            UIIFGeneratorMedium.impactOccurred()
+                            await viewModel.addPost(post: post, fromUser: fromUser)
+                            self.reloadPost.isRequiredReload = true
+                        }
                     } label: {
                         Text("投稿する")
                             .foregroundColor(.white)

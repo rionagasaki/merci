@@ -111,7 +111,9 @@ struct EmailRegisterView: View {
             .padding(.horizontal, 16)
             .padding(.top, 8)
             Button {
-                viewModel.signUpEmail(appState: appState)
+                Task {
+                   await viewModel.signUpEmail(appState: appState)
+                }
             } label: {
                 Text("新規登録")
                     .foregroundColor(.white)

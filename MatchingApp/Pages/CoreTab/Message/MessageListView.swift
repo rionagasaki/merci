@@ -7,7 +7,6 @@
 
 import SwiftUI
 import SDWebImageSwiftUI
-import PartialSheet
 
 struct MessageListView: View {
     @State var selection: Int = 0
@@ -17,90 +16,66 @@ struct MessageListView: View {
     let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .heavy)
     
     var body: some View {
-        VStack {
-            VStack {
-                if viewModel.onlineUsers.count != 0 {
-                    VStack {
-                        Text("👀オンライン中の動物")
-                            .foregroundColor(.customBlack)
-                            .font(.system(size: 16, weight: .medium))
-                            .frame(maxWidth: UIScreen.main.bounds.width, alignment: .leading)
-                        
-                        if viewModel.isLoading {
-                            ProgressView()
-                                .frame(height: 60)
-                        } else {
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack {
-                                    ForEach(viewModel.onlineUsers) { user in
-                                        NavigationLink {
-                                            UserProfileView(userId: user.user.uid, isFromHome: false)
-                                        } label: {
-                                            OnlineUser(user: user)
-                                        }
-                                        
-                                    }
+        List {
+            if viewModel.onlineUsers.count != 0 {
+                Section {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack {
+                            ForEach(viewModel.onlineUsers) { user in
+                                NavigationLink {
+                                    UserProfileView(userId: user.user.uid, isFromHome: false)
+                                } label: {
+                                    OnlineUser(user: user)
                                 }
                             }
                         }
                     }
-                    .padding(.horizontal, 16)
-                }
-                
-                if viewModel.isLoading {
-                    Text("💬チャットリスト")
+                } header: {
+                    Text("👀オンライン中の動物")
                         .foregroundColor(.customBlack)
                         .font(.system(size: 16, weight: .medium))
-                        .frame(maxWidth: UIScreen.main.bounds.width, alignment: .leading)
-                        .padding(.top, 8)
-                        .padding(.horizontal, 16)
-                    Spacer()
-                } else {
-                    if viewModel.allChatmateUsers.count == 0 {
-                        ScrollView {
-                            VStack {
-                                Spacer()
-                                Image("Ice")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 96, height: 96)
-                                Text("表示できるメッセージがありません")
-                                    .foregroundColor(.customBlack)
-                                    .font(.system(size: 18, weight: .bold))
-                            }
-                            .padding(.top, 128)
-                        }
-                    } else {
-                        Text("💬チャットリスト")
-                            .foregroundColor(.customBlack)
-                            .font(.system(size: 16, weight: .medium))
-                            .frame(maxWidth: UIScreen.main.bounds.width, alignment: .leading)
-                            .padding(.top, 8)
-                            .padding(.horizontal, 16)
-                        List {
-                            ForEach(viewModel.chatmateUsers.count == 0 ? viewModel.allChatmateUsers :viewModel.chatmateUsers) { user in
-                                NavigationLink {
-                                    ChatView(toUser: user)
-                                } label: {
-                                    MessageListCellView(chatmate: user)
-                                }
-                                .swipeActions(edge: .trailing) {
-                                    Button {
-                                        viewModel.setChatRoomHidden(fromUserID: userModel.user.uid, toUserID: user.user.uid)
-                                    } label: {
-                                        Text("非表示")
-                                    }
-                                    .tint(Color.customRed)
-                                }
-                            }
-                        }
-                        .padding(.top, 8)
-                        .listStyle(.plain)
-                    }
                 }
             }
-            .padding(.top, 16)
+            
+            Section {
+                if viewModel.allChatmateUsers.count == 0 {
+                    HStack {
+                        Spacer()
+                        Image("Ice")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 96, height: 96)
+                        Text("表示できるメッセージがありません")
+                            .foregroundColor(.customBlack)
+                            .font(.system(size: 18, weight: .bold))
+                        Spacer()
+                    }
+                } else {
+                    ForEach(viewModel.chatmateUsers.count == 0 ? viewModel.allChatmateUsers :viewModel.chatmateUsers) { user in
+                        NavigationLink {
+                            ChatView(toUser: user)
+                        } label: {
+                            MessageListCellView(chatmate: user)
+                        }
+                        .swipeActions(edge: .trailing) {
+                            Button {
+                                viewModel.setChatRoomHidden(fromUserID: userModel.user.uid, toUserID: user.user.uid)
+                            } label: {
+                                Text("非表示")
+                            }
+                            .tint(Color.customRed)
+                        }
+                    }
+                }
+            } header: {
+                Text("💬チャットリスト")
+                    .foregroundColor(.customBlack)
+                    .font(.system(size: 16, weight: .medium))
+            }
+
         }
+        .scrollContentBackground(.hidden)
+        .background(Color.customLightGray)
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $viewModel.isSelectChatPairHalfModal){
             FilterlingChatmateView(
@@ -112,9 +87,10 @@ struct MessageListView: View {
             .presentationDetents([.height(150)])
         }
         .onAppear {
-            viewModel.chatmateUsers = []
-            viewModel.fetchChatmateInfo(chatmateUsersMapping: userModel.user.chatmateMapping, userModel: userModel)
-            viewModel.fetchOnlineUser(userID: userModel.user.uid)
+            Task {
+                viewModel.chatmateUsers = []
+                await viewModel.getChatmateInfoAndOnlineUser(chatmateUsersMapping: userModel.user.chatmateMapping, userModel: userModel)
+            }
         }
         .alert(isPresented: $viewModel.isErrorAlert){
             Alert(title: Text("エラー"), message: Text(viewModel.errorMessage))
@@ -142,8 +118,10 @@ struct MessageListView: View {
             }
         }
         .refreshable {
-            UIIFGeneratorMedium.impactOccurred()
-            viewModel.fetchChatmateInfo(chatmateUsersMapping: userModel.user.chatmateMapping, userModel: userModel)
+            Task {
+                UIIFGeneratorMedium.impactOccurred()
+                await viewModel.getChatmateInfoAndOnlineUser(chatmateUsersMapping: userModel.user.chatmateMapping, userModel: userModel)
+            }
         }
     }
 }

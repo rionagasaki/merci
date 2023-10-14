@@ -73,8 +73,10 @@ struct CommentNoticeCellView: View {
                         .padding(.trailing, 8)
                 }
             }
-            Divider()
+            .padding(.horizontal, 16)
         }
-        .padding(.horizontal, 8)
+        .padding(.vertical, 8)
+        .background(Color.white.cornerRadius(20))
+        .padding(.horizontal, 16)
     }
 }

@@ -29,8 +29,10 @@ struct HiddenChatUserListView: View {
                         .font(.system(size: 18, weight: .medium))
                 }
                 .refreshable {
-                    UIIFGeneratorMedium.impactOccurred()
-                    self.viewModel.initial(userModel: userModel)
+                    Task {
+                        UIIFGeneratorMedium.impactOccurred()
+                        await self.viewModel.initial(userModel: userModel)
+                    }
                 }
             } else {
                 List {
@@ -48,12 +50,16 @@ struct HiddenChatUserListView: View {
                 }
                 .listStyle(.plain)
                 .refreshable {
-                    self.viewModel.initial(userModel: userModel)
+                    Task {
+                        await self.viewModel.initial(userModel: userModel)
+                    }
                 }
             }
         }
         .onAppear {
-            viewModel.initial(userModel: userModel)
+            Task {
+                await viewModel.initial(userModel: userModel)
+            }
         }
         .toolbar {
             ToolbarItem(placement: .principal){

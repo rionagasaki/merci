@@ -9,6 +9,7 @@ import SwiftUI
 import Combine
 import FirebaseAuth
 
+
 class ContentViewModel: ObservableObject {
     @Published var isLoginModal: Bool = false
     @Published var isUserInfoSetupRequired: Bool = false
@@ -40,7 +41,6 @@ class ContentViewModel: ObservableObject {
                     weakSelf.isRequiredOnboarding = true
                     return
                 }
-    
                 // 未既読なチャットがある場合
                 let unreadExceptHiddenUserIDs = Array<String>(user.chatmateMapping.keys).filter { !user.hiddenChatRoomUserIDs.contains($0) }
                 let unreadChatRoomIDs = unreadExceptHiddenUserIDs.compactMap { userID in if let chatRoomID = user.chatmateMapping[userID] { return chatRoomID } else { return nil } }
@@ -81,7 +81,8 @@ class ContentViewModel: ObservableObject {
                 appState.unreadMessageAllCount = allUnreadMessageCount
                 
                 weakSelf.noticeService.getAllNotices(userID: user.uid)
-                    .sink { completion in
+                    .sink { [weak self] completion in
+                        guard let weakSelf = self else { return }
                         switch completion {
                         case .finished:
                             print("successfully initialize")
@@ -142,20 +143,16 @@ class ContentViewModel: ObservableObject {
         }
     }
     
-    func updateUserTokenAndInitialUserInfo(token: String){
+    func updateUserTokenAndInitialUserInfo(token: String) async {
         guard let user = AuthenticationManager.shared.user else { return }
-        userService.updateUserInfo(currentUid: user.uid, key: "fcmToken", value: token)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] completion in
-                guard let weakSelf = self else { return }
-                switch completion {
-                case .finished:
-                    break
-                case .failure(let error):
-                    weakSelf.isErrorAlert = true
-                    weakSelf.errorMessage = error.errorMessage
-                }
-            } receiveValue: { _ in }
-            .store(in: &self.cancellable)
+        do {
+            try await userService.updateUserInfo(currentUid: user.uid, key: "fcmToken", value: token)
+        } catch let error as AppError {
+            self.errorMessage = error.errorMessage
+            self.isErrorAlert = true
+        } catch {
+            self.errorMessage = error.localizedDescription
+            self.isErrorAlert = true
+        }
     }
 }

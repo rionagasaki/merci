@@ -19,7 +19,7 @@ struct RequestNoticeCellView: View {
     @EnvironmentObject var userModel: UserObservableModel
     
     var body: some View {
-        VStack{
+        VStack {
             HStack(alignment: .top){
                 if !notice.isRead {
                     Circle()
@@ -97,8 +97,9 @@ struct RequestNoticeCellView: View {
                 
             }
             .padding(.horizontal, 16)
-            Divider()
         }
         .padding(.vertical, 8)
+        .background(Color.white.cornerRadius(20))
+        .padding(.horizontal, 16)
     }
 }

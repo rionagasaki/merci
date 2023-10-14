@@ -33,25 +33,18 @@ class EmailRegisterViewModel: ObservableObject {
         self.isAvailableEmail = emailPredicate.evaluate(with: email)
     }
 
-    func signUpEmail(appState: AppState){
-        AuthenticationService.shared.signUpWithEmail(email: self.email, password: self.password)
-            .flatMap { authResult -> AnyPublisher<Void, AppError> in
-                let email = authResult.user.email ?? ""
-                let uid = authResult.user.uid
-                return self.userService.registerUserEmailAndUid(email: email, uid: uid)
-            }
-            .sink { completion in
-                switch completion {
-                case .finished:
-                    print("successfully signUp")
-                case .failure(let error):
-                    self.errorMessage = error.errorMessage
-                    self.isErrorAlert = true
-                }
-            } receiveValue: { _ in
-                self.email = ""
-                self.password = ""
-            }
-            .store(in: &self.cancellable)
+    func signUpEmail(appState: AppState) async {
+        do {
+            let result = try await AuthenticationService.shared.signUpWithEmail(email: self.email, password: self.password)
+            let email = result.user.email ?? ""
+            let uid = result.user.uid
+            try await self.userService.registerUserEmailAndUid(email: email, uid: uid)
+        } catch let error as AppError {
+            self.errorMessage = error.errorMessage
+            self.isErrorAlert = true
+        } catch {
+            self.errorMessage = error.localizedDescription
+            self.isErrorAlert = true
+        }
     }
 }
