@@ -10,15 +10,6 @@
       }
     },
     {
-      "identity" : "agoraaudio_ios",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/AgoraIO/AgoraAudio_iOS.git",
-      "state" : {
-        "revision" : "62ea5dda567e6c394a4a14c40c4738d5604924b8",
-        "version" : "4.2.2"
-      }
-    },
-    {
       "identity" : "alerttoast",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/elai950/AlertToast.git",
@@ -64,33 +55,6 @@
       }
     },
     {
-      "identity" : "functions-swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/supabase-community/functions-swift",
-      "state" : {
-        "revision" : "c680cdfc53399376bdece299b1387b4fb3da514e",
-        "version" : "1.0.0"
-      }
-    },
-    {
-      "identity" : "get",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/kean/Get",
-      "state" : {
-        "revision" : "12830cc64f31789ae6f4352d2d51d03a25fc3741",
-        "version" : "2.1.6"
-      }
-    },
-    {
-      "identity" : "getextensions",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/binaryscraping/GetExtensions",
-      "state" : {
-        "revision" : "aa20f38721142eb6592b2c8f11179d32d7d70ae3",
-        "version" : "1.0.0"
-      }
-    },
-    {
       "identity" : "googleappmeasurement",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/google/GoogleAppMeasurement.git",
@@ -127,15 +91,6 @@
       }
     },
     {
-      "identity" : "gotrue-swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/supabase-community/gotrue-swift",
-      "state" : {
-        "revision" : "a972c99bf0ed745047ec7bc6231460f6738d004e",
-        "version" : "1.1.1"
-      }
-    },
-    {
       "identity" : "grpc-ios",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/grpc/grpc-ios.git",
@@ -163,15 +118,6 @@
       }
     },
     {
-      "identity" : "keychainaccess",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/kishikawakatsumi/KeychainAccess",
-      "state" : {
-        "revision" : "84e546727d66f1adc5439debad16270d0fdd04e7",
-        "version" : "4.2.2"
-      }
-    },
-    {
       "identity" : "leveldb",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/firebase/leveldb.git",
@@ -190,30 +136,12 @@
       }
     },
     {
-      "identity" : "ltmorphinglabel",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/lexrus/LTMorphingLabel",
-      "state" : {
-        "revision" : "cbde73b207ac5cfcde289a09685ad0e62b75dc04",
-        "version" : "0.9.3"
-      }
-    },
-    {
       "identity" : "nanopb",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/firebase/nanopb.git",
       "state" : {
         "revision" : "819d0a2173aff699fb8c364b6fb906f7cdb1a692",
         "version" : "2.30909.0"
-      }
-    },
-    {
-      "identity" : "partialsheet",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/AndreaMiotto/PartialSheet",
-      "state" : {
-        "revision" : "318f18bfabd2b2ddf785babd2e53bd593c00a254",
-        "version" : "3.1.0"
       }
     },
     {
@@ -235,30 +163,12 @@
       }
     },
     {
-      "identity" : "postgrest-swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/supabase-community/postgrest-swift",
-      "state" : {
-        "revision" : "a3c2d6a2ede94d2529edf063b056b1a66fd9cdc2",
-        "version" : "1.0.0"
-      }
-    },
-    {
       "identity" : "promises",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/google/promises.git",
       "state" : {
         "revision" : "ec957ccddbcc710ccc64c9dcbd4c7006fcf8b73a",
         "version" : "2.2.0"
-      }
-    },
-    {
-      "identity" : "realtime-swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/supabase-community/realtime-swift.git",
-      "state" : {
-        "revision" : "0b985c687fe963f6bd818ff77a35c27247b98bb4",
-        "version" : "0.0.2"
       }
     },
     {
@@ -280,66 +190,12 @@
       }
     },
     {
-      "identity" : "storage-swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/supabase-community/storage-swift.git",
-      "state" : {
-        "revision" : "c3d812b9680cd9872afa40863bb993ffc5c7fdd6",
-        "version" : "0.1.2"
-      }
-    },
-    {
-      "identity" : "supabase-swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/supabase/supabase-swift.git",
-      "state" : {
-        "revision" : "c5d5e3eb7b8db485494949ecdfa9eef126cfa947",
-        "version" : "0.2.1"
-      }
-    },
-    {
       "identity" : "swift-protobuf",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-protobuf.git",
       "state" : {
         "revision" : "0af9125c4eae12a4973fb66574c53a54962a9e1e",
         "version" : "1.21.0"
-      }
-    },
-    {
-      "identity" : "tocropviewcontroller",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/TimOliver/TOCropViewController.git",
-      "state" : {
-        "revision" : "d0470491f56e734731bbf77991944c0dfdee3e0e",
-        "version" : "2.6.1"
-      }
-    },
-    {
-      "identity" : "urlqueryencoder",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/kean/URLQueryEncoder",
-      "state" : {
-        "revision" : "4ce950479707ea109f229d7230ec074a133b15d7",
-        "version" : "0.2.1"
-      }
-    },
-    {
-      "identity" : "vcomponents",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/VakhoKontridze/VComponents",
-      "state" : {
-        "revision" : "6dd3653cc4f93c26ac7e4822fc4b22e86cf26a91",
-        "version" : "4.3.3"
-      }
-    },
-    {
-      "identity" : "vcore",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/VakhoKontridze/VCore",
-      "state" : {
-        "revision" : "3420e22ad8c5b808ec95ba91ad66f79b12f7648a",
-        "version" : "4.10.0"
       }
     }
   ],
