@@ -12,15 +12,16 @@ import GoogleSignIn
 import GoogleSignInSwift
 import Combine
 
-//　新規登録のみを許容する。ログインはできない。
 struct GoogleRegisterView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var userModel: UserObservableModel
-    @StateObject var viewModel = GoogleRegisterViewModel()
+    @StateObject var viewModel = GoogleAuthViewModel()
     
     var body: some View {
         Button {
-            viewModel.googleAuth(appState: appState)
+            Task {
+                await viewModel.googleAuth(userModel:userModel, appState: appState, isNewUser: true)
+            }
         } label: {
             HStack {
                 Image("Google")
@@ -32,8 +33,8 @@ struct GoogleRegisterView: View {
                     .foregroundColor(.black)
             }
         }
-        .alert(isPresented: $viewModel.alreadyHasAccountAlert){
-            Alert(title: Text("エラー"), message: Text(viewModel.alertText))
+        .alert(isPresented: $viewModel.isErrorAlert){
+            Alert(title: Text("エラー"), message: Text(viewModel.errorMessage))
         }
         .frame(width: UIScreen.main.bounds.width-32, height: 50)
         .background(Color.white)

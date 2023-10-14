@@ -51,10 +51,14 @@ struct UserProfileView: View {
                                                     PostView(post: fixedPost)
                                             }
                                             if fixedPost.posterUid == userModel.user.uid {
-                                                PostMenu(text1: "ピンを外す", text2: "投稿を削除する"){
-                                                    viewModel.pinnedPost(postID: "", userID: fixedPost.posterUid)
+                                                PostMenu(text1: "ピンを外す", text2: "投稿を削除する", imageName1: "pin.fill", imageName2: "minus.circle.fill"){
+                                                    Task {
+                                                      await viewModel.pinnedPost(postID: "", userID: fixedPost.posterUid)
+                                                    }
                                                 } deleteAction: {
-                                                    viewModel.deletePost(postID: fixedPost.id, userModel: userModel)
+                                                    Task {
+                                                       await viewModel.deletePost(postID: fixedPost.id, userModel: userModel)
+                                                    }
                                                 }
                                             }
                                         }
@@ -62,6 +66,7 @@ struct UserProfileView: View {
                                     .background(Color.customBlue.opacity(0.2))
                                     .cornerRadius(20)
                                 }
+                                
                                 ForEach(viewModel.usersPost.indices, id: \.self) { index in
                                     let post = viewModel.usersPost[index]
                                     ZStack(alignment: .topTrailing) {
@@ -80,10 +85,14 @@ struct UserProfileView: View {
                                                     }
                                         }
                                         if post.posterUid == userModel.user.uid {
-                                            PostMenu(text1: "投稿を固定する", text2: "投稿を削除する") {
-                                                viewModel.pinnedPost(postID: post.id, userID: post.posterUid)
+                                            PostMenu(text1: "投稿を固定する", text2: "投稿を削除する", imageName1: "pin.fill", imageName2: "minus.circle.fill") {
+                                                Task {
+                                                    await viewModel.pinnedPost(postID: post.id, userID: post.posterUid)
+                                                }
                                             } deleteAction: {
-                                                viewModel.deletePost(postID: post.id, userModel: userModel)
+                                                Task {
+                                                    await viewModel.deletePost(postID: post.id, userModel: userModel)
+                                                }
                                             }
                                         }
                                     }
@@ -192,6 +201,8 @@ struct UserBaseProfileView: View {
 struct PostMenu: View {
     let text1: String
     let text2: String
+    let imageName1: String
+    let imageName2: String
     let fixAction: () -> Void
     let deleteAction: () -> Void
     var body: some View {
@@ -199,13 +210,13 @@ struct PostMenu: View {
             Button {
                 fixAction()
             } label: {
-                Label(text1, systemImage: "pin.fill")
+                Label(text1, systemImage: imageName1)
             }
             
             Button(role: .destructive) {
                 deleteAction()
             } label: {
-                Label(text2, systemImage: "minus.circle.fill")
+                Label(text2, systemImage: imageName2)
             }
         } label: {
             Image(systemName: "ellipsis")

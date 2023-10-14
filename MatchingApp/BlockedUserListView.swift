@@ -10,6 +10,7 @@ import SwiftUI
 struct BlockedUserListView: View {
     @StateObject var viewModel = BlockedUserListViewModel()
     @EnvironmentObject var userModel: UserObservableModel
+    let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .heavy)
     var body: some View {
         VStack {
             if viewModel.blockedUser.count == 0 {
@@ -23,7 +24,10 @@ struct BlockedUserListView: View {
                         .font(.system(size: 18, weight: .bold))
                 }
                 .refreshable {
-                    viewModel.initial(userModel: userModel)
+                    UIIFGeneratorMedium.impactOccurred()
+                    Task {
+                        await viewModel.initial(userModel: userModel)
+                    }
                 }
             } else {
                 List {
@@ -41,12 +45,16 @@ struct BlockedUserListView: View {
                 }
                 .listStyle(.plain)
                 .refreshable {
-                    viewModel.initial(userModel: userModel)
+                    Task {
+                        await viewModel.initial(userModel: userModel)
+                    }
                 }
             }
         }
         .onAppear {
-            viewModel.initial(userModel: userModel)
+            Task {
+               await viewModel.initial(userModel: userModel)
+            }
         }
         .toolbar {
             ToolbarItem(placement: .principal){

@@ -51,7 +51,9 @@ struct UserIntroductionEditorView: View {
                         .font(.system(size: 14))
                     Spacer()
                     Button {
-                        viewModel.storeUserIntroductionToFirestore(userModel: userModel)
+                        Task {
+                            await viewModel.storeUserIntroductionToFirestore(userModel: userModel)
+                        }
                     } label: {
                         Text("保存する")
                             .foregroundColor(.white)

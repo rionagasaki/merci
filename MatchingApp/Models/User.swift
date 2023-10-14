@@ -45,10 +45,11 @@ class User {
     var chatLastTimestampMapping: [String: Timestamp]
     
     var hiddenChatRoomUserIDs: [String]
+    var hiddenPostIDs: [String]
     var unreadMessageCount: [String: Int]
     
     var tab_item_notice: [String]
-
+    
     init(document: QueryDocumentSnapshot){
         let userDic = document.data()
         self.id = document.documentID
@@ -66,7 +67,7 @@ class User {
         self.birthDate = (userDic["birthDate"] as? String).orEmpty
         self.hobbies = (userDic["hobbies"] as? [String]).orEmptyArray
         self.introduction = (userDic["introduction"] as? String).orEmpty
-    
+        
         self.friendRequestUids = (userDic["friendRequestUids"] as? [String]).orEmptyArray
         self.friendRequestedUids = (userDic["friendRequestedUids"] as? [String]).orEmptyArray
         self.friendUids = (userDic["friendUids"] as? [String]).orEmptyArray
@@ -78,12 +79,13 @@ class User {
         self.reportUserIDs = (userDic["reportUserIDs"] as? [String]).orEmptyArray
         
         self.isDisplayOnlyPost = (userDic["isDisplayOnlyPost"] as? Bool) ?? false
-   
+        
         self.notificationMapping = (userDic["notificationMapping"] as? [String: String]) ?? [:]
         self.chatmateMapping = (userDic["chatmateMapping"] as? [String: String]) ?? [:]
         self.chatLastMessageMapping = (userDic["chatLastMessageMapping"] as? [String: String]) ?? [:]
         self.chatLastTimestampMapping = (userDic["chatLastTimestampMapping"] as? [String: Timestamp]) ?? [:]
         self.hiddenChatRoomUserIDs = (userDic["hiddenChatRoomUserIDs"] as? [String]).orEmptyArray
+        self.hiddenPostIDs = (userDic["hiddenPostIDs"] as? [String]).orEmptyArray
         self.unreadMessageCount = (userDic["unreadMessageCount"] as? [String: Int] ?? [:])
         
         self.tab_item_notice = (userDic["tab_item_notice"] as? [String]).orEmptyArray
@@ -106,7 +108,7 @@ class User {
         self.gender = (userDic?["gender"] as? String).orEmpty
         self.hobbies = (userDic?["hobbies"] as? [String]).orEmptyArray
         self.introduction = (userDic?["introduction"] as? String).orEmpty
-
+        
         self.friendRequestUids = (userDic?["friendRequestUids"] as? [String]).orEmptyArray
         self.friendRequestedUids = (userDic?["friendRequestedUids"] as? [String]).orEmptyArray
         self.friendUids = (userDic?["friendUids"] as? [String]).orEmptyArray
@@ -124,6 +126,7 @@ class User {
         self.chatLastMessageMapping = (userDic?["chatLastMessageMapping"] as? [String: String]) ?? [:]
         self.chatLastTimestampMapping = (userDic?["chatLastTimestampMapping"] as? [String: Timestamp]) ?? [:]
         self.hiddenChatRoomUserIDs = (userDic?["hiddenChatRoomUserIDs"] as? [String]).orEmptyArray
+        self.hiddenPostIDs = (userDic?["hiddenPostIDs"] as? [String]).orEmptyArray
         self.unreadMessageCount = (userDic?["unreadMessageCount"] as? [String: Int] ?? [:])
         
         self.tab_item_notice = (userDic?["tab_item_notice"] as? [String]).orEmptyArray
@@ -159,6 +162,7 @@ class User {
             chatLastMessageTimestamp: self.chatLastTimestampMapping,
             chatLastMessageTimestampString: ConvertMapping.convertMapping(self.chatLastTimestampMapping),
             hiddenChatRoomUserIDs: self.hiddenChatRoomUserIDs,
+            hiddenPostIDs: self.hiddenPostIDs,
             unreadMessageCount: self.unreadMessageCount,
             tab_item_notice: ConvertMapping.convertMappingToBool(self.unreadMessageCount, notice: self.tab_item_notice)
         )
@@ -187,7 +191,7 @@ struct UserModel {
     var friendRequestedUids: [String] = []
     var friendUids: [String] = []
     var friendEarliestPostTimestampMapping: [String: Timestamp] = [:]
-
+    
     var blockedUids: [String] = []
     var blockingUids: [String] = []
     var reportUserIDs: [String] = []
@@ -198,6 +202,7 @@ struct UserModel {
     var chatLastMessageTimestamp: [String: Timestamp] = [:]
     var chatLastMessageTimestampString: [String: String] = [:]
     var hiddenChatRoomUserIDs: [String] = []
+    var hiddenPostIDs: [String] = []
     var unreadMessageCount:[String: Int] = [:]
     
     var tab_item_notice: [String] = []
@@ -207,35 +212,36 @@ struct UserModel {
 final class UserObservableModel: ObservableObject, Identifiable, Equatable {
     static func == (lhs: UserObservableModel, rhs: UserObservableModel) -> Bool {
         return lhs.user.uid == rhs.user.uid &&
-               lhs.user.fcmToken == rhs.user.fcmToken &&
-               lhs.user.activeCallUid == rhs.user.activeCallUid &&
-               lhs.user.nickname == rhs.user.nickname &&
-               lhs.user.email == rhs.user.email &&
-               lhs.user.gender == rhs.user.gender &&
-               lhs.user.profileImageURLString == rhs.user.profileImageURLString &&
-               lhs.user.coins == rhs.user.coins &&
-               lhs.user.onboarding == rhs.user.onboarding &&
-               lhs.user.isCallingChannelId == rhs.user.isCallingChannelId &&
-               lhs.user.fixedPost == rhs.user.fixedPost &&
-               lhs.user.birthDate == rhs.user.birthDate &&
-               lhs.user.hobbies == rhs.user.hobbies &&
-               lhs.user.introduction == rhs.user.introduction &&
-               lhs.user.friendRequestUids == rhs.user.friendRequestUids &&
-               lhs.user.friendRequestedUids == rhs.user.friendRequestedUids &&
-               lhs.user.friendUids == rhs.user.friendUids &&
-               lhs.user.friendEarliestPostTimestampMapping == rhs.user.friendEarliestPostTimestampMapping &&
-               lhs.user.blockedUids == rhs.user.blockedUids &&
-               lhs.user.blockingUids == rhs.user.blockingUids &&
-               lhs.user.reportUserIDs == rhs.user.reportUserIDs &&
-               lhs.user.isDisplayOnlyPost == rhs.user.isDisplayOnlyPost &&
-               lhs.user.notificationMapping == rhs.user.notificationMapping &&
-               lhs.user.chatmateMapping == rhs.user.chatmateMapping &&
-               lhs.user.chatLastMessageMapping == rhs.user.chatLastMessageMapping &&
-               lhs.user.hiddenChatRoomUserIDs == rhs.user.hiddenChatRoomUserIDs &&
-               lhs.user.unreadMessageCount == rhs.user.unreadMessageCount &&
-               lhs.user.tab_item_notice == rhs.user.tab_item_notice
+        lhs.user.fcmToken == rhs.user.fcmToken &&
+        lhs.user.activeCallUid == rhs.user.activeCallUid &&
+        lhs.user.nickname == rhs.user.nickname &&
+        lhs.user.email == rhs.user.email &&
+        lhs.user.gender == rhs.user.gender &&
+        lhs.user.profileImageURLString == rhs.user.profileImageURLString &&
+        lhs.user.coins == rhs.user.coins &&
+        lhs.user.onboarding == rhs.user.onboarding &&
+        lhs.user.isCallingChannelId == rhs.user.isCallingChannelId &&
+        lhs.user.fixedPost == rhs.user.fixedPost &&
+        lhs.user.birthDate == rhs.user.birthDate &&
+        lhs.user.hobbies == rhs.user.hobbies &&
+        lhs.user.introduction == rhs.user.introduction &&
+        lhs.user.friendRequestUids == rhs.user.friendRequestUids &&
+        lhs.user.friendRequestedUids == rhs.user.friendRequestedUids &&
+        lhs.user.friendUids == rhs.user.friendUids &&
+        lhs.user.friendEarliestPostTimestampMapping == rhs.user.friendEarliestPostTimestampMapping &&
+        lhs.user.blockedUids == rhs.user.blockedUids &&
+        lhs.user.blockingUids == rhs.user.blockingUids &&
+        lhs.user.reportUserIDs == rhs.user.reportUserIDs &&
+        lhs.user.isDisplayOnlyPost == rhs.user.isDisplayOnlyPost &&
+        lhs.user.notificationMapping == rhs.user.notificationMapping &&
+        lhs.user.chatmateMapping == rhs.user.chatmateMapping &&
+        lhs.user.chatLastMessageMapping == rhs.user.chatLastMessageMapping &&
+        lhs.user.hiddenChatRoomUserIDs == rhs.user.hiddenChatRoomUserIDs &&
+        lhs.user.hiddenPostIDs == rhs.user.hiddenPostIDs &&
+        lhs.user.unreadMessageCount == rhs.user.unreadMessageCount &&
+        lhs.user.tab_item_notice == rhs.user.tab_item_notice
     }
-
+    
     
     @Published var user: UserModel = .init()
     
@@ -244,7 +250,7 @@ final class UserObservableModel: ObservableObject, Identifiable, Equatable {
     }
     let genders = ["男性", "女性", "未回答"]
     let tokyo23Wards = ["千代田区", "中央区", "港区", "新宿区", "文京区", "台東区", "墨田区", "江東区", "品川区", "目黒区", "大田区", "世田谷区", "渋谷区", "中野区", "杉並区", "豊島区", "北区", "荒川区", "板橋区", "練馬区", "足立区", "葛飾区", "江戸川区"]
-
+    
     func initial(){
         self.user = .init()
     }

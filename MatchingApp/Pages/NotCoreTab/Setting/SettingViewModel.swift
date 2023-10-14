@@ -8,7 +8,8 @@
 import Foundation
 import Combine
 
-class SettingViewModel: ObservableObject {
+@MainActor
+final class SettingViewModel: ObservableObject {
     @Published var isSuccess: Bool = false
     @Published var isWebView: Bool = false
     @Published var webUrlString: String = ""
@@ -18,19 +19,16 @@ class SettingViewModel: ObservableObject {
     
     private var cancellable = Set<AnyCancellable>()
     
-    func signOut(){
-        AuthenticationService.shared.signOut()
-            .sink { completion in
-                switch completion {
-                case .finished:
-                    self.isSuccess = true
-                case .failure(let error):
-                    self.isErrorAlert = true
-                    self.errorMessage = error.errorMessage
-                }
-            } receiveValue: { _ in
-                print("recieve value")
-            }
-            .store(in: &self.cancellable)
+    func signOut() async {
+        do {
+            try await AuthenticationService.shared.signOut()
+            self.isSuccess = true
+        } catch let error as AppError {
+            self.errorMessage = error.errorMessage
+            self.isErrorAlert = true
+        } catch {
+            self.errorMessage = error.localizedDescription
+            self.isErrorAlert = true
+        }
     }
 }

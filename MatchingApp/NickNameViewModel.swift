@@ -17,21 +17,19 @@ class NickNameViewModel: ObservableObject {
     private let userService = UserFirestoreService()
     private var cancellabel = Set<AnyCancellable>()
     
-    func storeUserNickname(uid: String){
-        self.userService.updateUserInfo(
-            currentUid: uid,
-            key: "nickname",
-            value: self.nickname)
-        .sink { completion in
-            switch completion {
-            case .finished:
-                self.isSuccessStore = true
-            case .failure(let error):
-                self.isErrorAlert = true
-                self.errorMessage = error.errorMessage
-            }
-        } receiveValue: { _ in }
-            .store(in: &self.cancellabel)
+    func storeUserNickname(uid: String) async {
+        do {
+            try await self.userService.updateUserInfo(
+                currentUid: uid,
+                key: "nickname",
+                value: self.nickname)
+        } catch let error as AppError {
+            self.errorMessage = error.errorMessage
+            self.isErrorAlert = true
+        } catch {
+            self.errorMessage = error.localizedDescription
+            self.isErrorAlert = true
+        }
     }
     
 }

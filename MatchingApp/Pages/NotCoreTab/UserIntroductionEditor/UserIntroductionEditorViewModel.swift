@@ -14,22 +14,20 @@ class UserIntroductionEditorViewModel: ObservableObject {
     @Published var isErrorAlert: Bool = false
     @Published var errorMessage: String = ""
     @Published var isSuccess: Bool = false
-    private var cancellable = Set<AnyCancellable>()
     private let userService = UserFirestoreService()
     
     func storeUserIntroductionToFirestore(
         userModel: UserObservableModel
-    ){
-        self.userService.updateUserInfo(currentUid: userModel.user.uid, key: "introduction", value: self.userIntroduction)
-            .sink { completion in
-                switch completion {
-                case .finished:
-                    self.isSuccess = true
-                case .failure(let error):
-                    self.isErrorAlert = true
-                    self.errorMessage = error.errorMessage
-                }
-            } receiveValue: { _ in }
-            .store(in: &self.cancellable)
+    ) async {
+        do {
+            try await self.userService.updateUserInfo(currentUid: userModel.user.uid, key: "introduction", value: self.userIntroduction)
+            self.isSuccess = true
+        } catch let error as AppError {
+            self.errorMessage = error.errorMessage
+            self.isErrorAlert = true
+        } catch {
+            self.errorMessage = error.localizedDescription
+            self.isErrorAlert = true
+        }
     }
 }

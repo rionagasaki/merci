@@ -25,6 +25,15 @@ class UserProfileViewModel: ObservableObject {
     private let postService = PostFirestoreService()
     private var cancellable = Set<AnyCancellable>()
     
+    private func handleError(error: Error) {
+        if let error = error as? AppError {
+            self.errorMessage = error.errorMessage
+        } else {
+            self.errorMessage = error.localizedDescription
+        }
+        self.isErrorAlert = true
+    }
+    
     func initial(userId: String){
         if userId.isEmpty { return }
         self.isLoading = true
@@ -142,42 +151,35 @@ class UserProfileViewModel: ObservableObject {
             .store(in: &self.cancellable)
     }
     
-    func deletePost(postID: String, userModel: UserObservableModel) {
-        self.postService
-            .deletePost(postID: postID, userID: userModel.user.uid, fixedPostID: userModel.user.fixedPost)
-            .sink { completion in
-                switch completion {
-                case .finished:
-                    if postID == self.fixedPost?.id {
-                        self.fixedPost = nil
-                    }
-                    self.getLatestPosts()
-                case .failure(let error):
-                    self.isErrorAlert = true
-                    self.errorMessage = error.errorMessage
-                }
-            } receiveValue: { _ in
-                print("recieve value")
+    func deletePost(postID: String, userModel: UserObservableModel) async {
+        do {
+            try await self.postService
+                .deletePost(postID: postID, userID: userModel.user.uid, fixedPostID: userModel.user.fixedPost)
+            if postID == self.fixedPost?.id {
+                self.fixedPost = nil
             }
-            .store(in: &self.cancellable)
+            self.getLatestPosts()
+        } catch let error as AppError {
+            self.errorMessage = error.errorMessage
+            self.isErrorAlert = true
+        } catch {
+            self.errorMessage = error.localizedDescription
+            self.isErrorAlert = true
+        }
+        
     }
     
-    func pinnedPost(postID: String, userID: String) {
-        self.userService.fixedPostToProfile(postID: postID, userID: userID)
-            .sink { completion in
-                switch completion {
-                case .finished:
-                    if postID.isEmpty {
-                        self.fixedPost = nil
-                    } else {
-                        self.getPost(postID: postID)
-                    }
-                    break
-                case .failure(let error):
-                    self.errorMessage = error.errorMessage
-                    self.isErrorAlert = true
-                }
-            } receiveValue: { _ in }.store(in: &self.cancellable)
+    func pinnedPost(postID: String, userID: String) async {
+        do {
+            try await self.userService.fixedPostToProfile(postID: postID, userID: userID)
+            if postID.isEmpty {
+                self.fixedPost = nil
+            } else {
+                self.getPost(postID: postID)
+            }
+        } catch {
+            self.handleError(error: error)
+        }
     }
     
     func getPost(postID: String){

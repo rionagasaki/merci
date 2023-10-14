@@ -56,7 +56,7 @@ class AppleAuthViewModel: ObservableObject {
         return String(nonce)
     }
     
-    func handleResult(result: (Result<ASAuthorization, Error>), userModel: UserObservableModel, appState: AppState){
+    func handleResult(result: (Result<ASAuthorization, Error>), userModel: UserObservableModel, appState: AppState) async {
         switch result {
         case .success(let authResults):
             let appleIDCredential = authResults.credential as? ASAuthorizationAppleIDCredential
@@ -76,26 +76,22 @@ class AppleAuthViewModel: ObservableObject {
             
             let credential = OAuthProvider.credential(withProviderID: "apple.com",idToken: idTokenString,rawNonce: nonce)
             
-            AuthenticationService
-                .shared
-                .signInWithApple(credential: credential)
-                .flatMap { authResult -> AnyPublisher<Void, AppError> in
-                    guard let additionalUserInfo = authResult.additionalUserInfo else { return Just(()).setFailureType(to: AppError.self).eraseToAnyPublisher() }
-                    if !additionalUserInfo.isNewUser { return Just(()).setFailureType(to: AppError.self).eraseToAnyPublisher() }
-                    let email = authResult.user.email ?? ""
-                    let uid = authResult.user.uid
-                    return self.userService.registerUserEmailAndUid(email: email, uid: uid)
+            do {
+                let result = try await AuthenticationService.shared.signInWithApple(credential: credential)
+                if let userInfo = result.additionalUserInfo, userInfo.isNewUser {
+                    let uid = result.user.uid
+                    let email = result.user.email ?? ""
+                    try await self.userService.registerUserEmailAndUid(email: email, uid: uid)
                 }
-                .sink { completion in
-                    switch completion {
-                    case .finished:
-                        break
-                    case .failure(let error):
-                        self.errorMessage = error.errorMessage
-                        self.isErrorAlert = true
-                    }
-                } receiveValue: { _ in }
-                .store(in: &cancellable)
+                
+            } catch let error as AppError {
+                self.errorMessage = error.errorMessage
+                self.isErrorAlert = true
+            } catch {
+                self.errorMessage = error.localizedDescription
+                self.isErrorAlert = true
+            }
+            
         case .failure(let error):
             print("Authentication failed: \(error.localizedDescription)")
             break

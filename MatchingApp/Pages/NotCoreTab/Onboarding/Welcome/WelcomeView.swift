@@ -65,7 +65,9 @@ struct WelcomeView: View {
                 }
                 Spacer()
                 Button {
-                    viewModel.doneOnboarding(userModel: userModel)
+                    Task {
+                       await viewModel.doneOnboarding(userModel: userModel)
+                    }
                 } label: {
                     Text("merciを始める")
                         .frame(width: UIScreen.main.bounds.width-32, height: 60)

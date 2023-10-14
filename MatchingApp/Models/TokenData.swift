@@ -13,13 +13,8 @@ class TokenData: ObservableObject {
     private init(){}
     @Published var token: String = ""
     
-    func fetchToken(){
-        Messaging.messaging().token { token, error in
-            if let error = error {
-                print(error)
-            } else if let token = token {
-                self.token  = token
-            }
-        }
+    func fetchToken() async throws -> Void {
+        let token = try await Messaging.messaging().token()
+        self.token = token
     }
 }

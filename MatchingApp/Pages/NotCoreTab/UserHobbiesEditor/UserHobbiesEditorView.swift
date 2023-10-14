@@ -159,7 +159,9 @@ struct UserHobbiesEditorView: View {
                 }
             }
             Button {
-                viewModel.storeHobbiesToFirestore(userModel: userModel)
+                Task {
+                    await viewModel.storeHobbiesToFirestore(userModel: userModel)
+                }
             } label: {
                 Text("変更を保存する")
                     .foregroundColor(.white)
@@ -183,8 +185,8 @@ struct UserHobbiesEditorView: View {
                     .font(.system(size: 16, weight: .medium))
             }
         }
-        .alert(isPresented: $viewModel.isFailedStoreData) {
-            Alert(title: Text("エラー"), message: Text("データの更新に失敗しました。ネットワーク等の接続をご確認の上、再度お試しください。"))
+        .alert(isPresented: $viewModel.isErrorAlert) {
+            Alert(title: Text("エラー"), message: Text(viewModel.errorMessage))
         }
     }
 }

@@ -79,11 +79,6 @@ class PointPurchaseViewModel: ObservableObject {
                 }
             }
         }
-        .flatMap { _ -> AnyPublisher<Void, AppError> in
-            self.userService.updateUserInfo(
-                currentUid: uid, key: "coins",
-                value: givenPoint)
-        }
         .sink { completion in
             switch completion {
             case .finished:

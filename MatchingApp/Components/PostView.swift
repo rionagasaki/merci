@@ -37,11 +37,9 @@ struct PostView: View {
                             .foregroundColor(.gray.opacity(0.6))
                             .font(.system(size: 14))
                         
-                        if post.posterUid == userModel.user.uid {
-                            Text("")
-                                .frame(width: 24, height: 24)
-                                .padding(.leading, 4)
-                        }
+                        Text("")
+                            .frame(width: 24, height: 24)
+                            .padding(.leading, 4)
                     }
                     
                     if !post.mentionUserNickName.isEmpty {
@@ -54,32 +52,36 @@ struct PostView: View {
                             .cornerRadius(10)
                     }
                     
-                    Text(post.text)
-                        .foregroundColor(.customBlack)
-                        .font(.system(size: 16))
-                        .multilineTextAlignment(.leading)
-                    
-                    if !post.contentImageUrlStrings.isEmpty {
-                        LazyVStack {
-                            HStack {
-                                LazyVGrid(columns: Array(repeating: .init(.fixed((UIScreen.main.bounds.width / 4)), spacing: 8), count: 2)) {
-                                    ForEach(post.contentImageUrlStrings, id: \.self) { contentImageString in
-                                        Button {
-                                            self.viewModel.selectedPhoto = contentImageString
-                                            self.viewModel.isPhotoPreview = true
-                                        } label: {
-                                            WebImage(url: URL(string: contentImageString))
-                                                .resizable()
-                                                .indicator(.activity)
-                                                .transition(.fade(duration: 0.5))
-                                                .scaledToFill()
-                                                .frame(width: (UIScreen.main.bounds.width)/4, height: (UIScreen.main.bounds.width)/4)
-                                                .background(Color.gray.opacity(0.1))
-                                                .cornerRadius(10)
+                    ScrollView {
+                        VStack(alignment: .leading){
+                            Text(post.text)
+                                .foregroundColor(.customBlack)
+                                .font(.system(size: 16))
+                                .multilineTextAlignment(.leading)
+                            
+                            if !post.contentImageUrlStrings.isEmpty {
+                                LazyVStack {
+                                    HStack {
+                                        LazyVGrid(columns: Array(repeating: .init(.fixed((UIScreen.main.bounds.width / 4)), spacing: 8), count: 2)) {
+                                            ForEach(post.contentImageUrlStrings, id: \.self) { contentImageString in
+                                                Button {
+                                                    self.viewModel.selectedPhoto = contentImageString
+                                                    self.viewModel.isPhotoPreview = true
+                                                } label: {
+                                                    WebImage(url: URL(string: contentImageString))
+                                                        .resizable()
+                                                        .indicator(.activity)
+                                                        .transition(.fade(duration: 0.5))
+                                                        .scaledToFill()
+                                                        .frame(width: (UIScreen.main.bounds.width)/4, height: (UIScreen.main.bounds.width)/4)
+                                                        .background(Color.gray.opacity(0.1))
+                                                        .cornerRadius(10)
+                                                }
+                                            }
                                         }
+                                        Spacer()
                                     }
                                 }
-                                Spacer()
                             }
                         }
                     }

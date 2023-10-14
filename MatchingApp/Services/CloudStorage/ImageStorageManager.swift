@@ -8,59 +8,49 @@
 import Foundation
 import UIKit
 import FirebaseStorage
-import Combine
 
 
-class ImageStorageManager {
-    let storage = Storage.storage()
-    var cancellable = Set<AnyCancellable>()
+final class ImageStorageManager {
+    private let storage = Storage.storage()
+    private let childName: String = "post"
+    private let compressionQuality = 0.3
     
-    func uploadImageToStorage(folderName: String, profileImage: UIImage) -> AnyPublisher<String, AppError> {
-        Future { promise in
-            guard let updateImage = profileImage.jpegData(compressionQuality: 0.3) else {
-                return promise(.failure(.other(.changeJpegError)))
-            }
-
-            let userProfileRef = self.storage.reference().child("post").child(UUID().uuidString)
-            userProfileRef.putData(updateImage, metadata: nil) { metadata, error in
-                if let error = error as? NSError {
-                    return promise(.failure(.storage(error)))
+    func uploadImageToStorage(with profileImage: UIImage) async throws -> String {
+        guard let updateImage = profileImage.jpegData(compressionQuality: self.compressionQuality) else {
+            throw AppError.other(.unexpectedError)
+        }
+        
+        let userProfileRef = self.storage.reference().child(self.childName).child(UUID().uuidString)
+        try await withCheckedThrowingContinuation { continuation in
+            userProfileRef.putData(updateImage, metadata: nil){ result in
+                switch result {
+                case .success(_):
+                    continuation.resume()
+                case .failure(let failure):
+                    continuation.resume(with: .failure(failure))
                 }
                 
-                userProfileRef
-                    .downloadURL { url, error in
-                    if let error = error as? NSError {
-                        promise(.failure(.storage(error)))
-                    } else if let downloadURL = url {
-                        promise(.success(downloadURL.absoluteString))
-                    }
+            }
+        }
+        let downloadUrl = try await userProfileRef.downloadURL()
+        return downloadUrl.absoluteString
+    }
+    
+    func uploadMultipleImageToStorage(with images:[UIImage]) async throws -> [String] {
+        var uploadedImageURLs:[String] = Array(repeating: "", count: images.count)
+        
+        try await withThrowingTaskGroup(of: (Int, String).self) { [weak self] group in
+            guard let self = self else { return }
+            for (index, image) in images.enumerated() {
+                group.addTask {
+                    return (index, try await self.uploadImageToStorage(with: image))
                 }
             }
-        }.eraseToAnyPublisher()
-    }
-
-    func uploadMultipleImageToStorage(folderName: String, images:[UIImage]) -> AnyPublisher<[String], AppError> {
-        let uploadFutures = images.map { uploadImageToStorage(folderName: folderName, profileImage: $0) }
-        let mergedFutures = Publishers
-            .MergeMany(uploadFutures)
-            .eraseToAnyPublisher()
-            .collect()
             
-        let futureResult = Future<[String], AppError> { promise in
-            mergedFutures
-                .sink { completion in
-                    switch completion {
-                    case .finished:
-                        break
-                    case let .failure(error):
-                        promise(.failure(error))
-                    }
-                } receiveValue: { images in
-                    print(images)
-                    promise(.success(images))
-                }
-                .store(in: &self.cancellable)
-        }.eraseToAnyPublisher()
-        return futureResult
+            for try await (index, imageURL) in group {
+                uploadedImageURLs[index] = imageURL
+            }
+        }
+        return uploadedImageURLs
     }
 }

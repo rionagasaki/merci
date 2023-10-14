@@ -11,20 +11,20 @@ import FirebaseAuth
 import FirebaseFirestore
 import Combine
 
-// Googleでログインする場合。アカウント作成はできない！
-
 struct GoogleAuthView: View {
     @StateObject var viewModel = GoogleAuthViewModel()
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var userModel: UserObservableModel
     
-    
     var body: some View {
         Button {
-            viewModel.googleAuth(
-                userModel: userModel,
-                appState: appState
-            )
+            Task {
+                await viewModel.googleAuth(
+                    userModel: userModel,
+                    appState: appState,
+                    isNewUser: false
+                )
+            }
         } label: {
             HStack {
                 Image("Google")

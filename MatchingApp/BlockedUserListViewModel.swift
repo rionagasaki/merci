@@ -9,7 +9,8 @@ import Foundation
 import Combine
 import SwiftUI
 
-class BlockedUserListViewModel: ObservableObject {
+@MainActor
+final class BlockedUserListViewModel: ObservableObject {
     @Published var errorMessage: String = ""
     @Published var isErrorAlert: Bool = false
     @Published var isLoading: Bool = false
@@ -17,19 +18,17 @@ class BlockedUserListViewModel: ObservableObject {
     private let userService = UserFirestoreService()
     private var cancellable = Set<AnyCancellable>()
     
-    func initial(userModel: UserObservableModel){
-        self.userService.getConcurrentUserInfo(userIDs: userModel.user.blockingUids)
-            .sink { completion in
-                switch completion {
-                case .finished:
-                    break
-                case .failure(let error):
-                    self.errorMessage = error.errorMessage
-                    self.isErrorAlert = true
-                }
-            } receiveValue: { users in
-                self.blockedUser = users.map { .init(userModel: $0.adaptUserObservableModel()) }
-            }.store(in: &self.cancellable)
+    func initial(userModel: UserObservableModel) async {
+        do {
+            let users = try await self.userService.getConcurrentUserInfo(userIDs: userModel.user.blockingUids)
+            self.blockedUser = users.map { .init(userModel: $0.adaptUserObservableModel()) }
+        } catch let error as AppError {
+            self.errorMessage = error.errorMessage
+            self.isErrorAlert = true
+        } catch {
+            self.errorMessage = error.localizedDescription
+            self.isErrorAlert = true
+        }
     }
     
     func resolveBlock(userModel: UserObservableModel, user: UserObservableModel) {

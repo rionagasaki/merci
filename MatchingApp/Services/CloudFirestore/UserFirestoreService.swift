@@ -31,54 +31,36 @@ class UserFirestoreService {
             }
         }.eraseToAnyPublisher()
     }
-    func getOnlineUser(userID: String) -> AnyPublisher<[UserModel], AppError> {
-        return Future { promise in
-            db.collection(self.userPath).whereField("status", isEqualTo: "online")
-                .getDocuments { querySnapshot, error in
-                    if let error = error {
-                        promise(.failure(.firestore(error)))
-                    } else if let querySnapshot = querySnapshot {
-                        let userModel = querySnapshot.documents.map { document in
-                            return User(document: document).adaptUserObservableModel()
-                        }.filter { user in
-                            user.uid != userID
-                        }
-                        promise(.success(userModel))
-                    }
-                }
-            
-        }.eraseToAnyPublisher()
+    func getOnlineUser(userID: String) async throws -> [UserModel] {
+        let querySnapshot = try await db.collection(self.userPath).whereField("status", isEqualTo: "online")
+            .getDocuments()
+        let userModel = querySnapshot.documents.map { document in
+            return User(document: document).adaptUserObservableModel()
+        }.filter { user in
+            user.uid != userID
+        }
+        return userModel
     }
     
-    func searchUser(uid: String) -> AnyPublisher<User?, AppError>{
-        return Future { promise in
-            if uid.isEmpty {
-                promise(.success(nil))
-                return
-            }
-            db.collection(self.userPath).document(uid).getDocument { document, error in
-                if let error = error {
-                    promise(.failure(.firestore(error)))
-                    return
-                }
-                
-                guard let document = document else {
-                    promise(.success(nil))
-                    return
-                }
-                if document.exists {
-                    let docRef = User(document: document)
-                    promise(.success(docRef))
-                } else {
-                    promise(.success(nil))
-                }
-            }
-        }.eraseToAnyPublisher()
+    func getOneUser(uid: String) async throws -> User {
+        let document = try await db.collection(self.userPath).document(uid).getDocument()
+        let user = User(document: document)
+        return user
     }
     
-    func getConcurrentUserInfo(userIDs: [String]) -> AnyPublisher<[User], AppError>{
-        let publisher = userIDs.map { searchUser(uid: $0) }
-        return Publishers.MergeMany(publisher).compactMap { $0 }.collect().eraseToAnyPublisher()
+    func getConcurrentUserInfo(userIDs: [String]) async throws -> [User]  {
+        var users: [User] = []
+        return try await withThrowingTaskGroup(of: User.self, body: { group in
+            for userID in userIDs {
+                group.addTask {
+                    return try await self.getOneUser(uid: userID)
+                }
+            }
+            for try await user in group {
+                users.append(user)
+            }
+            return users
+        })
     }
     
     func getUpdateUser(uid: String, completion: @escaping (Result<UserModel, AppError>) -> Void) {
@@ -97,46 +79,25 @@ class UserFirestoreService {
         }
     }
     
-    func checkAccountExists(email: String, isNewUser: Bool) -> AnyPublisher<Void, AppError>{
-        return Future { promise in
-            db.collection("User")
-                .whereField("email", isEqualTo: email)
-                .getDocuments { querySnapshots, error in
-                    if let error = error as? NSError {
-                        promise(.failure(.firestore(error)))
-                        return
-                    }
-                    if isNewUser {
-                        if let documentsCount = querySnapshots?.count, documentsCount != 0 {
-                            promise(.failure(.other(.alreadyHasAccountError)))
-                            return
-                        } else {
-                            promise(.success(()))
-                        }
-                    } else {
-                        guard let documentsCount = querySnapshots?.count, documentsCount != 0 else {
-                            promise(.failure(.other(.hasNoAccountError)))
-                            return
-                        }
-                        promise(.success(()))
-                    }
-                }
-        }.eraseToAnyPublisher()
+    func checkAccountExists(email: String, isNewUser: Bool) async throws -> Void {
+        let query = db.collection("User").whereField("email", isEqualTo: email)
+        let snapshots = try await query.getDocuments()
+        if isNewUser {
+            if snapshots.count != 0 {
+                throw AppError.other(.alreadyHasAccountError)
+            }
+        } else {
+            if snapshots.count == 0 {
+                throw AppError.other(.hasNoAccountError)
+            }
+        }
     }
     
-    func registerUserEmailAndUid(email: String, uid: String) -> AnyPublisher<Void, AppError> {
-        return Future { promise in
-            db.collection(self.userPath).document(uid).setData([
-                "uid": uid,
-                "email": email
-            ]){ error in
-                if let error = error {
-                    promise(.failure(.firestore(error)))
-                } else {
-                    promise(.success(()))
-                }
-            }
-        }.eraseToAnyPublisher()
+    func registerUserEmailAndUid(email: String, uid: String) async throws {
+        try await db.collection(self.userPath).document(uid).setData([
+            "uid": uid,
+            "email": email
+        ])
     }
     
     func createUser(
@@ -156,22 +117,15 @@ class UserFirestoreService {
                 }
             }
         }
+    
     func updateUserInfo<T>(
         currentUid: String,
         key: String,
         value: T
-    ) -> AnyPublisher<Void, AppError> {
-        return Future { promise in
-            db.collection(self.userPath).document(currentUid).updateData([
-                key: value
-            ]){ error in
-                if let error = error {
-                    promise(.failure(.firestore(error)))
-                } else {
-                    promise(.success(()))
-                }
-            }
-        }.eraseToAnyPublisher()
+    ) async throws -> Void {
+        try await db.collection(self.userPath).document(currentUid).updateData([
+            key: value
+        ])
     }
     
     func updateProfileImageForUser(
@@ -196,18 +150,10 @@ class UserFirestoreService {
         }.eraseToAnyPublisher()
     }
     
-    func fixedPostToProfile(postID: String, userID: String) -> AnyPublisher<Void, AppError> {
-        return Future { promise in
-            db.collection(self.userPath).document(userID).updateData([
-                "fixedPost": postID
-            ]){ error in
-                if let error = error {
-                    promise(.failure(.firestore(error)))
-                } else {
-                    promise(.success(()))
-                }
-            }
-        }.eraseToAnyPublisher()
+    func fixedPostToProfile(postID: String, userID: String) async throws -> Void {
+        try await db.collection(self.userPath).document(userID).updateData([
+            "fixedPost": postID
+        ])
     }
     
     func requestFriend(
@@ -464,5 +410,11 @@ class UserFirestoreService {
                 completionHandler(.success(()))
             }
         }
+    }
+    
+    func addHiddenPost(userID: String, postID: String) async throws -> Void {
+        try await  db.collection(self.userPath).document(userID).updateData([
+            "hiddenPostIDs": FieldValue.arrayUnion([postID])
+        ])
     }
 }

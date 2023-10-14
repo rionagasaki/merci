@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import MorphingLabel
 
 struct EntranceView: View {
     @State var selection: Int = 0

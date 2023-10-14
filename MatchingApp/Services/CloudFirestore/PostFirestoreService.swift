@@ -15,69 +15,60 @@ enum PostTarget {
     case `init`
 }
 
-class PostFirestoreService {
-    let userPath: String = "User"
-    let likeNoticePath: String = "LikeNotice"
-    let commentNoticePath: String = "CommentNotice"
-    let postPath: String = "Post"
-    let secretText: String = "SecretText"
+final class PostFirestoreService {
+    private let userPath: String = "User"
+    private let likeNoticePath: String = "LikeNotice"
+    private let commentNoticePath: String = "CommentNotice"
+    private let postPath: String = "Post"
+    private let postReportPath: String = "PostReport"
+    
     private var lastDocument: DocumentSnapshot?
     private var friendLastDocument: DocumentSnapshot?
     private var usersLastDocument: DocumentSnapshot?
+    private let createdAt: String = "createdAt"
+    private let queryLimit = 20
     
-    func getAllPost(startAfter lastDoc: DocumentSnapshot? = nil, target: PostTarget) -> AnyPublisher<[Post], AppError> {
-        return Future { promise in
-            var query: Query = db
-                .collection(self.postPath)
-                .order(by: "createdAt", descending: true)
-                .limit(to: 20)
-            
-            if let lastDoc = lastDoc {
-                query = query.start(afterDocument: lastDoc)
-            }
-            
-            query.getDocuments { (querySnapshots, error) in
-                if let error = error {
-                    promise(.failure(.firestore(error)))
-                } else if let querySnapshots = querySnapshots {
-                    let posts = querySnapshots.documents.map { document -> Post in
-                        return Post(document: document)
-                    }
-                    switch target {
-                    case .all:
-                        if querySnapshots.documents.count < 20 {
-                            self.lastDocument = nil
-                        } else {
-                            self.lastDocument = querySnapshots.documents.last
-                        }
-                    case .friend:
-                        if querySnapshots.documents.count < 20 {
-                            self.friendLastDocument = nil
-                        } else {
-                            self.friendLastDocument = querySnapshots.documents.last
-                        }
-                   
-                    case .`init`:
-                        if querySnapshots.documents.count < 20 {
-                            self.lastDocument = nil
-                            self.friendLastDocument = nil
-                        } else {
-                            self.lastDocument = querySnapshots.documents.last
-                            self.friendLastDocument = querySnapshots.documents.last
-                        }
-                    }
-                    promise(.success(posts))
-                }
-            }
-        }.eraseToAnyPublisher()
+    func getAllPost(startAfter lastDoc: DocumentSnapshot? = nil, target: PostTarget) async throws -> [Post] {
+        let querySnapshots = try await createQuery(startAfter: lastDoc).getDocuments()
+        updateLastDocumentBasedOn(target: target, with: querySnapshots)
+        return querySnapshots.documents.map { Post(document: $0) }
     }
     
-    func getNextPage() -> AnyPublisher<[Post], AppError> {
-        return getAllPost(startAfter: self.lastDocument, target: .all)
+    private func createQuery(startAfter lastDoc: DocumentSnapshot?) -> Query {
+        var query: Query = db
+            .collection(self.postPath)
+            .order(by: createdAt, descending: true)
+            .limit(to: queryLimit)
+        
+        if let lastDoc = lastDoc {
+            query = query.start(afterDocument: lastDoc)
+        }
+        return query
     }
     
-    func getFriendNextPage() -> AnyPublisher<[Post], AppError> {
-        return getAllPost(startAfter: self.friendLastDocument, target: .friend)
+    private func updateLastDocumentBasedOn(target: PostTarget, with snapshots: QuerySnapshot) {
+        let shouldReset = snapshots.documents.count < queryLimit
+        
+        switch target {
+        case .all:
+            self.lastDocument = shouldReset ? nil : snapshots.documents.last
+        case .friend:
+            self.friendLastDocument = shouldReset ? nil : snapshots.documents.last
+        case .`init`:
+            self.lastDocument = shouldReset ? nil : snapshots.documents.last
+            self.friendLastDocument = shouldReset ? nil : snapshots.documents.last
+        }
+    }
+    
+    
+    func getNextPage() async throws -> [Post] {
+        let posts = try await getAllPost(startAfter: self.lastDocument, target: .all)
+        return posts
+    }
+    
+    func getFriendNextPage() async throws  -> [Post] {
+        let posts = try await getAllPost(startAfter: self.friendLastDocument, target: .friend)
+        return posts
     }
     
     func getOnePost(postId: String) -> AnyPublisher<Post, AppError> {
@@ -110,8 +101,8 @@ class PostFirestoreService {
             var query: Query = db
                 .collection(self.postPath)
                 .whereField("posterUid", isEqualTo: userID)
-                .order(by: "createdAt", descending: true)
-                .limit(to: 20)
+                .order(by: self.createdAt, descending: true)
+                .limit(to: self.queryLimit)
             
             if let lastDoc = lastDoc {
                 query = query.start(afterDocument: lastDoc)
@@ -125,7 +116,7 @@ class PostFirestoreService {
                         let posts = querySnapshots.documents.map { document -> Post in
                             return Post(document: document)
                         }
-                        if querySnapshots.documents.count < 20 {
+                        if querySnapshots.documents.count < self.queryLimit {
                             self.usersLastDocument = nil
                         } else {
                             self.usersLastDocument = querySnapshots.documents.last
@@ -148,24 +139,16 @@ class PostFirestoreService {
         posterProfileImageUrlString: String,
         text: String,
         contentImageUrlStrings:[String]
-    ) -> AnyPublisher<Void, AppError>{
+    ) async throws -> Void {
         let postId = UUID().uuidString
-        return Future { promise in
-            db.collection(self.postPath).document(postId).setData([
-                "createdAt": createdAt,
-                "posterUid": posterUid,
-                "posterNickName": posterNickName,
-                "posterProfileImageUrlString": posterProfileImageUrlString,
-                "text":text,
-                "contentImageUrlStrings": contentImageUrlStrings
-            ]){ error in
-                if let error = error {
-                    promise(.failure(.firestore(error)))
-                } else {
-                    promise(.success(()))
-                }
-            }
-        }.eraseToAnyPublisher()
+        try await db.collection(self.postPath).document(postId).setData([
+            "createdAt": createdAt,
+            "posterUid": posterUid,
+            "posterNickName": posterNickName,
+            "posterProfileImageUrlString": posterProfileImageUrlString,
+            "text":text,
+            "contentImageUrlStrings": contentImageUrlStrings
+        ])
     }
     
     func createReplyPost(
@@ -174,58 +157,50 @@ class PostFirestoreService {
         parentPost: PostObservableModel,
         text: String,
         contentImageUrlStrings:[String]
-    ) -> AnyPublisher<Void, AppError> {
-        return Future { promise in
-            let postId = UUID().uuidString
-            let batch = db.batch()
-            let replyPostDocRef = db.collection(self.postPath).document(postId)
-            let parentPostDocRef = db.collection(self.postPath).document(parentPost.id)
-            let noticeID: String = UUID().uuidString
-            let noticeDoc = db.collection(self.userPath).document(toUser.user.uid).collection(self.commentNoticePath).document(noticeID)
-            let allParentPost = parentPost.parentPosts + [parentPost.id]
-            batch.setData([
-                "createdAt": Date.init(),
-                "posterUid": fromUser.user.uid,
-                "posterNickName": fromUser.user.nickname,
-                "posterProfileImageUrlString": fromUser.user.profileImageURLString,
-                "text":text,
-                "contentImageUrlStrings": contentImageUrlStrings,
-                "mentionUserUid": toUser.user.uid,
-                "mentionUserNickName": toUser.user.nickname,
-                "parentPosts": allParentPost
-            ], forDocument: replyPostDocRef)
-            
-            batch.setData([
-                "replys": [fromUser.user.uid : postId],
-                "childPosts": FieldValue.arrayUnion([postId])
-            ], forDocument: parentPostDocRef, merge: true)
-            
-            batch.setData([
-                "createdAt": Date.init(),
-                "isRead": false,
-                "recieverUserId": toUser.user.uid,
-                "recieverUserFcmToken": toUser.user.fcmToken,
-                "recieverPostId": parentPost.id,
-                "recieverPostText": parentPost.text,
-                "triggerUserNickNameMapping": [fromUser.user.uid: fromUser.user.nickname],
-                "triggerUserProfileImageUrlStringMapping": [fromUser.user.uid: fromUser.user.profileImageURLString],
-                "lastTriggerUserUid": fromUser.user.uid,
-                "lastTriggerCommentText": text,
-            ], forDocument: noticeDoc)
-            
-            batch.setData([
-                "commentNotice": toUser.user.uid
-            ], forDocument: noticeDoc, merge: true)
-            
-            batch.commit {error in
-                if let error = error {
-                    promise(.failure(.firestore(error)))
-                } else {
-                    promise(.success(()))
-                }
-            }
-            
-        }.eraseToAnyPublisher()
+    ) async throws {
+        let postId = UUID().uuidString
+        let batch = db.batch()
+        let replyPostDocRef = db.collection(self.postPath).document(postId)
+        let parentPostDocRef = db.collection(self.postPath).document(parentPost.id)
+        let noticeID: String = UUID().uuidString
+        let noticeDoc = db.collection(self.userPath).document(toUser.user.uid).collection(self.commentNoticePath).document(noticeID)
+        let allParentPost = parentPost.parentPosts + [parentPost.id]
+        
+        batch.setData([
+            "createdAt": Date.init(),
+            "posterUid": fromUser.user.uid,
+            "posterNickName": fromUser.user.nickname,
+            "posterProfileImageUrlString": fromUser.user.profileImageURLString,
+            "text":text,
+            "contentImageUrlStrings": contentImageUrlStrings,
+            "mentionUserUid": toUser.user.uid,
+            "mentionUserNickName": toUser.user.nickname,
+            "parentPosts": allParentPost
+        ], forDocument: replyPostDocRef)
+        
+        batch.setData([
+            "replys": [fromUser.user.uid : postId],
+            "childPosts": FieldValue.arrayUnion([postId])
+        ], forDocument: parentPostDocRef, merge: true)
+        
+        batch.setData([
+            "createdAt": Date.init(),
+            "isRead": false,
+            "recieverUserId": toUser.user.uid,
+            "recieverUserFcmToken": toUser.user.fcmToken,
+            "recieverPostId": parentPost.id,
+            "recieverPostText": parentPost.text,
+            "triggerUserNickNameMapping": [fromUser.user.uid: fromUser.user.nickname],
+            "triggerUserProfileImageUrlStringMapping": [fromUser.user.uid: fromUser.user.profileImageURLString],
+            "lastTriggerUserUid": fromUser.user.uid,
+            "lastTriggerCommentText": text,
+        ], forDocument: noticeDoc)
+        
+        batch.setData([
+            "commentNotice": toUser.user.uid
+        ], forDocument: noticeDoc, merge: true)
+        
+        try await batch.commit()
     }
     
     func handleLikeButtonPress(userModel: UserObservableModel, postModel: PostObservableModel) -> Future<Void, AppError> {
@@ -276,26 +251,30 @@ class PostFirestoreService {
         }
     }
     
-    func deletePost(postID: String, userID: String, fixedPostID: String) -> AnyPublisher<Void, AppError> {
+    func deletePost(postID: String, userID: String, fixedPostID: String) async throws {
         let batch = db.batch()
         let postDocRef = db.collection(self.postPath).document(postID)
         let userDocRef = db.collection(self.userPath).document(userID)
-        return Future { promise in
-            batch.deleteDocument(postDocRef)
-            
-            if fixedPostID == postID {
-                batch.updateData([
-                    "fixedPost": ""
-                ], forDocument: userDocRef)
-            }
-            
-            batch.commit { error in
-                if let error = error {
-                    promise(.failure(.firestore(error)))
-                } else {
-                    promise(.success(()))
-                }
-            }
-        }.eraseToAnyPublisher()
+        
+        batch.deleteDocument(postDocRef)
+        
+        if fixedPostID == postID {
+            batch.updateData([
+                "fixedPost": ""
+            ], forDocument: userDocRef)
+        }
+        try await batch.commit()
+    }
+    
+    func addReportToPost(fromUserID: String, toUserID:String, postID: String, postText: String, reportText: String) async throws -> Void {
+        let reportID = UUID().uuidString
+        try await  db.collection(self.postReportPath).document(reportID).setData([
+            "createdAt": Date.init(),
+            "fromUserID": fromUserID,
+            "toUserID": toUserID,
+            "postID": postID,
+            "postText": postText,
+            "reportText": reportText
+        ])
     }
 }

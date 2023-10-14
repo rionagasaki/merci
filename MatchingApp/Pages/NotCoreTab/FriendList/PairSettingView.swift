@@ -21,33 +21,33 @@ struct PairSettingView: View {
         VStack {
             SearchBar(viewModel: viewModel, userID: userModel.user.uid)
             ScrollView(showsIndicators: false) {
-                    VStack {
-                        Label {
-                            Text("送っているリクエスト")
-                                .foregroundColor(.customBlack)
-                                .font(.system(size: 20, weight: .bold))
-                                .frame(maxWidth: UIScreen.main.bounds.width, alignment: .leading)
-                        } icon: {
-                            Image(systemName: "person.2")
-                                .foregroundColor(.customBlack)
-                        }
-                        .padding(.top, 24)
-                        
-                        if viewModel.requestFriendUsers.count == 0 {
-                            Text("送っているリクエストはありません")
-                                .foregroundColor(.customBlack)
-                                .font(.system(size: 12))
-                                .padding(.top, 12)
-                                .padding(.leading, 8)
-                        } else {
-                            ForEach(viewModel.requestFriendUsers) { user in
-                                UserCellView(buttonText: "キャンセル", buttonColor: .customBlue.opacity(0.8), user: user) {
-                                    viewModel.cancelFriendRequest(requestingUser: userModel, requestedUser: user)
-                                }
+                VStack {
+                    Label {
+                        Text("送っているリクエスト")
+                            .foregroundColor(.customBlack)
+                            .font(.system(size: 20, weight: .bold))
+                            .frame(maxWidth: UIScreen.main.bounds.width, alignment: .leading)
+                    } icon: {
+                        Image(systemName: "person.2")
+                            .foregroundColor(.customBlack)
+                    }
+                    .padding(.top, 24)
+                    
+                    if viewModel.requestFriendUsers.count == 0 {
+                        Text("送っているリクエストはありません")
+                            .foregroundColor(.customBlack)
+                            .font(.system(size: 12))
+                            .padding(.top, 12)
+                            .padding(.leading, 8)
+                    } else {
+                        ForEach(viewModel.requestFriendUsers) { user in
+                            UserCellView(buttonText: "キャンセル", buttonColor: .customBlue.opacity(0.8), user: user) {
+                                viewModel.cancelFriendRequest(requestingUser: userModel, requestedUser: user)
                             }
                         }
                     }
-
+                }
+                
                 VStack {
                     Label {
                         Text("受け取ったリクエスト")
@@ -105,11 +105,15 @@ struct PairSettingView: View {
         }
         .padding(.horizontal, 16)
         .refreshable {
-            UIIFGeneratorMedium.impactOccurred()
-            viewModel.initialFriendList(userModel: userModel)
+            Task {
+                UIIFGeneratorMedium.impactOccurred()
+                await viewModel.initialFriendList(userModel: userModel)
+            }
         }
         .onAppear {
-            viewModel.initialFriendList(userModel: userModel)
+            Task {
+                await viewModel.initialFriendList(userModel: userModel)
+            }
         }
         .alert(isPresented: $viewModel.isErrorAlert){
             Alert(
@@ -160,7 +164,9 @@ struct SearchBar: View {
                     .font(.system(size: 16, weight: .bold))
             }
             .onSubmit {
-                viewModel.searchUserByUid(userID: userID)
+                Task {
+                    await viewModel.searchUserByUid(userID: userID)
+                }
             }
             .frame(height: 40)
             .foregroundColor(.black)

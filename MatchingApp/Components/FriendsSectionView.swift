@@ -24,6 +24,9 @@ struct FriendsSectionView: View {
             HStack {
                 NavigationLink {
                     PairSettingView()
+                        .onAppear {
+                            UIIFGeneratorMedium.impactOccurred()
+                        }
                 } label: {
                     VStack {
                         Text("ユーザー検索")
@@ -43,6 +46,9 @@ struct FriendsSectionView: View {
                 
                 NavigationLink {
                     ProfileChangeView()
+                        .onAppear {
+                            UIIFGeneratorMedium.impactOccurred()
+                        }
                 } label: {
                     VStack {
                         Text("プロフ編集")
@@ -64,6 +70,9 @@ struct FriendsSectionView: View {
             HStack {
                 NavigationLink {
                     SettingView()
+                        .onAppear {
+                            UIIFGeneratorMedium.impactOccurred()
+                        }
                 } label: {
                     VStack {
                         Text("設定")
@@ -121,14 +130,15 @@ struct FriendsSectionView: View {
             }
         }
         .alert(isPresented: $isErrorAlert){
-            Alert(title: Text("少し待ってね"), message: Text("アプリのリンクを読み込んでいます..."))
+            Alert(title: Text("少し待ってね"), message: Text(errorMessage))
         }
         .onAppear {
             dynamicLink.createDynamicLink { result in
                 switch result {
                 case .success(let url):
                     self.applicationDynamicLink = url
-                case .failure(_):
+                case .failure(let error):
+                    self.errorMessage = error.errorMessage
                     self.isErrorAlert = true
                 }
             }

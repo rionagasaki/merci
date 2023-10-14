@@ -8,8 +8,8 @@
 import Foundation
 import Combine
 
-class NotificationListViewModel: ObservableObject {
-    
+@MainActor
+final class NotificationListViewModel: ObservableObject {
     enum  NoticeType: String, CaseIterable {
         case good = "いいね"
         case comment = "コメント"
@@ -31,9 +31,10 @@ class NotificationListViewModel: ObservableObject {
     @Published var isErrorAlert: Bool = false
     @Published var errorMessage: String = ""
     
-    func getNotice(appState: AppState, userID: String) {
+    func getNotice(appState: AppState, userID: String) async {
         self.noticeService.getAllNotices(userID: userID)
-            .sink { completion in
+            .sink { [weak self] completion in
+                guard let self = self else { return }
                 switch completion {
                 case .finished:
                     self.confirmNotice(appState: appState)
@@ -41,7 +42,8 @@ class NotificationListViewModel: ObservableObject {
                     self.isErrorAlert = true
                     self.errorMessage = error.errorMessage
                 }
-            } receiveValue: { (likeNotices, commentNotices, followNotices) in
+            } receiveValue: { [weak self] (likeNotices, commentNotices, followNotices) in
+                guard let self = self else { return }
                 self.likeNotices = []
                 self.commentNotices = []
                 self.followNotices = []
@@ -100,7 +102,8 @@ class NotificationListViewModel: ObservableObject {
     
     func getCommentNotice(userID: String, appState: AppState){
         self.noticeService.getCommentNoticeInfo(userID: userID)
-            .sink { completion in
+            .sink { [weak self] completion in
+                guard let self = self else { return }
                 switch completion {
                 case .finished:
                     self.confirmNotice(appState: appState)
@@ -108,7 +111,8 @@ class NotificationListViewModel: ObservableObject {
                     self.isErrorAlert = true
                     self.errorMessage = error.errorMessage
                 }
-            } receiveValue: { commentNotices in
+            } receiveValue: { [weak self] commentNotices in
+                guard let self = self else { return }
                 self.commentNotices = []
                 self.commentNotices = commentNotices
                 self.confirmNotice(appState: appState)
@@ -118,7 +122,8 @@ class NotificationListViewModel: ObservableObject {
     
     func getLikeNotice(userID: String) {
         self.noticeService.getLikeNoticeInfo(userID: userID)
-            .sink { completion in
+            .sink { [weak self] completion in
+                guard let self = self else { return }
                 switch completion {
                 case .finished:
                     print("finished")
@@ -126,7 +131,8 @@ class NotificationListViewModel: ObservableObject {
                     self.isErrorAlert = true
                     self.errorMessage = error.errorMessage
                 }
-            } receiveValue: { likeNotices in
+            } receiveValue: { [weak self] likeNotices in
+                guard let self = self else { return }
                 self.likeNotices = []
                 self.likeNotices = likeNotices
             }
@@ -135,7 +141,8 @@ class NotificationListViewModel: ObservableObject {
     
     func getRequestNotice(userID: String, appState: AppState) {
         self.noticeService.getRequestNoticeInfo(userID: userID)
-            .sink { completion in
+            .sink { [weak self] completion in
+                guard let self = self else { return }
                 switch completion {
                 case .finished:
                     self.confirmNotice(appState: appState)
@@ -143,7 +150,8 @@ class NotificationListViewModel: ObservableObject {
                     self.isErrorAlert = true
                     self.errorMessage = error.errorMessage
                 }
-            } receiveValue: { followNotices in
+            } receiveValue: { [weak self] followNotices in
+                guard let self = self else { return }
                 self.followNotices = []
                 self.followNotices = followNotices
                 self.confirmNotice(appState: appState)
@@ -163,7 +171,8 @@ class NotificationListViewModel: ObservableObject {
                 userID: userID,
                 noticeID: noticeID
             )
-            .sink { completion in
+            .sink { [weak self] completion in
+                guard let self = self else { return }
                 switch completion {
                 case .finished:
                     self.confirmNotice(appState: appState)
@@ -171,9 +180,7 @@ class NotificationListViewModel: ObservableObject {
                     self.isErrorAlert = true
                     self.errorMessage = error.errorMessage
                 }
-            } receiveValue: { _ in
-                print("recieve value")
-            }
+            } receiveValue: { _ in }
             .store(in: &self.cancellable)
     }
     
@@ -197,11 +204,12 @@ class NotificationListViewModel: ObservableObject {
         
         
         // subscribe
-        updatePublisher.sink { completion in
+        updatePublisher.sink { [weak self] completion in
+            guard let self = self else { return }
             switch completion {
             case .finished:
                 self.isLoading = false
-                self.getNotice(appState:appState, userID: userID)
+//                self.getNotice(appState:appState, userID: userID)
             case .failure(let error):
                 self.errorMessage = error.errorMessage
                 self.isErrorAlert = true

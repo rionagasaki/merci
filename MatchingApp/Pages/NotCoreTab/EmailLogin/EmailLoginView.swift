@@ -93,7 +93,9 @@ struct EmailLoginView: View {
             .padding(.horizontal, 16)
             .padding(.top, 8)
             Button {
-                viewModel.signInWithEmail(userModel: userModel, appState: appState)
+                Task {
+                    await viewModel.signInWithEmail(userModel: userModel, appState: appState)
+                }
             } label: {
                 Text("ログイン")
                     .foregroundColor(.white)

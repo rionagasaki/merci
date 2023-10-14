@@ -9,7 +9,8 @@ import Foundation
 import UIKit
 import Combine
 
-class CreateReplyPostViewModel: ObservableObject {
+@MainActor
+final class CreateReplyPostViewModel: ObservableObject {
     @Published var text: String = ""
     @Published var toUser: UserObservableModel?
     @Published var isImagePickerModal: Bool = false
@@ -42,7 +43,7 @@ class CreateReplyPostViewModel: ObservableObject {
             .store(in: &self.cancellable)
     }
     
-    func addPost(post: PostObservableModel, fromUser: UserObservableModel){
+    func addPost(post: PostObservableModel, fromUser: UserObservableModel) async {
         self.isLoading = true
         if text.isEmpty {
             self.isErrorAlert = true
@@ -56,31 +57,13 @@ class CreateReplyPostViewModel: ObservableObject {
             return
         }
         
-        imageStorageManager.uploadMultipleImageToStorage(
-            folderName: "Post",
-            images: contentImages
-        )
-        .flatMap { imageStrings in
-            return self.postService.createReplyPost(
-                fromUser: fromUser,
-                toUser: toUser,
-                parentPost: post,
-                text: self.text,
-                contentImageUrlStrings: imageStrings
-            )
+        do {
+            let downloadImageUrlStrings = try await self.imageStorageManager.uploadMultipleImageToStorage(with: self.contentImages)
+            let _ = try await self.postService.createReplyPost(fromUser: fromUser, toUser: toUser, parentPost: post, text: self.text, contentImageUrlStrings: downloadImageUrlStrings)
+            self.isLoading = false
+            self.isPostSuccess = true
+        } catch {
+            self.isErrorAlert = true
         }
-        .sink { completion in
-            switch completion {
-            case .finished:
-                self.isLoading = false
-                self.isPostSuccess = true
-            case .failure(let error):
-                self.isErrorAlert = true
-                self.errorMessage = error.errorMessage
-            }
-        } receiveValue: { _ in
-            print("recieve value")
-        }
-        .store(in: &self.cancellable)
     }
 }

@@ -30,7 +30,7 @@ class DynamicLink {
         linkBuilder.iOSParameters?.appStoreID = "6450633838"
         linkBuilder.socialMetaTagParameters = DynamicLinkSocialMetaTagParameters()
         linkBuilder.socialMetaTagParameters?.title =  "merci"
-        linkBuilder.socialMetaTagParameters?.descriptionText = "匿名お悩み通話、チャット"
+        linkBuilder.socialMetaTagParameters?.descriptionText = "merci ~匿名お悩み通話、チャット~"
         linkBuilder.socialMetaTagParameters?.imageURL = URL(string: "https://firebasestorage.googleapis.com/v0/b/matchingapp-b77af.appspot.com/o/Group%2027.png?alt=media&token=99f34185-72a4-4cb5-9ac5-a8a2faffc4c8&_gl=1*vnlxhl*_ga*NjA2OTAyNTEyLjE2OTU1MzkwOTI.*_ga_CW55HF8NVT*MTY5NTk5OTA2NC4yOC4xLjE2OTU5OTkxMzIuNjAuMC4w")
         
         guard let longParam = linkBuilder.url else { return }

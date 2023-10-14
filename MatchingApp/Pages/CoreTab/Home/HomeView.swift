@@ -18,7 +18,7 @@ struct HomeView: View {
     var body: some View {
         VStack(spacing: .zero) {
             CustomScrollView(
-                menus: ["友達投稿","投稿","自分"],
+                menus: ["友達投稿","投稿","お悩み","自分"],
                 postFilter: $viewModel.postFilter,
                 selection: $viewModel.selection
             )
@@ -34,18 +34,23 @@ struct HomeView: View {
                     AllPostView(viewModel: viewModel)
                         .tag(1)
                     
+                    ConcernListView(viewModel: viewModel)
+                        .tag(2)
+                    
                     UserProfileView(
                         userId: userModel.user.uid,
                         isFromHome: true
                     )
-                    .tag(2)
+                    .tag(3)
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
             }
         }
         .onAppear {
-            if viewModel.allPosts.count == 0 {
-                viewModel.initialAllPostAndCall(userModel: userModel)
+            Task {
+                if viewModel.allPosts.count == 0 {
+                    await viewModel.initialAllPostAndCall(userModel: userModel)
+                }
             }
         }
         .alert(isPresented: $viewModel.isErrorAlert) {
@@ -57,76 +62,92 @@ struct HomeView: View {
         .toast(isPresenting: $viewModel.isDeleteToast) {
             AlertToast(type: .error(Color.customRed), title: "つぶやきを消したよ！")
         }
+        .toast(isPresenting: $viewModel.isHiddenToast) {
+            AlertToast(type: .error(Color.customRed), title: "非表示にしたよ！")
+        }
     }
 }
-
 
 struct AllPostView: View {
     @StateObject var viewModel: HomeViewModel
     @EnvironmentObject var userModel: UserObservableModel
     @ObservedObject var reloadPost = ReloadPost.shared
+    @State var post: PostObservableModel = .init()
     let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .heavy)
     
     var body: some View {
         NavigationStack {
             ScrollViewReader { scrollReader in
                 ScrollView {
-                    VStack {
-                        VStack {
-                            LazyVStack {
-                                if viewModel.isLoading {
-                                    ProgressView()
-                                } else {
-                                    ForEach(viewModel.postFilter == .allPostsAndReplys ? viewModel.allPosts.indices: viewModel.filterlingParentPost.indices, id: \.self) { index in
-                                        let post = viewModel.postFilter == .allPostsAndReplys ? viewModel.allPosts[index]: viewModel.filterlingParentPost[index]
-                                        let count = viewModel.postFilter == .allPostsAndReplys ? viewModel.allPosts.count: viewModel.filterlingParentPost.count
-                                        ZStack(alignment: .topTrailing) {
-                                            NavigationLink {
-                                                PostDetailView(
-                                                    savedScrollDocumentID: Binding<String?>($viewModel.savedScrollDocumentId),
-                                                    postId: post.id
-                                                )
-                                                .onAppear {
-                                                    viewModel.savedScrollDocumentId = ""
-                                                }
-                                            } label: {
-                                                PostView(post: post)
-                                                    .background(Color.white)
-                                                    .cornerRadius(20)
-                                                    .onAppear {
-                                                        if index == count - 1 {
-                                                            if !viewModel.isLastDocumentLoaded {
-                                                                viewModel.getNextPage(userModel: userModel)
-                                                            }
-                                                        }
+                    LazyVStack {
+                        ForEach(viewModel.postFilter == .allPostsAndReplys ? viewModel.allPosts.indices: viewModel.filterlingParentPost.indices, id: \.self) { index in
+                            let post = viewModel.postFilter == .allPostsAndReplys ? viewModel.allPosts[index]: viewModel.filterlingParentPost[index]
+                            let count = viewModel.postFilter == .allPostsAndReplys ? viewModel.allPosts.count: viewModel.filterlingParentPost.count
+                            ZStack(alignment: .topTrailing) {
+                                NavigationLink {
+                                    PostDetailView(
+                                        savedScrollDocumentID: Binding<String?>($viewModel.savedScrollDocumentId),
+                                        postId: post.id
+                                    )
+                                    .onAppear {
+                                        viewModel.savedScrollDocumentId = ""
+                                    }
+                                } label: {
+                                    PostView(post: post)
+                                        .background(Color.white)
+                                        .cornerRadius(20)
+                                        .onAppear {
+                                            Task {
+                                                if index == count - 1 {
+                                                    if !viewModel.isLastDocumentLoaded {
+                                                        await viewModel.getNextPage(userModel: userModel)
                                                     }
-                                            }
-                                            if post.posterUid == userModel.user.uid {
-                                                PostMenu(text1: "投稿を固定する", text2: "投稿を削除する"){
-                                                    viewModel.pinnedPost(postID: post.id, userID: post.posterUid)
-                                                } deleteAction: {
-                                                    viewModel.deletePost(postID: post.id, userModel: userModel)
                                                 }
                                             }
                                         }
-                                        .id(UUID(uuidString: post.id))
+                                }
+                                if post.posterUid == userModel.user.uid {
+                                    PostMenu(text1: "投稿を固定する", text2: "投稿を削除する", imageName1:"pin.fill", imageName2: "minus.circle.fill"){
+                                        Task {
+                                            await viewModel.pinnedPost(
+                                                postID: post.id,
+                                                userID: userModel.user.uid
+                                            )
+                                        }
+                                    } deleteAction: {
+                                        Task {
+                                            await viewModel.deletePost(postID: post.id, userModel: userModel)
+                                        }
+                                    }
+                                } else {
+                                    PostMenu(text1: "非表示にする", text2: "通報する", imageName1: "eye.slash", imageName2: "exclamationmark.triangle"){
+                                        Task {
+                                            await viewModel.hiddenPost(
+                                                postID: post.id,
+                                                userModel: userModel
+                                            )
+                                        }
+                                    } deleteAction: {
+                                        self.post = post
+                                        self.viewModel.isReportPostModal = true
                                     }
                                 }
                             }
-                        }
-                        .padding(.vertical, 16)
-                        
-                        if !viewModel.isLastDocumentLoaded && !viewModel.isLoading {
-                            ProgressView()
-                                .frame(width: 30, height: 30)
-                                .padding(.bottom, 8)
+                            .id(UUID(uuidString: post.id))
                         }
                     }
+                    .padding(.vertical, 16)
                     .onChange(of: viewModel.savedScrollDocumentId){ _ in
                         print("after count \(viewModel.allPosts.count)")
                         withAnimation {
                             scrollReader.scrollTo(UUID(uuidString: viewModel.savedScrollDocumentId), anchor: .some(.center))
                         }
+                    }
+                    
+                    if !viewModel.isLastDocumentLoaded && !viewModel.isLoading {
+                        ProgressView()
+                            .frame(width: 30, height: 30)
+                            .padding(.bottom, 8)
                     }
                 }
             }
@@ -134,13 +155,20 @@ struct AllPostView: View {
         .background(Color.gray.opacity(0.1))
         .onChange(of: reloadPost.isRequiredReload) {
             if $0 {
-                viewModel.getLatestPosts(userModel: userModel)
-                reloadPost.isRequiredReload = false
+                Task {
+                    await viewModel.getLatestPosts(userModel: userModel)
+                    reloadPost.isRequiredReload = false
+                }
             }
         }
         .refreshable {
-            UIIFGeneratorMedium.impactOccurred()
-            viewModel.getLatestPosts(userModel: userModel)
+            Task {
+                UIIFGeneratorMedium.impactOccurred()
+                await viewModel.getLatestPosts(userModel: userModel)
+            }
+        }
+        .fullScreenCover(isPresented: $viewModel.isReportPostModal) {
+            ReportPostView(post: self.post)
         }
     }
 }
@@ -149,6 +177,7 @@ struct FriendPostView: View {
     @StateObject var viewModel: HomeViewModel
     @EnvironmentObject var userModel: UserObservableModel
     @ObservedObject var reloadPost = ReloadPost.shared
+    @State var post: PostObservableModel = .init()
     let UIIFGeneratorMedium = UIImpactFeedbackGenerator(style: .heavy)
     
     var body: some View {
@@ -202,61 +231,84 @@ struct FriendPostView: View {
                 }
                 
                 VStack {
-                        LazyVStack {
-                            if viewModel.isLoading {
-                                ProgressView()
-                            } else {
-                                ForEach(viewModel.postFilter == .allPostsAndReplys ? viewModel.friendPosts.indices: viewModel.friendFilterlingParentPost.indices, id: \.self) { index in
-                                    let post = viewModel.postFilter == .allPostsAndReplys ? viewModel.friendPosts[index]: viewModel.friendFilterlingParentPost[index]
-                                    let count = viewModel.postFilter == .allPostsAndReplys ? viewModel.friendPosts.count: viewModel.friendFilterlingParentPost.count
-                                    ZStack(alignment: .topTrailing){
-                                        NavigationLink {
-                                            PostDetailView(
-                                                savedScrollDocumentID: Binding<String?>($viewModel.savedScrollDocumentId),
-                                                postId: post.id
-                                            )
-                                        } label: {
-                                            PostView(post: post)
-                                                .background(Color.white)
-                                                .cornerRadius(20)
-                                                .onAppear {
-                                                    if index == count - 1 {
-                                                        if !viewModel.isFriendDocumentLoaded {
-                                                            viewModel.getFriendNextPage(userModel: userModel)
-                                                        }
+                    LazyVStack {
+                        ForEach(viewModel.postFilter == .allPostsAndReplys ? viewModel.friendPosts.indices: viewModel.friendFilterlingParentPost.indices, id: \.self) { index in
+                            let post = viewModel.postFilter == .allPostsAndReplys ? viewModel.friendPosts[index]: viewModel.friendFilterlingParentPost[index]
+                            let count = viewModel.postFilter == .allPostsAndReplys ? viewModel.friendPosts.count: viewModel.friendFilterlingParentPost.count
+                            ZStack(alignment: .topTrailing){
+                                NavigationLink {
+                                    PostDetailView(
+                                        savedScrollDocumentID: Binding<String?>($viewModel.savedScrollDocumentId),
+                                        postId: post.id
+                                    )
+                                } label: {
+                                    PostView(post: post)
+                                        .background(Color.white)
+                                        .cornerRadius(20)
+                                        .onAppear {
+                                            Task {
+                                                if index == count - 1 {
+                                                    if !viewModel.isFriendDocumentLoaded {
+                                                        await viewModel.getFriendNextPage(userModel: userModel)
                                                     }
                                                 }
-                                        }
-                                        if post.posterUid == userModel.user.uid {
-                                            PostMenu(text1: "投稿を固定する", text2: "投稿を削除する"){
-                                                viewModel.pinnedPost(postID: post.id, userID: post.posterUid)
-                                            } deleteAction: {
-                                                viewModel.deletePost(postID: post.id, userModel: userModel)
                                             }
                                         }
+                                }
+                                if post.posterUid == userModel.user.uid {
+                                    PostMenu(text1: "投稿を固定する", text2: "投稿を削除する", imageName1:"pin.fill", imageName2: "minus.circle.fill"){
+                                        Task {
+                                            await viewModel.pinnedPost(
+                                                postID: post.id,
+                                                userID: userModel.user.uid
+                                            )
+                                        }
+                                    } deleteAction: {
+                                        Task {
+                                            await viewModel.deletePost(postID: post.id, userModel: userModel)
+                                        }
+                                    }
+                                } else {
+                                    PostMenu(text1: "非表示にする", text2: "通報する", imageName1: "eye.slash", imageName2: "exclamationmark.triangle"){
+                                        Task {
+                                            await viewModel.hiddenPost(
+                                                postID: post.id,
+                                                userModel: userModel
+                                            )
+                                        }
+                                    } deleteAction: {
+                                        self.post = post
+                                        self.viewModel.isReportPostModal = true
                                     }
                                 }
                             }
                         }
+                    }
                     if !viewModel.isFriendDocumentLoaded && userModel.user.friendUids.count != 0 {
-                            ProgressView()
-                                .frame(width: 30, height: 30)
-                                .padding(.bottom, 8)
-                        }
-                   
+                        ProgressView()
+                            .frame(width: 30, height: 30)
+                            .padding(.bottom, 8)
+                    }
                 }
                 .padding(.vertical, 16)
             }
         }
         .onReceive(reloadPost.$isRequiredReload) {
             if $0 {
-                viewModel.getLatestFriendPost(userModel: userModel)
+                Task {
+                    await viewModel.getLatestFriendPost(userModel: userModel)
+                }
             }
         }
         .refreshable {
-            UIIFGeneratorMedium.impactOccurred()
-            viewModel.getLatestFriendPost(userModel: userModel)
-            viewModel.getConcurrentUserInfo(userIDs: userModel.user.friendUids)
+            Task {
+                UIIFGeneratorMedium.impactOccurred()
+                await viewModel.getLatestFriendPost(userModel: userModel)
+                await viewModel.getConcurrentUserInfo(userIDs: userModel.user.friendUids)
+            }
+        }
+        .fullScreenCover(isPresented: $viewModel.isReportPostModal) {
+            ReportPostView(post: self.post)
         }
         .background(Color.gray.opacity(0.1))
     }
